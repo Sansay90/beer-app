@@ -96,7 +96,13 @@ const themeItems = computed(() => [[
     </template>
 
     <template #default="{ collapsed }">
-      <UNavigationMenu :items="nav" :collapsed="collapsed" orientation="vertical" tooltip />
+      <UNavigationMenu
+        :items="nav"
+        :collapsed="collapsed"
+        orientation="vertical"
+        tooltip
+        :ui="{ link: 'gap-2.5 py-2 text-base', linkLeadingIcon: 'size-5.5', childLink: 'py-1.5 text-[0.9375rem]' }"
+      />
     </template>
 
     <template #footer="{ collapsed }">
@@ -108,6 +114,8 @@ const themeItems = computed(() => [[
             color="neutral"
             variant="ghost"
             :block="!collapsed"
+            size="lg"
+            class="text-base"
             :square="collapsed"
             :class="collapsed ? 'mx-auto' : 'justify-start'"
             :ui="{ label: 'truncate' }"
@@ -121,13 +129,15 @@ const themeItems = computed(() => [[
           color="primary"
           variant="soft"
           :block="!collapsed"
+          size="lg"
+          class="text-base"
           :square="collapsed"
           :class="collapsed ? 'mx-auto' : 'justify-start'"
           aria-label="Войти"
           @click="login"
         />
         <UTooltip v-if="auth.user" :text="link.label" :disabled="!collapsed">
-          <div class="flex items-center gap-2 px-2.5 py-1.5 text-sm" :class="collapsed && 'justify-center'">
+          <div class="flex items-center gap-2.5 px-2.5 py-2 text-base" :class="collapsed && 'justify-center'">
             <UIcon :name="link.icon" class="size-5 shrink-0" :class="link.tone" />
             <span v-if="!collapsed" class="truncate text-muted">{{ link.label }}</span>
           </div>
@@ -139,6 +149,8 @@ const themeItems = computed(() => [[
             :color="soundOn ? 'primary' : 'neutral'"
             variant="ghost"
             :block="!collapsed"
+            size="lg"
+            class="text-base"
             :square="collapsed"
             :class="collapsed ? 'mx-auto' : 'justify-start'"
             @click="toggleSound"
@@ -151,6 +163,8 @@ const themeItems = computed(() => [[
             color="neutral"
             variant="ghost"
             :block="!collapsed"
+            size="lg"
+            class="text-base"
             :square="collapsed"
             :class="collapsed ? 'mx-auto' : 'justify-start'"
             :aria-label="`Тема: ${theme.label}`"
