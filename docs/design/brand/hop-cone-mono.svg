@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -12 120 148">
+  <mask id="gaps" maskUnits="userSpaceOnUse" x="-10" y="-12" width="120" height="148">
+    <g fill="#fff" stroke="#000" stroke-width="3.6" stroke-linejoin="round">
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(50 98) rotate(0) scale(0.95)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(36 78) rotate(14) scale(1)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(64 78) rotate(-14) scale(1)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(23 57) rotate(26) scale(0.98)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(77 57) rotate(-26) scale(0.98)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(50 57) rotate(0) scale(1)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(18 36) rotate(34) scale(0.9)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(82 36) rotate(-34) scale(0.9)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(37 36) rotate(6) scale(1)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(63 36) rotate(-6) scale(1)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(32 17) rotate(24) scale(0.86)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(68 17) rotate(-24) scale(0.86)"/>
+    <path d="M-16 16 A16 16 0 0 1 16 16 C16 23 5 30 0 38 C-5 30 -16 23 -16 16 Z" transform="translate(50 8) rotate(0) scale(0.95)"/>
+    </g>
+  </mask>
+  <g fill="#2B1B12">
+    <rect x="-10" y="-12" width="120" height="148" mask="url(#gaps)"/>
+    <path d="M50 10 C50 1 53 -5 60 -9" fill="none" stroke="#2B1B12" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

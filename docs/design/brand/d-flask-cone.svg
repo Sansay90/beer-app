@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Г. Шишка в колбе: колба Эрленмейера, внутри — шишка хмеля, из горлышка — лист -->
+  <path d="M50 18 V46 L27 92 Q23 102 34 102 H86 Q97 102 93 92 L70 46 V18" stroke="#2B1B12" stroke-width="5"/>
+  <path d="M45 18 H75" stroke="#2B1B12" stroke-width="5"/>
+  <path d="M60 52 C71 53 77 63 76 74 C75 85 69 92 60 98 C51 92 45 85 44 74 C43 63 49 53 60 52 Z" fill="#E8A33A"/>
+  <path d="M48 68 Q54 75 60 68 Q66 75 72 68 M50 81 Q55 88 60 81 Q65 88 70 81" stroke="#F6EBD4" stroke-width="3"/>
+  <path d="M70 18 C72 8 84 4 92 8 C88 16 79 20 70 18 Z" fill="#7C9A3C" stroke="#7C9A3C" stroke-width="2"/>
+  <path d="M72 16 L86 9" stroke="#F6EBD4" stroke-width="1.6"/>
+</svg>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Hoplab — шишка хмеля</title>
+<style>
+  :root { --malt: #2B1B12; --amber: #E8A33A; --foam: #F6EBD4; --hop: #9DBA48; --hop-light: #C5D97A; --hop-dark: #4D6B1E; }
+  body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: var(--foam); color: var(--malt); }
+  .row { display: flex; gap: 36px; padding: 26px 32px; align-items: end; flex-wrap: wrap; }
+  .dark { background: #1A110B; color: var(--foam); }
+  .card { text-align: center; font-size: 13px; font-weight: 600; }
+  .card svg { width: 130px; height: 170px; display: block; margin: 0 auto 6px; }
+  .tiny svg { width: 24px; height: 32px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- чешуйка: лепесток острием вниз -->
+    <path id="b" d="M0 0 C9 0 14 8 13 17 C12 24 6 29 0 34 C-6 29 -12 24 -13 17 C-14 8 -9 0 0 0 Z"/>
+    <!-- лист хмеля: три лопасти с зубчиками -->
+    <path id="leaf" d="M0 0 C-4 -6 -14 -8 -18 -16 C-12 -16 -10 -20 -14 -26 C-6 -24 -4 -28 -6 -36 C0 -30 4 -34 6 -40 C8 -32 14 -34 16 -38 C16 -30 22 -30 26 -32 C22 -24 26 -22 30 -20 C22 -14 14 -10 0 0 Z"/>
+
+    <!-- А. Плоская шишка: чешуйки снизу вверх, верхний ряд накрывает основания нижнего -->
+    <symbol id="coneA" viewBox="0 0 100 150">
+      <g fill="var(--hop)" stroke="var(--hop-dark)" stroke-width="2.6" stroke-linejoin="round">
+        <use href="#b" x="50" y="106"/>
+        <use href="#b" x="39" y="88"/><use href="#b" x="61" y="88"/>
+        <use href="#b" x="29" y="68"/><use href="#b" x="50" y="70"/><use href="#b" x="71" y="68"/>
+        <use href="#b" x="31" y="48"/><use href="#b" x="50" y="50"/><use href="#b" x="69" y="48"/>
+        <use href="#b" x="40" y="30"/><use href="#b" x="60" y="30"/>
+        <use href="#b" x="50" y="16"/>
+      </g>
+      <path d="M50 17 C50 9 54 4 60 2" fill="none" stroke="var(--hop-dark)" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- Б. С листом и светлыми бликами на чешуйках -->
+    <symbol id="coneB" viewBox="0 0 120 150">
+      <use href="#leaf" x="66" y="34" fill="var(--hop-dark)" transform="rotate(10 66 34)"/>
+      <g fill="var(--hop)" stroke="var(--hop-dark)" stroke-width="2.6" stroke-linejoin="round">
+        <use href="#b" x="50" y="106"/>
+        <use href="#b" x="39" y="88"/><use href="#b" x="61" y="88"/>
+        <use href="#b" x="29" y="68"/><use href="#b" x="50" y="70"/><use href="#b" x="71" y="68"/>
+        <use href="#b" x="31" y="48"/><use href="#b" x="50" y="50"/><use href="#b" x="69" y="48"/>
+        <use href="#b" x="40" y="30"/><use href="#b" x="60" y="30"/>
+        <use href="#b" x="50" y="16"/>
+      </g>
+      <g stroke="var(--hop-light)" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M46 112 Q47 122 50 128"/><path d="M35 94 Q36 104 39 110"/><path d="M57 94 Q58 104 61 110"/>
+        <path d="M25 74 Q26 84 29 90"/><path d="M46 76 Q47 86 50 92"/><path d="M67 74 Q68 84 71 90"/>
+        <path d="M27 54 Q28 64 31 70"/><path d="M46 56 Q47 66 50 72"/><path d="M65 54 Q66 64 69 70"/>
+        <path d="M36 36 Q37 46 40 52"/><path d="M56 36 Q57 46 60 52"/>
+      </g>
+      <path d="M50 17 C50 9 54 4 60 2" fill="none" stroke="var(--hop-dark)" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- В. Линией, одним цветом — для надписей и печати -->
+    <symbol id="coneC" viewBox="0 0 100 150">
+      <g fill="var(--foam)" stroke="currentColor" stroke-width="4" stroke-linejoin="round">
+        <use href="#b" x="50" y="106"/>
+        <use href="#b" x="39" y="88"/><use href="#b" x="61" y="88"/>
+        <use href="#b" x="29" y="68"/><use href="#b" x="50" y="70"/><use href="#b" x="71" y="68"/>
+        <use href="#b" x="31" y="48"/><use href="#b" x="50" y="50"/><use href="#b" x="69" y="48"/>
+        <use href="#b" x="40" y="30"/><use href="#b" x="60" y="30"/>
+        <use href="#b" x="50" y="16"/>
+      </g>
+      <path d="M50 17 C50 9 54 4 60 2" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- Г. Упрощённая — силуэт с зубчатым краем, для мелких размеров -->
+    <symbol id="coneD" viewBox="0 0 100 150">
+      <path d="M50 14 C62 16 66 24 64 30 C76 32 80 42 77 50 C88 54 89 66 83 74 C90 82 86 94 76 98 C78 108 70 116 62 116 C62 126 56 134 50 140 C44 134 38 126 38 116 C30 116 22 108 24 98 C14 94 10 82 17 74 C11 66 12 54 23 50 C20 42 24 32 36 30 C34 24 38 16 50 14 Z" fill="var(--hop)"/>
+      <path d="M36 30 Q50 40 64 30 M23 50 Q36 60 50 52 Q64 60 77 50 M17 74 Q33 84 50 76 Q67 84 83 74 M24 98 Q37 106 50 100 Q63 106 76 98 M38 116 Q44 122 50 120 Q56 122 62 116" fill="none" stroke="var(--hop-dark)" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M50 15 C50 8 54 4 60 2" fill="none" stroke="var(--hop-dark)" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="row">
+  <div class="card"><svg><use href="#coneA"/></svg>А. Чешуйки внахлёст</div>
+  <div class="card"><svg viewBox="0 0 120 150"><use href="#coneB"/></svg>Б. С листом и бликами</div>
+  <div class="card" style="color:var(--malt)"><svg><use href="#coneC"/></svg>В. Линией, одним цветом</div>
+  <div class="card"><svg><use href="#coneD"/></svg>Г. Упрощённый силуэт</div>
+</div>
+<div class="row dark">
+  <div class="card"><svg><use href="#coneA"/></svg></div>
+  <div class="card"><svg viewBox="0 0 120 150"><use href="#coneB"/></svg></div>
+  <div class="card" style="color:var(--amber)"><svg><use href="#coneC"/></svg></div>
+  <div class="card"><svg><use href="#coneD"/></svg></div>
+</div>
+<div class="row tiny">
+  <div class="card"><svg><use href="#coneA"/></svg></div>
+  <div class="card"><svg viewBox="0 0 120 150"><use href="#coneB"/></svg></div>
+  <div class="card" style="color:var(--malt)"><svg><use href="#coneC"/></svg></div>
+  <div class="card"><svg><use href="#coneD"/></svg></div>
+</div>
+</body>
+</html>

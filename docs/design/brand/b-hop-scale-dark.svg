@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Б. Мерная шишка: шишка хмеля тонкой линией, слева — шкала, как на мерном цилиндре -->
+  <path d="M66 20 C82 22 92 38 91 56 C90 76 80 92 66 106 C52 92 42 76 41 56 C40 38 50 22 66 20 Z" stroke="#F6EBD4" stroke-width="5"/>
+  <path d="M50 42 Q58 52 66 42 Q74 52 82 42" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M44 59 Q51.3 69 58.7 59 Q66 69 73.3 59 Q80.7 69 88 59" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M47 76 Q56.5 86 66 76 Q75.5 86 85 76" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M56 92 Q61 99 66 92 Q71 99 76 92" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M66 20 C66 14 69 10 74 8" stroke="#7C9A3C" stroke-width="4"/>
+  <path d="M16 28 H28 M20 40 H28 M16 52 H28 M20 64 H28 M16 76 H28 M20 88 H28 M16 100 H28" stroke="#F6EBD4" stroke-width="4"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- А. Колба, полная хмеля: колба Эрленмейера, внутри — чешуйки шишки, из горлышка — лист хмеля -->
+  <path d="M50 18 V46 L27 92 Q23 102 34 102 H86 Q97 102 93 92 L70 46 V18" stroke="#F6EBD4" stroke-width="5"/>
+  <path d="M45 18 H75" stroke="#F6EBD4" stroke-width="5"/>
+  <path d="M45 61 Q52.5 71 60 61 Q67.5 71 75 61" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M38 75 Q45.3 86 52.7 75 Q60 86 67.3 75 Q74.7 86 82 75" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M33 89 Q42.3 99 51.7 89 Q60 99 68.3 89 Q77.7 99 87 89" stroke="#E8A33A" stroke-width="4.5"/>
+  <path d="M70 18 C72 8 84 4 92 8 C88 16 79 20 70 18 Z" fill="#7C9A3C" stroke="#7C9A3C" stroke-width="2"/>
+  <path d="M72 16 L86 9" stroke="#F6EBD4" stroke-width="1.6"/>
+</svg>

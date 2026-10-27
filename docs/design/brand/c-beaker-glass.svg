@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- В. Мензурка-бокал: лабораторный стакан с носиком, в нём пиво, пена — чешуйками хмеля, справа — деления -->
+  <path d="M34 50 L38 96 Q39 104 47 104 H73 Q81 104 82 96 L86 50 Z" fill="#E8A33A"/>
+  <path d="M32 48 Q39 38 46 48 Q53 38 60 48 Q67 38 74 48 Q81 38 88 48 L88 50 H32 Z" fill="#F6EBD4"/>
+  <path d="M22 16 C28 16 31 20 32 26 L38 96 Q39 104 47 104 H73 Q81 104 82 96 L89 18" stroke="#2B1B12" stroke-width="5"/>
+  <path d="M32 48 Q39 38 46 48 Q53 38 60 48 Q67 38 74 48 Q81 38 88 48" stroke="#2B1B12" stroke-width="3.5"/>
+  <path d="M76 62 H84 M79 72 H84 M76 82 H84 M79 92 H84" stroke="#2B1B12" stroke-width="3"/>
+</svg>
