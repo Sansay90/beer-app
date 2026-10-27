@@ -1,0 +1,39 @@
+# brewapp на сервере: Postgres и сервис (интерфейс — внутри образа). Лежит в /opt/brewapp, туда же его кладёт
+# выкатка (.github/workflows/deploy.yml) вместе с новым образом. Настройки — /opt/brewapp/.env (образец —
+# deploy/.env.example). HTTPS и домен — nginx на сервере (deploy/nginx.conf), сервис слушает только 127.0.0.1.
+# Агенты пивоварен подключаются извне: wss://<домен>/api/agent.
+name: brewapp
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: brewapp
+      POSTGRES_USER: brewapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
+      TZ: ${TZ:-Europe/Moscow}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brewapp -d brewapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ghcr.io/sansay90/beer-app:${APP_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://brewapp:${POSTGRES_PASSWORD}@db:5432/brewapp
+      # запросы приходят только от nginx на этом же сервере — его заголовкам X-Forwarded-* можно верить
+      FORWARDED_ALLOW_IPS: "*"
+
+volumes:
+  pgdata:

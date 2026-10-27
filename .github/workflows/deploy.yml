@@ -1,0 +1,99 @@
+# Каждый пуш в main: проверка → образ в GitHub Container Registry → выкатка на сервер по SSH.
+# Сервер и его настройка — deploy/README.md. Секреты репозитория: DEPLOY_HOST, DEPLOY_SSH_KEY (ключ пользователя
+# deploy на сервере), DEPLOY_KNOWN_HOSTS (отпечаток сервера), DEPLOY_URL (адрес сайта для проверки после выкатки).
+name: Выкатка
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/sansay90/beer-app
+
+jobs:
+  check:
+    name: Проверка
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Типы интерфейса
+        working-directory: web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Сервис и агент собираются
+        run: python -m compileall -q service/app service/migrations agent/agent
+
+  build:
+    name: Образ
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Сервер
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Доступ к серверу
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Выкатить
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          scp -i ~/.ssh/deploy deploy/compose.yaml "deploy@$HOST:/opt/brewapp/compose.yaml"
+          # образ закрытый: вход в реестр — токеном этой выкатки, после неё он уже недействителен и стирается
+          printf '%s' "$TOKEN" | ssh -i ~/.ssh/deploy "deploy@$HOST" \
+            "docker login ghcr.io -u ${{ github.actor }} --password-stdin \
+             && cd /opt/brewapp \
+             && export APP_TAG=${{ github.sha }} \
+             && docker compose pull app \
+             && docker compose up -d --remove-orphans \
+             ; status=\$?; docker logout ghcr.io; docker image prune -f; exit \$status"
+      - name: Сайт отвечает
+        env:
+          URL: ${{ secrets.DEPLOY_URL }}
+        run: curl -fsS --retry 12 --retry-delay 5 --retry-all-errors "$URL/api/health"
