@@ -61,6 +61,11 @@ export default defineNuxtConfig({
       stylistic: { semi: false, quotes: 'single', indent: 2, commaDangle: 'always-multiline', braceStyle: '1tbs' },
     },
   },
+  // шрифты из CSS (assets/css/main.css) @nuxt/fonts скачивает при сборке и раздаёт сам — с кириллицей и нужными весами
+  fonts: {
+    defaults: { weights: [400, 500, 600, 700], subsets: ['cyrillic-ext', 'cyrillic', 'latin-ext', 'latin'] },
+    families: [{ name: 'Fira Sans' }, { name: 'Fira Sans Extra Condensed' }, { name: 'Literata' }],
+  },
   icon: {
     clientBundle: { scan: true, icons: ICONS, sizeLimitKb: 512 },
   },

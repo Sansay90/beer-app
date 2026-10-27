@@ -2,13 +2,51 @@
 @import "@nuxt/ui";
 
 @theme {
-  --font-sans: "Inter", system-ui, sans-serif;
+  /* интерфейс — Fira Sans; заголовки и цифры — её узкое начертание (длинные названия не слипаются, цифры табличные);
+     описания вкуса и рецепта — антиква Literata */
+  --font-sans: "Fira Sans", system-ui, sans-serif;
+  --font-display: "Fira Sans Extra Condensed", "Fira Sans", system-ui, sans-serif;
+  --font-serif: "Literata", Georgia, serif;
 }
 
-/* цифры одинаковой ширины — температура и таймеры не «прыгают» */
+/* нейтральная шкала — тёплая, «солод»: тёмная тема — дуб и бочка, текст — пена (app.config: neutral: 'malt').
+   static: Nuxt UI берёт цвета через переменные, а не классы — без static Tailwind их выбросил бы как неиспользуемые */
+@theme static {
+  --color-malt-50: #f7f2e9;
+  --color-malt-100: #f4ead6;
+  --color-malt-200: #e4d7c2;
+  --color-malt-300: #cbbba6;
+  --color-malt-400: #a8998a;
+  --color-malt-500: #74675a;
+  --color-malt-600: #5e5248;
+  --color-malt-700: #463a31;
+  --color-malt-800: #2e241c;
+  --color-malt-900: #221a14;
+  --color-malt-950: #17110d;
+}
+
+/* светлая тема — тёплый светлый фон вместо чисто белого: белый слепит */
+:root {
+  --ui-bg: var(--ui-color-neutral-50);
+  --ui-bg-muted: var(--ui-color-neutral-100);
+}
+
+/* на тёмном фоне главный текст — цвета пены, а не чисто белый */
+.dark {
+  --ui-bg: var(--ui-color-neutral-900);
+  --ui-bg-muted: var(--ui-color-neutral-800);
+  --ui-text-highlighted: var(--ui-color-neutral-50);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* цифры одинаковой ширины — температура и таймеры не «прыгают»; узкое начертание — крупно и читаемо издалека */
 .num {
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum", "cv11";
+  font-feature-settings: "tnum";
 }
 
 /* мягкая пульсация для «живых» индикаторов */

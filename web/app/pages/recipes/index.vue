@@ -12,8 +12,12 @@ const { data: list, status, error } = useApi('/api/recipes', { key: 'recipes', w
 const loaded = computed(() => status.value === 'success')
 useErrorToast(error)
 
-// «Мои» — только свои, в том числе неопубликованные
-const scope = ref<'all' | 'mine'>('all')
+// «Мои» — только свои, в том числе неопубликованные; выбор — в адресе (?scope=mine): на него ссылается меню
+const route = useRoute()
+const scope = computed<'all' | 'mine'>({
+  get: () => (route.query.scope === 'mine' ? 'mine' : 'all'),
+  set: v => navigateTo({ query: { ...route.query, scope: v === 'mine' ? 'mine' : undefined } }, { replace: true }),
+})
 const SCOPES = [{ label: 'Все', value: 'all' }, { label: 'Мои', value: 'mine' }]
 
 const query = ref('')

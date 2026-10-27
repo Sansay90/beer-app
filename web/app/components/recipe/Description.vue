@@ -18,7 +18,7 @@ watch(() => props.text, () => { open.value = false })
   <div>
     <div
       ref="box"
-      class="space-y-3 overflow-hidden leading-relaxed text-toned"
+      class="space-y-3 overflow-hidden font-serif leading-relaxed text-toned"
       :class="{ 'max-h-36': !open, 'mask-b-from-50%': !open && overflowing }"
     >
       <p v-for="(p, i) in paragraphs" :key="i" class="whitespace-pre-line">{{ p }}</p>

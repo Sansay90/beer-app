@@ -12,7 +12,7 @@ const meta = computed(() => props.recipe.meta)
     <div class="flex items-center gap-4">
       <RecipeGlass :ebc="ebc" :style-code="recipe.style?.code" class="h-20" />
       <div class="min-w-0">
-        <h1 class="truncate text-2xl font-semibold text-highlighted">{{ recipe.name }}</h1>
+        <h1 class="truncate text-3xl font-semibold text-highlighted">{{ recipe.name }}</h1>
         <div class="truncate text-muted">{{ styleLabel(recipe.style) }}</div>
         <div v-if="!meta.mine" class="mt-1 truncate text-sm text-muted">
           автор <span class="font-medium text-highlighted">{{ meta.author }}</span>

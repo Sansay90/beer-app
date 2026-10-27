@@ -2,7 +2,7 @@ export default defineAppConfig({
   ui: {
     colors: {
       primary: 'amber',
-      neutral: 'stone',
+      neutral: 'malt',    // своя тёплая шкала — assets/css/main.css
     },
   },
 })

@@ -72,7 +72,7 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
     <div class="flex min-w-0 flex-1 flex-col">
       <div class="flex items-start gap-2">
         <div class="min-w-0 flex-1">
-          <NuxtLink :to="`/recipes/${recipe.id}`" class="block truncate font-semibold text-highlighted outline-none after:absolute after:inset-0 after:rounded-xl">
+          <NuxtLink :to="`/recipes/${recipe.id}`" class="block truncate font-display text-lg leading-snug font-semibold text-highlighted outline-none after:absolute after:inset-0 after:rounded-xl">
             {{ recipe.name }}
           </NuxtLink>
           <div class="flex items-center gap-1 text-sm text-muted">
@@ -83,17 +83,17 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
         <UBadge v-if="inDevice" color="success" variant="subtle" size="sm" label="в пивоварне" class="shrink-0" />
       </div>
 
-      <p class="mt-2 line-clamp-2 h-10 text-sm text-toned">{{ recipe.about }}</p>
+      <p class="mt-2 line-clamp-2 h-10 font-serif text-sm text-toned">{{ recipe.about }}</p>
 
-      <div class="num mt-3 flex h-5 flex-nowrap gap-x-3.5 overflow-hidden text-sm">
+      <div class="num mt-3 flex h-6 flex-nowrap items-baseline gap-x-3 overflow-hidden text-sm">
         <span v-for="s in stats" :key="s.unit" class="whitespace-nowrap">
-          <span class="font-semibold text-highlighted">{{ s.value }}</span>
+          <span class="text-base font-semibold text-highlighted">{{ s.value }}</span>
           <span class="ms-1 text-muted">{{ s.unit }}</span>
         </span>
         <span v-if="!stats.length" class="text-dimmed">Только программа пивоварни</span>
       </div>
 
-      <div class="num mt-auto flex h-11 items-end justify-between gap-3 text-xs text-dimmed">
+      <div class="mt-auto flex h-11 items-end justify-between gap-3 text-xs text-dimmed tabular-nums">
         <span class="truncate pb-1">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
         <div v-if="thumbs.length" class="relative z-10 flex shrink-0 -space-x-2.5">
           <button
