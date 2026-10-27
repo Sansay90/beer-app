@@ -8,15 +8,6 @@ const { enabled: soundOn, toggle: toggleSound } = useSound()
 const open = ref(false)
 const close = () => { open.value = false }
 
-// настройки — здесь, а не пунктом меню: они личные и нужны редко
-const userItems = computed(() => [
-  [{ type: 'label' as const, label: auth.user?.name ?? auth.user?.email }],
-  [
-    ...(auth.user?.name ? [{ label: 'Моя страница', icon: 'i-lucide-user', to: brewerPath(auth.user.name), onSelect: close }] : []),
-    { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings', onSelect: close },
-    { label: 'Выйти', icon: 'i-lucide-log-out', onSelect: () => auth.logout() },
-  ],
-])
 const colorMode = useColorMode()
 
 // разделы видны всем — гостя закрытый раздел зовёт зарегистрироваться (AuthGate); пользователи — администратору.
@@ -39,8 +30,16 @@ const recipes = computed(() => {
     children: [sub('Все рецепты', 'all'), sub('Мои рецепты', 'mine'), sub('Избранное', 'favorites')],
   }
 })
+// состояние пивоварни — меткой у «Варки»: о ней и речь (гостю пивоварни нет)
+const status = computed(() => {
+  if (!auth.user) return undefined
+  if (!brewery.connected) return { label: 'нет связи', color: 'error' as const }
+  if (!brewery.online) return { label: 'не в сети', color: 'neutral' as const }
+  if (brewery.phase.running) return { label: 'идёт варка', color: 'primary' as const }
+  return { label: 'на связи', color: 'success' as const }
+})
 const nav = computed(() => [
-  { label: 'Варка', icon: 'i-lucide-flame', to: '/', onSelect: close },
+  { label: 'Варка', icon: 'i-lucide-flame', to: '/', badge: status.value && { ...status.value, variant: 'subtle' as const }, onSelect: close },
   recipes.value,
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users', onSelect: close }] : []),
 ])
@@ -51,28 +50,41 @@ function login() {
   drawer.show('login')
 }
 
-const link = computed(() => {
-  if (!brewery.connected) return { label: 'Нет связи с сервисом', tone: 'text-error', icon: 'i-lucide-server' }
-  if (!brewery.online) return { label: 'Пивоварня не в сети', tone: 'text-warning', icon: 'i-lucide-wifi-off' }
-  return { label: 'Пивоварня на связи', tone: 'text-success', icon: 'i-lucide-wifi' }
-})
-
 const THEMES = [
   { value: 'system', label: 'как в системе', icon: 'i-lucide-monitor' },
   { value: 'light', label: 'светлая', icon: 'i-lucide-sun' },
   { value: 'dark', label: 'тёмная', icon: 'i-lucide-moon' },
 ]
 const theme = computed(() => THEMES.find(t => t.value === colorMode.preference) ?? THEMES[0]!)
-const themeItems = computed(() => [[
-  { type: 'label' as const, label: 'Тема' },
-  ...THEMES.map(t => ({
-    label: t.label[0]!.toUpperCase() + t.label.slice(1),
-    icon: t.icon,
-    type: 'checkbox' as const,
-    checked: colorMode.preference === t.value,
-    onUpdateChecked: () => { colorMode.preference = t.value },
-  })),
-]])
+const themeChoices = computed(() => THEMES.map(t => ({
+  label: t.label[0]!.toUpperCase() + t.label.slice(1),
+  icon: t.icon,
+  type: 'checkbox' as const,
+  checked: colorMode.preference === t.value,
+  onUpdateChecked: () => { colorMode.preference = t.value },
+})))
+const themeItems = computed(() => [[{ type: 'label' as const, label: 'Тема' }, ...themeChoices.value]])
+
+// всё личное и редкое — в меню аккаунта, внизу панели одна строка: кто вы → страница и настройки → звук и тема → выход
+const userItems = computed(() => [
+  [{ type: 'label' as const, label: auth.user?.name ?? auth.user?.email }],
+  [
+    ...(auth.user?.name ? [{ label: 'Моя страница', icon: 'i-lucide-user', to: brewerPath(auth.user.name), onSelect: close }] : []),
+    { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings', onSelect: close },
+  ],
+  [
+    {
+      label: soundOn.value ? 'Звук включён' : 'Звук выключен',
+      icon: soundOn.value ? 'i-lucide-bell-ring' : 'i-lucide-bell-off',
+      type: 'checkbox' as const,
+      checked: soundOn.value,
+      onUpdateChecked: () => toggleSound(),
+      onSelect: (e: Event) => e.preventDefault(),          // меню не закрывается — видно, что переключилось
+    },
+    { label: `Тема: ${theme.value.label}`, icon: theme.value.icon, children: [themeChoices.value] },
+  ],
+  [{ label: 'Выйти', icon: 'i-lucide-log-out', onSelect: () => auth.logout() }],
+])
 </script>
 
 <template>
@@ -107,72 +119,41 @@ const themeItems = computed(() => [[
     </template>
 
     <template #footer="{ collapsed }">
-      <div class="flex w-full flex-col gap-1">
-        <UDropdownMenu v-if="auth.user" :items="userItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }">
-          <UButton
-            :label="collapsed ? undefined : auth.user.name ?? auth.user.email"
-            color="neutral"
-            variant="ghost"
-            :block="!collapsed"
-            size="lg"
-            class="text-base"
-            :square="collapsed"
-            :class="collapsed ? 'mx-auto' : 'justify-start'"
-            :ui="{ label: 'truncate' }"
-            aria-label="Аккаунт"
-          >
-            <template #leading>
-              <UserAvatar :user="auth.user" class="size-7" />
-            </template>
-          </UButton>
-        </UDropdownMenu>
+      <UDropdownMenu v-if="auth.user" :items="userItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }" :ui="{ content: 'min-w-60' }">
         <UButton
-          v-else
+          :label="collapsed ? undefined : auth.user.name ?? auth.user.email"
+          :trailing-icon="collapsed ? undefined : 'i-lucide-chevrons-up-down'"
+          color="neutral"
+          variant="ghost"
+          :block="!collapsed"
+          size="lg"
+          class="text-base"
+          :square="collapsed"
+          :class="collapsed ? 'mx-auto' : 'justify-start'"
+          :ui="{ label: 'truncate', trailingIcon: 'ms-auto text-dimmed' }"
+          aria-label="Аккаунт"
+        >
+          <template #leading>
+            <UserAvatar :user="auth.user" class="size-7" />
+          </template>
+        </UButton>
+      </UDropdownMenu>
+      <div v-else class="flex w-full items-center gap-1" :class="collapsed && 'flex-col'">
+        <UButton
           icon="i-lucide-log-in"
           :label="collapsed ? undefined : 'Войти'"
           color="primary"
           variant="soft"
           :block="!collapsed"
           size="lg"
-          class="text-base"
+          class="flex-1 text-base"
           :square="collapsed"
           :class="collapsed ? 'mx-auto' : 'justify-start'"
           aria-label="Войти"
           @click="login"
         />
-        <UTooltip v-if="auth.user" :text="link.label" :disabled="!collapsed">
-          <div class="flex items-center gap-2.5 px-2.5 py-2 text-base" :class="collapsed && 'justify-center'">
-            <UIcon :name="link.icon" class="size-5 shrink-0" :class="link.tone" />
-            <span v-if="!collapsed" class="truncate text-muted">{{ link.label }}</span>
-          </div>
-        </UTooltip>
-        <UTooltip :text="soundOn ? 'Звук включён' : 'Звук выключен'" :disabled="!collapsed">
-          <UButton
-            :icon="soundOn ? 'i-lucide-bell-ring' : 'i-lucide-bell-off'"
-            :label="collapsed ? undefined : soundOn ? 'Звук включён' : 'Звук выключен'"
-            :color="soundOn ? 'primary' : 'neutral'"
-            variant="ghost"
-            :block="!collapsed"
-            size="lg"
-            class="text-base"
-            :square="collapsed"
-            :class="collapsed ? 'mx-auto' : 'justify-start'"
-            @click="toggleSound"
-          />
-        </UTooltip>
-        <UDropdownMenu :items="themeItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }">
-          <UButton
-            :icon="theme.icon"
-            :label="collapsed ? undefined : `Тема: ${theme.label}`"
-            color="neutral"
-            variant="ghost"
-            :block="!collapsed"
-            size="lg"
-            class="text-base"
-            :square="collapsed"
-            :class="collapsed ? 'mx-auto' : 'justify-start'"
-            :aria-label="`Тема: ${theme.label}`"
-          />
+        <UDropdownMenu :items="themeItems" :content="{ side: collapsed ? 'right' : 'top', align: 'end' }">
+          <UButton :icon="theme.icon" color="neutral" variant="ghost" size="lg" square :aria-label="`Тема: ${theme.label}`" />
         </UDropdownMenu>
       </div>
     </template>

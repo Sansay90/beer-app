@@ -9,7 +9,7 @@ const ICONS = [
   'check', 'thermometer-sun', 'circle-pause', 'circle-play', 'square',
   'leaf', 'sparkles', 'flask-conical', 'wrench', 'list-plus', 'send',
   'bean', 'candy', 'beaker', 'droplet', 'microscope', 'thermometer-snowflake', 'notebook-pen', 'tag', 'search-x',
-  'arrow-up-down', 'calculator', 'bookmark', 'bookmark-check',
+  'arrow-up-down', 'calculator', 'bookmark', 'bookmark-check', 'chevrons-up-down', 'user',
   'circle-user', 'log-out', 'log-in', 'mail-check', 'mail-warning', 'link-2-off', 'globe', 'lock', 'lock-keyhole',
   'eye-off', 'shield', 'users', 'camera', 'bell',
   // Nuxt UI
