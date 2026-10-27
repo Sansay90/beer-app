@@ -9,6 +9,7 @@ const { $api } = useNuxtApp()
 const auth = useAuthStore()
 const brewery = useBreweryStore()
 const { exec, pending } = useCommand()
+const { exec: execVisibility, pending: visibilityPending } = useCommand()   // своя загрузка — не крутить «В пивоварню»
 const confirm = useConfirm()
 const favorite = useFavorite()
 
@@ -38,13 +39,31 @@ async function upload() {
 }
 
 async function setVisibility(visibility: Visibility) {
+  // публиковать — с подтверждённой почтой: сразу сказать и предложить письмо, а не ждать отказа сервиса
+  if (visibility === 'public' && !auth.user?.emailVerified) {
+    useToast().add({
+      title: 'Сначала подтвердите почту',
+      description: `Ссылка — в письме на ${auth.user?.email}.`,
+      color: 'warning',
+      icon: 'i-lucide-mail-warning',
+      actions: [{ label: 'Отправить ещё раз', color: 'neutral', variant: 'outline', onClick: () => { exec(() => auth.resendVerify(), 'Письмо отправлено') } }],
+    })
+    return
+  }
   if (visibility === 'public' && !await confirm({
-    title: 'Опубликовать рецепт?',
-    description: 'Его увидят все, и гости тоже. Править сможете только вы, снять с публикации — в любой момент.',
+    title: 'Опубликовать рецепт в каталоге?',
+    description: 'Его смогут найти и сварить другие пивовары.',
     confirmLabel: 'Опубликовать',
     confirmIcon: 'i-lucide-globe',
   })) return
-  const done = await exec(() => $api('/api/recipes/{rid}/visibility', { method: 'PUT', path: { rid: props.recipeId }, body: { visibility } }),
+  // снять — тоже с вопросом: кнопка-переключатель в шапке, нажать её случайно легко
+  if (visibility === 'private' && !await confirm({
+    title: 'Убрать рецепт из каталога?',
+    description: 'Другие пивовары перестанут его видеть. Вернуть можно в любой момент.',
+    confirmLabel: 'Убрать',
+    confirmIcon: 'i-lucide-eye-off',
+  })) return
+  const done = await execVisibility(() => $api('/api/recipes/{rid}/visibility', { method: 'PUT', path: { rid: props.recipeId }, body: { visibility } }),
     visibility === 'public' ? 'Рецепт опубликован' : 'Рецепт снят с публикации')
   if (done) await refreshNuxtData(recipeKey(props.recipeId))
 }
@@ -74,14 +93,27 @@ const menu = computed(() => {
     : { label: 'Опубликовать', icon: 'i-lucide-globe', onSelect: () => setVisibility('public') }
   return [
     [copy],
-    ...(m.canEdit || m.canModerate ? [[publish]] : []),
+    ...(m.canModerate ? [[publish]] : []),           // свой — переключателем в шапке; здесь — администратору у чужого
     ...(m.canEdit || m.canModerate ? [[{ label: 'Удалить', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: remove }]] : []),
   ]
 })
 </script>
 
 <template>
-  <UBadge v-if="inDevice" color="success" variant="subtle" icon="i-lucide-check" label="в пивоварне" class="hidden sm:inline-flex" />
+  <!-- признаки рецепта — вместе, в верхней строке: видимость своего, «в пивоварне», избранное. Как у избранного:
+       пока нет — действие («Опубликовать»), есть — состояние («Опубликован»), клик — обратно -->
+  <UButton
+    v-if="meta.canEdit"
+    icon="i-lucide-globe"
+    :label="meta.visibility === 'public' ? 'Опубликован' : 'Опубликовать'"
+    :color="meta.visibility === 'public' ? 'success' : 'neutral'"
+    :variant="meta.visibility === 'public' ? 'soft' : 'outline'"
+    :aria-pressed="meta.visibility === 'public'"
+    :ui="{ label: 'hidden sm:inline' }"
+    :loading="visibilityPending"
+    @click="setVisibility(meta.visibility === 'public' ? 'private' : 'public')"
+  />
+  <UBadge v-if="inDevice" color="success" variant="subtle" size="lg" icon="i-lucide-check" label="в пивоварне" class="hidden h-8 sm:inline-flex" />
   <UButton
     :icon="meta.favorite ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
     :label="meta.favorite ? 'В избранном' : 'В избранное'"

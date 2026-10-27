@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Шапка рецепта: бокал, название, стиль, автор или видимость, описание, фото пива.
+// Шапка рецепта: бокал, название, стиль, автор (у чужого), описание, фото пива. Признаки — видимость, избранное,
+// «в пивоварне» — в верхней строке страницы (view/Actions.vue).
 import type { RecipeDetail } from '~/types'
 import { NuxtLink } from '#components'
 
@@ -25,15 +26,6 @@ const meta = computed(() => props.recipe.meta)
           <UserAvatar :user="meta.author" class="size-7" />
           <span class="truncate">автор <span class="font-medium text-highlighted">{{ brewerName(meta.author) }}</span></span>
         </component>
-        <UBadge
-          v-else
-          class="mt-2"
-          color="neutral"
-          variant="subtle"
-          size="sm"
-          :icon="meta.visibility === 'public' ? 'i-lucide-globe' : 'i-lucide-lock'"
-          :label="meta.visibility === 'public' ? 'опубликован' : 'виден только вам'"
-        />
       </div>
     </div>
     <RecipeDescription v-if="recipe.notes" :text="recipe.notes" class="mt-5 max-w-3xl" />
