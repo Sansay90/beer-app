@@ -1,0 +1,30 @@
+# Линтер Python для сервиса и агента: ruff check service agent (ruff format не используется — стиль ручной).
+line-length = 120
+target-version = "py313"
+# миграции генерирует Alembic, однажды применённые не правятся
+extend-exclude = ["**/.venv", "**/node_modules", "service/migrations/versions"]
+
+[lint]
+select = [
+  "E", "W",     # pycodestyle
+  "F",          # pyflakes
+  "I",          # порядок импортов
+  "B",          # bugbear — вероятные ошибки
+  "UP",         # синтаксис современного Python
+  "C4",         # генераторы и включения
+  "SIM",        # упрощения
+  "ASYNC",      # блокирующее в async
+  "RUF",
+]
+ignore = [
+  "RUF001", "RUF002", "RUF003",   # кириллица в строках и комментариях — не опечатка
+  "SIM105",                       # try/except/pass читается проще contextlib.suppress
+  "SIM108",                       # тернарный оператор — не всегда понятнее
+]
+
+[lint.isort]
+known-first-party = ["app", "agent"]
+
+[lint.per-file-ignores]
+# тесты ждут условий опросом — Event на каждое условие только усложнит их
+"**/tests/**" = ["ASYNC110"]

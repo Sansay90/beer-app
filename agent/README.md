@@ -14,20 +14,20 @@
 
 ## Запуск
 
-```powershell
-cd brewapp\agent
-copy .env.example .env               # SERVICE_URL, AGENT_TOKEN, BREWERY_IP
-python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python -m agent
+```sh
+cp .env.example .env                 # SERVICE_URL, AGENT_TOKEN, BREWERY_IP
+python -m venv .venv                 # и активировать: .venv\Scripts\activate или source .venv/bin/activate
+pip install -r requirements.txt
+python -m agent
 ```
 
-- **Токен** (`AGENT_TOKEN`) выдаёт сервис: в `brewapp\service` — `.venv\Scripts\python -m app.agents new`.
+Или в Docker, сам по себе: `docker compose up -d --build` (`compose.yaml` в этой папке; журнал — `docker compose logs -f`). Ключи и память — те же файлы, что у агента из `.venv`.
+
+- **Токен** (`AGENT_TOKEN`) выдаёт сервис: `python -m app agents new "Название" --email <почта владельца>` (на сервере — [deploy/README.md](../deploy/README.md#агент-у-пивоварни)).
 - **Ключи** — `devices.json` в этой папке (ниже — как получить).
 - **Адрес пивоварни** без `BREWERY_IP` агент ищет сам — по UDP-широковещанию модуля Tuya — и запоминает. В Docker широковещание не доходит, там адрес обязателен. Лучше закрепить IP за пивоварней в роутере (DHCP-резервация).
-- На одной машине с сервисом агента можно запустить и в Docker — он есть в `service/compose.yaml`.
 
-Переменные окружения (или `.env`): `SERVICE_URL` — адрес сервиса для агентов (`ws://…/api/agent`); `AGENT_TOKEN`; `BREWERY_IP`, `BREWERY_VERSION` — пивоварня вместо автопоиска; `MAX_WATTS` — потолок мощности, если модели нет в списке (`agent/recipe.py`, `MODEL_MAX_WATTS`); `BREWAPP_DEVICES`, `BREWAPP_STATE` — пути к ключам и памяти.
+Настройки — переменные окружения или `.env` (`agent/config.py`): `SERVICE_URL` — адрес сервиса для агентов (`wss://<сайт>/api/agent`, у себя на ПК — `ws://127.0.0.1:8000/api/agent`); `AGENT_TOKEN`; `BREWERY_IP`, `BREWERY_VERSION` — пивоварня вместо автопоиска; `MAX_WATTS` — потолок мощности, если модели нет в списке (`agent/recipe.py`, `MODEL_MAX_WATTS`); `BREWAPP_DEVICES`, `BREWAPP_STATE` — пути к ключам и памяти.
 
 Модуль Tuya обслуживает не больше трёх одновременных локальных подключений — агент занимает одно, Smart Life работает параллельно.
 
@@ -39,9 +39,9 @@ JSON по WebSocket `SERVICE_URL`, токен — в заголовке `Authori
 
 | `type` | когда | поля |
 |---|---|---|
-| `hello` | первым после подключения | `agent` — версия, `session` — id запуска агента, `device` {`tuyaId`, `name`}, `model`, `limits` (как `schemas.Limits`), `activeRecipeId` — рецепт из приложения в пивоварне, `brewId` — незакрытая варка, `brews` — варки, о которых у агента остались недосланные записи (их сервис не закрывает как прерванные) |
-| `state` | при любом изменении | `data` — снимок для интерфейса (`schemas.Snapshot`) |
-| `event` | событие пивоварни | `brewId`, `data` — `schemas.BrewEvent` |
+| `hello` | первым после подключения | `agent` — версия, `session` — id запуска агента, `device` {`tuyaId`, `name`}, `model`, `limits` (схема `Limits` сервиса), `activeRecipeId` — рецепт из приложения в пивоварне, `brewId` — незакрытая варка, `brews` — варки, о которых у агента остались недосланные записи (их сервис не закрывает как прерванные) |
+| `state` | при любом изменении | `data` — снимок для интерфейса (схема `Snapshot`) |
+| `event` | событие пивоварни | `brewId`, `data` — схема `BrewEvent` |
 | `reading` | температура, не чаще раза в 2 с | `brewId`, `at` (unix), `temp`, `target`, `step`, `status` |
 | `brewStarted` | запущена программа | `id`, `at`, `name`, `recipeId`, `recipe` — программа пивоварни для истории |
 | `brewUpdated` | раз в 30 с во время варки | `id`, `energyWh` |
@@ -80,16 +80,21 @@ JSON по WebSocket `SERVICE_URL`, токен — в заголовке `Authori
 
 ```
 agent/
-  __main__.py        настройки, запуск
+  __main__.py        запуск
+  config.py          настройки: окружение или .env
   link.py            связь с сервисом: переподключение, неподтверждённые записи, команды
-  brew.py            смысл поверх DP: состояние, таймер шага, расписание закладок, события, варки
+  controller.py      смысл поверх DP: состояние, таймер шага, расписание закладок, события, варки
   device.py          подключение к пивоварне: фоновый поток, сторож связи, переподключение, команды с проверкой эха
   energy.py          оценка расхода электричества ТЭНом
   recipe.py          программа ↔ бинарный блок DP 128
   state.py           память между перезапусками (data/state.json)
+  fake.py            имитация пивоварни для тестов (и для сквозных тестов сервиса)
+tests/               pytest: кодирование программы, контроллер на имитации, связь с поддельным сервисом
 tools/probe.py       разведка протокола: снимок и журнал изменений DP
 dpmap.json           полная карта DP с пояснениями (для probe.py)
 ```
+
+Тесты: `pip install -r requirements-dev.txt`, затем `pytest` — ни пивоварня, ни сервис для них не нужны.
 
 Агент не вносит поправок под конкретный экземпляр или привычки пивовара: в пивоварню уходит ровно та программа, что прислал сервис.
 

@@ -4,11 +4,12 @@ import type { ManualMode } from '~/types'
 const open = defineModel<boolean>('open', { default: false })
 
 const brewery = useBreweryStore()
+const { data: limits } = useLimits()
 const { exec, pending } = useCommand()
 
 const form = reactive<ManualMode>({ setpoint: 65, minutes: 60, watts: 2500 })
-const boilTemp = computed(() => brewery.limits?.boilTemp ?? 100.1)
-const watts = computed(() => wattOptions(brewery.limits))
+const boilTemp = computed(() => limits.value?.boilTemp ?? 100.1)
+const watts = computed(() => wattOptions(limits.value ?? null))
 const presets = computed(() => [52, 63, 66, 72, 78].map(t => ({ label: `${t}°`, value: t }))
   .concat({ label: 'Кипение', value: boilTemp.value }))
 
@@ -38,7 +39,7 @@ async function apply(andStart: boolean) {
         <UFormField label="Температура" hint="°C">
           <UInputNumber
             v-model="form.setpoint"
-            :min="brewery.limits?.minTemp ?? 20"
+            :min="limits?.minTemp ?? 20"
             :max="boilTemp"
             :step="0.5"
             :step-snapping="false"

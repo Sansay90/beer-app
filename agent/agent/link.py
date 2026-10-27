@@ -39,9 +39,11 @@ COMMANDS = {
 
 
 class Link:
-    def __init__(self, url, token, controller, device, version):
-        """device — {tuyaId, name}: какую пивоварню обслуживает агент. Создавать внутри работающего event loop."""
+    def __init__(self, url, token, controller, device, version, backoff=BACKOFF_S):
+        """device — {tuyaId, name}: какую пивоварню обслуживает агент; backoff — паузы, с, между попытками
+        переподключения. Создавать внутри работающего event loop."""
         self.url = url
+        self.backoff = backoff
         self.token = token
         self.ctl = controller
         self.device = device
@@ -104,7 +106,7 @@ class Link:
                 except Exception as e:                       # любая ошибка связи — переподключиться, а не упасть
                     if not attempt:
                         log.warning("нет связи с сервисом: %r", e)
-                await asyncio.sleep(BACKOFF_S[min(attempt, len(BACKOFF_S) - 1)])
+                await asyncio.sleep(self.backoff[min(attempt, len(self.backoff) - 1)])
                 attempt += 1
         finally:
             ticker.cancel()

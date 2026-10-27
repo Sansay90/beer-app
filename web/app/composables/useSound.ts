@@ -30,7 +30,7 @@ export const useSound = createSharedComposable(() => {
     return loading
   }
 
-  useEventListener(window, 'pointerdown', () => { if (prefs.sound) load(context()) })
+  useEventListener('pointerdown', () => { if (prefs.sound) load(context()) })   // на window; на сервере — ничего
 
   async function play(kind: SoundKind) {
     if (!prefs.sound) return

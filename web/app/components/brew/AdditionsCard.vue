@@ -29,14 +29,16 @@ const { exec, pending } = useCommand()
           'opacity-50': a.phase === 'done',
         }"
       >
-        <div class="num w-14 shrink-0 text-2xl font-semibold text-highlighted">
+        <div v-if="a.minutes" class="num w-14 shrink-0 text-2xl font-semibold text-highlighted">
           {{ a.minutes }}<span class="ml-0.5 text-xs font-medium text-muted">мин</span>
         </div>
+        <div v-else class="w-14 shrink-0 text-sm font-semibold leading-tight text-highlighted">в конце</div>
         <ul v-if="a.items.length" class="min-w-0 flex-1 space-y-0.5">
           <li v-for="(item, k) in a.items" :key="k" class="flex min-w-0 items-center gap-2">
             <UIcon :name="additionKind(item).icon" class="size-4 shrink-0" :class="additionKind(item).tint" />
             <span class="truncate font-medium text-highlighted">{{ additionName(item) }}</span>
             <span v-if="additionAmount(item)" class="num shrink-0 text-sm text-muted">{{ additionAmount(item) }}</span>
+            <span v-if="additionNote(item)" class="num shrink-0 text-xs text-muted">· {{ additionNote(item) }}</span>
           </li>
         </ul>
         <div v-else class="min-w-0 flex-1">

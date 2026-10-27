@@ -3,39 +3,19 @@
 Запуск из папки brewapp/agent:
     .venv\\Scripts\\python -m agent
 
-Настройки — переменные окружения или agent/.env (образец — .env.example):
-SERVICE_URL — адрес сервиса для агентов, AGENT_TOKEN — токен агента (выдаёт сервис, README.md);
-BREWERY_IP, BREWERY_VERSION — адрес пивоварни и версия протокола вместо автопоиска;
-MAX_WATTS — потолок мощности, если модели пивоварни нет в списке (recipe.MODEL_MAX_WATTS);
-BREWAPP_DEVICES — ключи пивоварни (devices.json), BREWAPP_STATE — память агента (data/state.json).
+Настройки — config.py (переменные окружения или agent/.env).
 """
 import asyncio
 import json
 import logging
-import os
 
-from .brew import Controller
+from .config import Config
+from .controller import Controller
 from .device import Brewery
 from .link import Link
 from .state import Memory
 
 VERSION = "0.1"
-APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))      # brewapp/agent
-
-
-def env(name, default=None):
-    """Переменная окружения или строка из agent/.env."""
-    if os.environ.get(name):
-        return os.environ[name]
-    try:
-        with open(os.path.join(APP_DIR, ".env"), encoding="utf-8") as f:
-            for line in f:
-                key, sep, value = line.strip().partition("=")
-                if sep and key == name and not key.startswith("#"):
-                    return value.strip() or default
-    except OSError:
-        pass
-    return default
 
 
 def load_device(path):
@@ -44,7 +24,7 @@ def load_device(path):
         with open(path, encoding="utf-8") as f:
             keyed = [d for d in json.load(f) if d.get("key")]
     except FileNotFoundError:
-        raise SystemExit(f"нет {path} — нужны ключи пивоварни (README.md, «Ключи пивоварни»)")
+        raise SystemExit(f"нет {path} — нужны ключи пивоварни (README.md, «Ключи пивоварни»)") from None
     if not keyed:
         raise SystemExit(f"в {path} нет пивоварни с ключом")
     return keyed[0]
@@ -61,19 +41,17 @@ async def serve(controller, brewery, url, token, device):
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s", datefmt="%H:%M:%S")
-    token = env("AGENT_TOKEN")
-    if not token:
+    cfg = Config.from_env()
+    if not cfg.token:
         raise SystemExit("не задан AGENT_TOKEN — токен агента выдаёт сервис (README.md, «Запуск»)")
-    d = load_device(env("BREWAPP_DEVICES") or os.path.join(APP_DIR, "devices.json"))
-    memory = Memory(env("BREWAPP_STATE") or os.path.join(APP_DIR, "data", "state.json"))
+    d = load_device(cfg.devices)
     # BREWERY_IP/VERSION перекрывают devices.json — в Docker автопоиск по широковещанию не работает
-    brewery = Brewery(d["id"], d["key"], address=env("BREWERY_IP") or d.get("ip") or None,
-                      version=env("BREWERY_VERSION") or d.get("version") or None)
-    max_watts = env("MAX_WATTS")
-    controller = Controller(brewery, memory, int(max_watts) if max_watts else None)
+    brewery = Brewery(d["id"], d["key"], address=cfg.brewery_ip or d.get("ip") or None,
+                      version=cfg.brewery_version or d.get("version") or None)
+    controller = Controller(brewery, Memory(cfg.state), cfg.max_watts)
     device = {"tuyaId": d["id"], "name": d.get("name") or "Пивоварня"}
     try:
-        asyncio.run(serve(controller, brewery, env("SERVICE_URL", "ws://127.0.0.1:8000/api/agent"), token, device))
+        asyncio.run(serve(controller, brewery, cfg.service_url, cfg.token, device))
     except KeyboardInterrupt:
         pass
 

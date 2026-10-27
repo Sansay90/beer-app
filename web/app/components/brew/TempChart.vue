@@ -25,8 +25,8 @@ function onCursor(u: uPlot) {
   tip.left = u.valToPos(t, 'x') + u.over.offsetLeft
   tip.top = u.valToPos(temp, 'y') + u.over.offsetTop
   tip.time = new Date(t * 1000).toLocaleTimeString('ru-RU')
-  tip.temp = `${temp.toFixed(1)} °C`
-  tip.target = target == null ? '' : `цель ${target.toFixed(1)} °C`
+  tip.temp = `${fmtTemp(temp)} °C`
+  tip.target = target == null ? '' : `цель ${fmtTemp(target)} °C`
 }
 
 const spans = [

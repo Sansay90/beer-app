@@ -3,12 +3,11 @@
 // Высота у всех карточек одна: описание всегда в две строки, цифры и низ — фиксированной высоты.
 // Ссылка на рецепт — название, растянутое на всю карточку; миниатюры — кнопки поверх неё: фото открываются тут же.
 // Чужой рецепт — с автором внизу, свой опубликованный — со значком глобуса.
-import type { Photo, RecipeSummary } from '~/types'
+import type { RecipeSummary } from '~/types'
 
 const props = defineProps<{ recipe: RecipeSummary; inDevice?: boolean }>()
 const prefs = usePreferencesStore()
-const recipes = useRecipesStore()
-const { exec } = useCommand()
+const photoUrl = usePhotoUrl()
 
 const t = computed(() => props.recipe.targets)
 const color = computed(() => beerColor(t.value.ebc))
@@ -20,7 +19,8 @@ const glow = computed(() => (color.value
 const num = (v: number, digits = 0) => v.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 const stats = computed(() => {
   const { og, fg, ibu, ebc } = t.value
-  const abv = abvOf(og, fg)
+  // крепость сохраняет сервис (с сахаром на брожении); у рецептов, сохранённых раньше, — по OG и FG
+  const abv = t.value.abv ?? abvOf(og, fg)
   return [
     og != null && (prefs.gravityUnit === 'plato'
       ? { value: num(gravityIn(og, 'plato'), 1), unit: '°P' }
@@ -36,22 +36,30 @@ const MAX_THUMBS = 3
 const thumbs = computed(() => props.recipe.photos.slice(0, MAX_THUMBS))
 const more = computed(() => props.recipe.photos.length - thumbs.value.length)
 
-// просмотр фото прямо из списка: подписи авторов приходят со списком фото рецепта
-const viewer = ref<Photo[]>([])
+// просмотр фото прямо из списка: подписи авторов приходят со списком фото рецепта — его читаем по первому нажатию
+const { data: viewer, error, execute } = useApi('/api/recipes/{rid}/photos', {
+  path: { rid: props.recipe.id },
+  key: `photos:${props.recipe.id}`,
+  default: () => [],
+  immediate: false,
+})
+const showError = useErrorToast()
 const viewing = ref<number | null>(null)
 async function openPhoto(i: number) {
-  viewer.value = (await exec(() => recipes.photos(props.recipe.id))) ?? []
+  await execute()
+  if (error.value) return showError(error.value)
   if (viewer.value.length) viewing.value = Math.min(i, viewer.value.length - 1)
 }
 
+// дата последней варки — отдельно, в NuxtTime: в часовом поясе посетителя и без расхождения с рендером на сервере
 const footer = computed(() => {
   const r = props.recipe
   const program = r.steps ? fmtMinutes(r.minutes) : 'без программы'
   if (!r.mine) return `${program} · автор ${r.author}`          // варки — свои, по чужому рецепту их не видно
   if (!r.brews) return `${program} · ещё не варили`
-  const last = new Date(r.lastBrewedAt! * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-  return `${program} · варили ${r.brews} ${plural(r.brews, 'раз', 'раза', 'раз')}, ${last}`
+  return `${program} · варили ${r.brews} ${plural(r.brews, 'раз', 'раза', 'раз')},`
 })
+const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && props.recipe.lastBrewedAt ? props.recipe.lastBrewedAt * 1000 : null))
 </script>
 
 <template>
@@ -86,7 +94,7 @@ const footer = computed(() => {
       </div>
 
       <div class="num mt-auto flex h-11 items-end justify-between gap-3 text-xs text-dimmed">
-        <span class="truncate pb-1">{{ footer }}</span>
+        <span class="truncate pb-1">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
         <div v-if="thumbs.length" class="relative z-10 flex shrink-0 -space-x-2.5">
           <button
             v-for="(pid, i) in thumbs"
@@ -96,7 +104,7 @@ const footer = computed(() => {
             :aria-label="`Фото ${i + 1}`"
             @click="openPhoto(i)"
           >
-            <img :src="recipes.photoUrl(pid, true)" alt="" loading="lazy" class="size-full object-cover">
+            <img :src="photoUrl(pid, true)" alt="" loading="lazy" class="size-full object-cover">
           </button>
           <button
             v-if="more > 0"

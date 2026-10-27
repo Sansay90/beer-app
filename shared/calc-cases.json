@@ -1,0 +1,739 @@
+[
+  {
+    "name": "American IPA",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 7.2
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.5
+        },
+        {
+          "ebc": 120.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Карамельный 120 EBC",
+          "amount": 0.6
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Magnum",
+          "alpha": 13.0,
+          "amount": 52.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Centennial",
+          "alpha": 10.0,
+          "amount": 30.0,
+          "minutes": 10
+        },
+        {
+          "use": "whirlpool",
+          "name": "Citra",
+          "alpha": 12.0,
+          "amount": 50.0,
+          "minutes": 20
+        },
+        {
+          "use": "whirlpool",
+          "name": "Simcoe",
+          "alpha": 13.0,
+          "amount": 50.0,
+          "minutes": 20
+        },
+        {
+          "day": 3,
+          "use": "dry_hop",
+          "name": "Citra",
+          "alpha": 12.0,
+          "amount": 75.0
+        },
+        {
+          "day": 3,
+          "use": "dry_hop",
+          "name": "Mosaic",
+          "alpha": 12.0,
+          "amount": 75.0
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Fermentis SafAle US-05",
+          "unit": "pkg",
+          "amount": 2.0,
+          "attenuation": 81.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      }
+    },
+    "expected": {
+      "og": 1.0634425977108453,
+      "fg": 1.0120540935650606,
+      "abv": 7.003413395413201,
+      "ibu": 53.47296581545197,
+      "ebc": 18.040474900160422,
+      "attenuation": 81.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "Belgian Dubbel",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 6.5
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.8
+        },
+        {
+          "ebc": 50.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Ароматический солод",
+          "amount": 0.3
+        },
+        {
+          "ebc": 300.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Special B",
+          "amount": 0.15
+        },
+        {
+          "ebc": 250.0,
+          "use": "boil",
+          "kind": "sugar",
+          "name": "Тёмный канди-сахар",
+          "amount": 0.6,
+          "minutes": 10
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Styrian Golding",
+          "alpha": 3.5,
+          "amount": 70.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Saaz",
+          "alpha": 3.5,
+          "amount": 25.0,
+          "minutes": 15
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Lallemand LalBrew Abbaye",
+          "unit": "pkg",
+          "amount": 2.0,
+          "attenuation": 78.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      }
+    },
+    "expected": {
+      "og": 1.0669447743090714,
+      "fg": 1.0130499188677613,
+      "abv": 7.3885807927676534,
+      "ibu": 19.04336613280849,
+      "ebc": 28.056732911181157,
+      "attenuation": 78.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "German Pils",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 6.1
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Perle",
+          "alpha": 8.0,
+          "amount": 37.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Hallertau Tradition",
+          "alpha": 6.0,
+          "amount": 30.0,
+          "minutes": 15
+        },
+        {
+          "use": "whirlpool",
+          "name": "Tettnanger",
+          "alpha": 4.5,
+          "amount": 40.0,
+          "minutes": 15
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Fermentis SafLager W-34/70",
+          "unit": "pkg",
+          "amount": 2.0,
+          "attenuation": 80.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      }
+    },
+    "expected": {
+      "og": 1.0469224236582335,
+      "fg": 1.0093844847316467,
+      "abv": 4.986540998991074,
+      "ibu": 30.45708905390586,
+      "ebc": 6.496611002986652,
+      "attenuation": 80.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "Irish Stout",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 3.9
+        },
+        {
+          "ebc": 3.0,
+          "use": "mash",
+          "kind": "adjunct",
+          "name": "Ячменные хлопья",
+          "amount": 1.0
+        },
+        {
+          "ebc": 1200.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Жжёный ячмень",
+          "amount": 0.55
+        },
+        {
+          "ebc": 900.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Шоколадный солод",
+          "amount": 0.12
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "East Kent Goldings",
+          "alpha": 5.5,
+          "amount": 60.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "East Kent Goldings",
+          "alpha": 5.5,
+          "amount": 30.0,
+          "minutes": 15
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Fermentis SafAle S-04",
+          "unit": "pkg",
+          "amount": 1.0,
+          "attenuation": 76.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      }
+    },
+    "expected": {
+      "og": 1.0411029110351215,
+      "fg": 1.0098646986484292,
+      "abv": 4.118738324312784,
+      "ibu": 34.30430866845721,
+      "ebc": 61.237883195610884,
+      "attenuation": 76.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "Weissbier",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 4.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Пшеничный солод",
+          "amount": 3.5
+        },
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 2.5
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.3
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Hallertau Mittelfrüh",
+          "alpha": 4.0,
+          "amount": 40.0,
+          "minutes": 60
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Lallemand LalBrew Munich Classic",
+          "unit": "pkg",
+          "amount": 1.0,
+          "attenuation": 78.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      }
+    },
+    "expected": {
+      "og": 1.0484526820020104,
+      "fg": 1.0106595900404423,
+      "abv": 5.037365032544184,
+      "ibu": 12.474352544773764,
+      "ebc": 7.615811280576725,
+      "attenuation": 78.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "Ржаной с можжевельником",
+    "recipe": {
+      "batch": {
+        "volume": 30.0,
+        "efficiency": 75.0
+      },
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 4.4
+        },
+        {
+          "ebc": 7.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Ржаной солод",
+          "amount": 1.8
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.5
+        },
+        {
+          "ebc": 120.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Карамельный 120 EBC",
+          "amount": 0.4
+        },
+        {
+          "ebc": 1200.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Жжёный ячмень",
+          "amount": 0.08
+        }
+      ],
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Magnum",
+          "alpha": 13.0,
+          "amount": 24.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Hallertau Mittelfrüh",
+          "alpha": 4.0,
+          "amount": 30.0,
+          "minutes": 10
+        }
+      ],
+      "yeasts": [
+        {
+          "form": "dry",
+          "name": "Lallemand LalBrew Voss Kveik",
+          "unit": "pkg",
+          "amount": 1.0,
+          "attenuation": 78.0
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      }
+    },
+    "expected": {
+      "og": 1.0548362207966098,
+      "fg": 1.0120639685752542,
+      "abv": 5.759553402381955,
+      "ibu": 26.171741575860317,
+      "ebc": 23.70853707496485,
+      "attenuation": 78.0,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "без объёма — ничего не считается, кроме сбраживания",
+    "recipe": {
+      "batch": {},
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [],
+      "yeasts": []
+    },
+    "expected": {
+      "og": null,
+      "fg": null,
+      "abv": null,
+      "ibu": null,
+      "ebc": null,
+      "attenuation": 75,
+      "defaultAttenuation": true
+    }
+  },
+  {
+    "name": "без дрожжей — сбраживание по умолчанию 75 %",
+    "recipe": {
+      "batch": {
+        "volume": 23,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 12,
+          "amount": 25,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "yeasts": [],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "expected": {
+      "og": 1.0501486975535326,
+      "fg": 1.012537174388383,
+      "abv": 5.03422910701635,
+      "ibu": 30.046438645203505,
+      "ebc": 8.983335646987621,
+      "attenuation": 75,
+      "defaultAttenuation": true
+    }
+  },
+  {
+    "name": "сахар и экстракт — без эффективности; сахар сбраживается целиком, на брожении — в крепость, не в OG",
+    "recipe": {
+      "batch": {
+        "volume": 20,
+        "efficiency": 70
+      },
+      "fermentables": [
+        {
+          "name": "Pilsner",
+          "kind": "grain",
+          "amount": 4,
+          "ebc": 3.5,
+          "use": "mash"
+        },
+        {
+          "name": "Декстроза",
+          "kind": "sugar",
+          "amount": 0.5,
+          "use": "boil",
+          "minutes": 10
+        },
+        {
+          "name": "Сухой экстракт",
+          "kind": "extract",
+          "amount": 0.3,
+          "ebc": 8,
+          "use": "boil",
+          "minutes": 60
+        },
+        {
+          "name": "Сахар в брожение",
+          "kind": "sugar",
+          "amount": 0.2,
+          "use": "fermentation"
+        }
+      ],
+      "hops": [],
+      "yeasts": [
+        {
+          "name": "US-05",
+          "attenuation": 81
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "expected": {
+      "og": 1.058101174729804,
+      "fg": 1.0092241782886262,
+      "abv": 7.145779700279561,
+      "ibu": null,
+      "ebc": 7.03811739620276,
+      "attenuation": 81,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "горечь: первое сусло — всё кипячение, вирпул и сухое — без горечи",
+    "recipe": {
+      "batch": {
+        "volume": 25,
+        "efficiency": 80
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5.5,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Columbus",
+          "alpha": 15,
+          "amount": 20,
+          "use": "first_wort"
+        },
+        {
+          "name": "Citra",
+          "alpha": 12,
+          "amount": 30,
+          "use": "boil",
+          "minutes": 10
+        },
+        {
+          "name": "Citra",
+          "alpha": 12,
+          "amount": 50,
+          "use": "whirlpool",
+          "minutes": 20
+        },
+        {
+          "name": "Mosaic",
+          "alpha": 12,
+          "amount": 80,
+          "use": "dry_hop",
+          "day": 4
+        },
+        {
+          "name": "Без альфы",
+          "amount": 10,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "S-04",
+          "attenuation": 75
+        }
+      ],
+      "boil": {
+        "minutes": 90,
+        "watts": 2500
+      }
+    },
+    "expected": {
+      "og": 1.0541103769730993,
+      "fg": 1.0135275942432749,
+      "abv": 5.467120266655049,
+      "ibu": 40.141932963125726,
+      "ebc": 9.05713706605403,
+      "attenuation": 75,
+      "defaultAttenuation": false
+    }
+  },
+  {
+    "name": "цвет: жжёный солод — 60 % выхода, карамельный — 75 %",
+    "recipe": {
+      "batch": {
+        "volume": 30,
+        "efficiency": 83
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 7,
+          "use": "mash"
+        },
+        {
+          "name": "Caramunich III",
+          "kind": "grain",
+          "amount": 0.4,
+          "ebc": 150,
+          "use": "mash"
+        },
+        {
+          "name": "Carafa Special III",
+          "kind": "grain",
+          "amount": 0.3,
+          "ebc": 1400,
+          "use": "mash"
+        },
+        {
+          "name": "Овсяные хлопья",
+          "kind": "adjunct",
+          "amount": 0.5,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "EKG",
+          "alpha": 5.5,
+          "amount": 40,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "S-04"
+        },
+        {
+          "name": "Nottingham",
+          "attenuation": 77
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "expected": {
+      "og": 1.051634682656625,
+      "fg": 1.0118759770110237,
+      "abv": 5.329075119771436,
+      "ibu": 16.668674925386462,
+      "ebc": 45.67691753751317,
+      "attenuation": 77,
+      "defaultAttenuation": false
+    }
+  }
+]

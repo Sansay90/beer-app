@@ -35,7 +35,7 @@ const currentProgress = computed(() => (brewery.phase.counting ? brewery.progres
     <template v-else>
       <div class="mt-2 flex flex-wrap items-baseline justify-between gap-2">
         <div class="text-lg font-semibold text-highlighted">{{ recipe.name || 'Рецепт из Smart Life' }}</div>
-        <div class="num text-sm text-muted">{{ recipe.steps.length }} шагов · {{ fmtMinutes(Math.round(brewery.total / 60)) }}</div>
+        <div class="num text-sm text-muted">{{ recipe.steps.length }} {{ plural(recipe.steps.length, 'шаг', 'шага', 'шагов') }} · {{ fmtMinutes(Math.round(brewery.total / 60)) }}</div>
       </div>
 
       <ol class="mt-4">

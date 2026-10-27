@@ -9,8 +9,8 @@ users ─┬─ sessions                  входы: cookie-токен — хэ
        └─ recipes ── recipe_photos  рецепт — JSONB; фото пива
 """
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import BigInteger, Column, DateTime, Index, LargeBinary
 from sqlalchemy.dialects.postgresql import JSONB
@@ -18,7 +18,25 @@ from sqlmodel import Field, SQLModel
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
+
+
+def unix(dt):
+    return dt.timestamp() if dt else None
+
+
+def from_unix(t):
+    return datetime.fromtimestamp(t, UTC)
+
+
+def parse_id(value):
+    """id из URL или сообщения → UUID; мусор — None (такого нет), а не ошибка 500."""
+    if isinstance(value, uuid.UUID):
+        return value
+    try:
+        return uuid.UUID(str(value))
+    except ValueError:
+        return None
 
 
 def ts(**kw):
@@ -36,9 +54,9 @@ class User(SQLModel, table=True):
     __tablename__ = "users"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
-    email: Optional[str] = Field(default=None, unique=True)           # строчными буквами
-    password_hash: Optional[str] = None
-    email_verified_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    email: str | None = Field(default=None, unique=True)           # строчными буквами
+    password_hash: str | None = None
+    email_verified_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     role: str = Field(default="user", sa_column_kwargs={"server_default": "user"})    # user | admin (access.py)
     created_at: datetime = ts()
 
@@ -49,7 +67,7 @@ class UserSession(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id")
     token_hash: str = Field(unique=True)
-    user_agent: Optional[str] = None
+    user_agent: str | None = None
     created_at: datetime = ts()
     last_seen_at: datetime = ts()
     expires_at: datetime = Field(sa_type=DateTime(timezone=True))
@@ -64,7 +82,7 @@ class AuthToken(SQLModel, table=True):
     token_hash: str = Field(unique=True)
     created_at: datetime = ts()
     expires_at: datetime = Field(sa_type=DateTime(timezone=True))
-    used_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    used_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
 
 class Recipe(SQLModel, table=True):
@@ -76,7 +94,7 @@ class Recipe(SQLModel, table=True):
     name: str
     data: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     visibility: str = Field(default="private", index=True, sa_column_kwargs={"server_default": "private"})
-    published_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    published_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     created_at: datetime = ts()
     updated_at: datetime = ts()
 
@@ -89,8 +107,8 @@ class RecipePhoto(SQLModel, table=True):
     user_id: uuid.UUID = fk("users.id")
     content_type: str                                 # image/jpeg | image/png | image/webp — по сигнатуре файла
     data: bytes = Field(sa_type=LargeBinary)
-    thumb: Optional[bytes] = Field(default=None, sa_type=LargeBinary)   # превью для списков, JPEG до 480 px
-    credit: Optional[str] = None
+    thumb: bytes | None = Field(default=None, sa_type=LargeBinary)   # превью для списков, JPEG до 480 px
+    credit: str | None = None
     created_at: datetime = ts()
 
 
@@ -102,7 +120,7 @@ class Agent(SQLModel, table=True):
     name: str
     token_hash: str = Field(unique=True)
     created_at: datetime = ts()
-    last_seen_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    last_seen_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
 
 class Device(SQLModel, table=True):
@@ -110,12 +128,12 @@ class Device(SQLModel, table=True):
     __tablename__ = "devices"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id")
-    agent_id: Optional[uuid.UUID] = fk("agents.id", nullable=True, ondelete="SET NULL")
+    agent_id: uuid.UUID | None = fk("agents.id", nullable=True, ondelete="SET NULL")
     tuya_id: str = Field(unique=True)
     name: str
-    model: Optional[str] = None                       # DP 109 power_model — сообщает агент
-    limits: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)      # schemas.Limits — сообщает агент
-    equipment: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)   # профиль оборудования (schemas.Equipment)
+    model: str | None = None                       # DP 109 power_model — сообщает агент
+    limits: dict[str, Any] | None = Field(default=None, sa_type=JSONB)      # schemas.Limits — сообщает агент
+    equipment: dict[str, Any] | None = Field(default=None, sa_type=JSONB)   # профиль оборудования (schemas.Equipment)
     created_at: datetime = ts()
 
 
@@ -125,38 +143,38 @@ class Brew(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id")
     device_id: uuid.UUID = fk("devices.id")
-    recipe_id: Optional[uuid.UUID] = fk("recipes.id", nullable=True, ondelete="SET NULL")
+    recipe_id: uuid.UUID | None = fk("recipes.id", nullable=True, ondelete="SET NULL")
     name: str
     recipe: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)   # рецепт, как был загружен
     status: str = "running"                           # running | finished | stopped
     energy_wh: float = Field(default=0.0, sa_column_kwargs={"server_default": "0"})   # оценка расхода ТЭНа
     started_at: datetime = ts(index=True)
-    ended_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    ended_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
 
 class Event(SQLModel, table=True):
     __tablename__ = "events"
     __table_args__ = (Index("ix_events_device_at", "device_id", "at"),)
-    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
     device_id: uuid.UUID = fk("devices.id", index=False)
-    brew_id: Optional[uuid.UUID] = fk("brews.id", nullable=True)
+    brew_id: uuid.UUID | None = fk("brews.id", nullable=True)
     at: datetime = ts()
     kind: str
     text: str
-    data: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)
+    data: dict[str, Any] | None = Field(default=None, sa_type=JSONB)
 
 
 class Reading(SQLModel, table=True):
     __tablename__ = "readings"
     __table_args__ = (Index("ix_readings_device_at", "device_id", "at"),)
-    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
     device_id: uuid.UUID = fk("devices.id", index=False)
-    brew_id: Optional[uuid.UUID] = fk("brews.id", nullable=True)
+    brew_id: uuid.UUID | None = fk("brews.id", nullable=True)
     at: datetime = ts()
     temp: float
-    target: Optional[float] = None
-    step: Optional[int] = None
-    status: Optional[str] = None
+    target: float | None = None
+    step: int | None = None
+    status: str | None = None
 
 
 class PushSubscription(SQLModel, table=True):
@@ -167,6 +185,6 @@ class PushSubscription(SQLModel, table=True):
     endpoint: str = Field(unique=True)
     p256dh: str
     auth: str
-    user_agent: Optional[str] = None
+    user_agent: str | None = None
     created_at: datetime = ts()
     last_seen_at: datetime = ts()

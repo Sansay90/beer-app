@@ -7,13 +7,8 @@ definePageMeta({ auth: 'admin', title: 'Пользователи' })
 const { $api } = useNuxtApp()
 const auth = useAuthStore()
 const { exec } = useCommand()
-const users = ref<AdminUser[]>([])
-const loaded = ref(false)
-
-onMounted(async () => {
-  users.value = (await exec(async () => unwrap(await $api.GET('/api/admin/users')))) ?? []
-  loaded.value = true
-})
+const { data: users, status, error } = useApi('/api/admin/users', { key: 'admin-users', default: () => [] })
+useErrorToast(error)
 
 const ROLES = [
   { label: 'Пользователь', value: 'user' },
@@ -21,10 +16,7 @@ const ROLES = [
 ]
 
 async function setRole(u: AdminUser, role: Role) {
-  const saved = await exec(
-    async () => unwrap(await $api.PUT('/api/admin/users/{uid}/role', { params: { path: { uid: u.id } }, body: { role } })),
-    'Роль изменена',
-  )
+  const saved = await exec(() => $api('/api/admin/users/{uid}/role', { method: 'PUT', path: { uid: u.id }, body: { role } }), 'Роль изменена')
   // не вышло (последний администратор) — список как был, выбор вернётся
   users.value = users.value.map(x => (x.id === u.id && saved ? saved : x))
   if (saved && u.id === auth.user?.id) await auth.refresh()
@@ -62,7 +54,7 @@ const date = (t: number) => new Date(t * 1000).toLocaleDateString('ru-RU', { day
             </li>
           </ul>
         </UCard>
-        <UEmpty v-else-if="loaded" icon="i-lucide-users" title="Пользователей пока нет" variant="naked" />
+        <UEmpty v-else-if="status === 'success'" icon="i-lucide-users" title="Пользователей пока нет" variant="naked" />
       </div>
     </template>
   </UDashboardPanel>

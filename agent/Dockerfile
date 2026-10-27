@@ -1,5 +1,5 @@
 # Агент brewapp: связь с пивоварней (Tuya, домашняя сеть) и с сервисом (WebSocket).
-# Ключи (devices.json) в образ не входят — подключаются томом; память агента — в /data (см. ../service/compose.yaml).
+# Ключи (devices.json) в образ не входят — подключаются томом; память агента — в /data (compose.yaml).
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

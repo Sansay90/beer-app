@@ -1,10 +1,10 @@
-import type { BrewEvent, HistoryPoint, Limits, ManualMode, Snapshot, SettingsUpdate } from '~/types'
+import type { BrewEvent, HistoryPoint, ManualMode, Snapshot, SettingsUpdate } from '~/types'
 
 const HISTORY_MAX = 10800               // 6 ч при точке раз в 2 с
 const HISTORY_STEP_S = 2
 const EVENTS_MAX = 200
 
-/** Пивоварня: живое состояние из потока SSE, производные для интерфейса и команды. */
+/** Пивоварня: живое состояние из потока SSE, производные для интерфейса и команды. Ограничения модели — useLimits. */
 export const useBreweryStore = defineStore('brewery', () => {
   const { $api } = useNuxtApp()
 
@@ -14,7 +14,6 @@ export const useBreweryStore = defineStore('brewery', () => {
   const connected = ref(false)           // связь с сервисом
   const events = ref<BrewEvent[]>([])    // новые — первыми
   const history = ref<HistoryPoint[]>([])
-  const limits = ref<Limits | null>(null)
   const heatStart = ref<number | null>(null)
   const now = useNow({ interval: 500 })
 
@@ -46,9 +45,6 @@ export const useBreweryStore = defineStore('brewery', () => {
     heatStart.value = heating ? snapshot.value?.temp ?? null : null
   })
 
-  // ограничения зависят только от модели: первый снимок (undefined → модель или null) и смена модели
-  watch(() => snapshot.value?.settings.model, () => loadLimits().catch(() => {}))
-
   // ── приём данных ───────────────────────────────────────────────────────────
   function applySnapshot(s: Snapshot) {
     snapshot.value = s
@@ -72,15 +68,11 @@ export const useBreweryStore = defineStore('brewery', () => {
   }
 
   async function loadHistory() {
-    history.value = unwrap(await $api.GET('/api/history', { params: { query: { minutes: 360 } } })) as HistoryPoint[]
+    history.value = await $api('/api/history', { query: { minutes: 360 } }) as HistoryPoint[]
   }
 
   async function loadEvents() {
-    events.value = unwrap(await $api.GET('/api/events'))
-  }
-
-  async function loadLimits() {
-    limits.value = unwrap(await $api.GET('/api/limits'))
+    events.value = await $api('/api/events')
   }
 
   /** Догнать сервис после (пере)подключения: то, что могло случиться без нас. */
@@ -89,23 +81,23 @@ export const useBreweryStore = defineStore('brewery', () => {
   }
 
   // ── команды ────────────────────────────────────────────────────────────────
-  const setPower = async (on: boolean) => { unwrap(await $api.POST('/api/power', { body: { on } })) }
-  const setPump = async (on: boolean) => { unwrap(await $api.POST('/api/pump', { body: { on } })) }
-  const setFlow = async (level: number) => { unwrap(await $api.POST('/api/flow', { body: { level } })) }
-  const setManual = async (body: ManualMode) => { unwrap(await $api.POST('/api/manual', { body })) }
-  const start = async () => { unwrap(await $api.POST('/api/start')) }
-  const pause = async () => { unwrap(await $api.POST('/api/pause')) }
-  const startRecipe = async () => { unwrap(await $api.POST('/api/recipe/start')) }
-  const confirmAlert = async () => { unwrap(await $api.POST('/api/alert/confirm')) }
-  const saveSettings = async (body: SettingsUpdate) => { unwrap(await $api.POST('/api/settings', { body })) }
+  const setPower = async (on: boolean) => { await $api('/api/power', { method: 'POST', body: { on } }) }
+  const setPump = async (on: boolean) => { await $api('/api/pump', { method: 'POST', body: { on } }) }
+  const setFlow = async (level: number) => { await $api('/api/flow', { method: 'POST', body: { level } }) }
+  const setManual = async (body: ManualMode) => { await $api('/api/manual', { method: 'POST', body }) }
+  const start = async () => { await $api('/api/start', { method: 'POST' }) }
+  const pause = async () => { await $api('/api/pause', { method: 'POST' }) }
+  const startRecipe = async () => { await $api('/api/recipe/start', { method: 'POST' }) }
+  const confirmAlert = async () => { await $api('/api/alert/confirm', { method: 'POST' }) }
+  const saveSettings = async (body: SettingsUpdate) => { await $api('/api/settings', { method: 'POST', body }) }
   const ackAddition = async (minutes: number) => {
-    unwrap(await $api.POST('/api/additions/{minutes}/ack', { params: { path: { minutes } } }))
+    await $api('/api/additions/{minutes}/ack', { method: 'POST', path: { minutes } })
   }
 
   return {
-    snapshot, connected, events, history, limits,
+    snapshot, connected, events, history,
     online, phase, remaining, rate, eta, progress, status, steps, additions, total, programLeft, next,
-    applySnapshot, pushEvent, setConnected, resync, loadLimits,
+    applySnapshot, pushEvent, setConnected, resync,
     setPower, setPump, setFlow, setManual, start, pause, startRecipe, confirmAlert, saveSettings, ackAddition,
   }
 })

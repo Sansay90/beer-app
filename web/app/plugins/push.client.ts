@@ -4,12 +4,12 @@ export default defineNuxtPlugin({
   dependsOn: ['api'],
   setup() {
     if (!('serviceWorker' in navigator)) return
-    const { $bridgeUrl } = useNuxtApp()
+    const { $apiBase } = useNuxtApp()
     const base = useRuntimeConfig().app.baseURL
     const auth = useAuthStore()
     const push = usePush()
     // адрес сервиса — параметром: кнопки в уведомлении шлют команды прямо ему
-    navigator.serviceWorker.register(`${base}sw.js?api=${encodeURIComponent($bridgeUrl)}`, { scope: base })
+    navigator.serviceWorker.register(`${base}sw.js?api=${encodeURIComponent($apiBase)}`, { scope: base })
       .then(() => watch(() => auth.user?.id, id => id && push.sync(), { immediate: true }))
       .catch(e => console.warn('уведомления недоступны:', e))
   },

@@ -1,9 +1,10 @@
-# brewapp: Postgres, сервис и агент пивоварни на одной машине. Из папки brewapp/service:
-#   docker compose up -d --build      запустить всё (и пересобрать после правок кода)
-#   docker compose up -d db           только базу — для сервиса и агента, запущенных локально (.venv)
-#   docker compose logs -f service    журнал сервиса (agent — агента)
+# brewapp у себя на ПК: Postgres, сервис и интерфейс — те же образы, что на сервере, только собранные из исходников.
+# Из папки brewapp/service:
+#   docker compose up -d db           только база — для сервиса из .venv (python -m app) и web (npm run dev)
+#   docker compose up -d --build      всё: интерфейс — http://127.0.0.1:3000, API — http://127.0.0.1:8000
+#   docker compose logs -f service    журнал сервиса (web — интерфейса)
 #   docker compose down               остановить (данные базы остаются в томе pgdata)
-# На другом компьютере рядом с пивоварней агент ставится отдельно — agent/README.md.
+# Агент пивоварни — отдельно: agent/compose.yaml.
 name: brewapp
 
 services:
@@ -17,7 +18,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
       TZ: ${TZ:-Europe/Moscow}
     ports:
-      # только этот ПК — чтобы сервис из .venv тоже мог подключиться
+      # только этот ПК — чтобы сервис из .venv и тесты тоже могли подключиться
       - "127.0.0.1:5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -36,34 +37,23 @@ services:
       db:
         condition: service_healthy
     ports:
-      # только этот ПК. Для телефона — "8000:8000", но входа пока нет: управлять сможет любой в Wi-Fi
       - "127.0.0.1:8000:8000"
+    env_file: .env
     environment:
-      TZ: ${TZ:-Europe/Moscow}
       DATABASE_URL: postgresql+psycopg://brewapp:${POSTGRES_PASSWORD}@db:5432/brewapp
-      # Web Push: ключ сервера (python -m app.push) и контакт для push-сервисов
-      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
-      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:brewapp@example.com}
 
-  agent:
-    build: ../agent
-    image: brewapp-agent
-    container_name: brewapp-agent
+  web:
+    build: ../web
+    image: brewapp-web
+    container_name: brewapp-web
     restart: unless-stopped
     depends_on:
       service:
         condition: service_healthy
-    # настройки агента — его .env (токен, адрес пивоварни). Автопоиск по широковещанию из контейнера не доходит,
-    # поэтому BREWERY_IP в нём обязателен
-    env_file: ../agent/.env
+    ports:
+      - "127.0.0.1:3000:3000"
     environment:
-      # к сервису рядом; к серверу в интернете — AGENT_SERVICE_URL=wss://<домен>/api/agent в .env
-      SERVICE_URL: ${AGENT_SERVICE_URL:-ws://service:8000/api/agent}
-      TZ: ${TZ:-Europe/Moscow}
-    volumes:
-      # ключи пивоварни и память агента — те же, что у агента, запущенного из .venv
-      - ../agent/devices.json:/config/devices.json:ro
-      - ../agent/data:/data
+      NUXT_API_SERVER: http://service:8000
 
 volumes:
   pgdata:

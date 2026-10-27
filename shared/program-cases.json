@@ -1,0 +1,1333 @@
+[
+  {
+    "name": "American IPA",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Осахаривание",
+          "temp": 66.0,
+          "watts": 2500,
+          "minutes": 60
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Magnum",
+          "alpha": 13.0,
+          "amount": 52.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Centennial",
+          "alpha": 10.0,
+          "amount": 30.0,
+          "minutes": 10
+        },
+        {
+          "use": "whirlpool",
+          "name": "Citra",
+          "alpha": 12.0,
+          "amount": 50.0,
+          "minutes": 20
+        },
+        {
+          "use": "whirlpool",
+          "name": "Simcoe",
+          "alpha": 13.0,
+          "amount": 50.0,
+          "minutes": 20
+        },
+        {
+          "day": 3,
+          "use": "dry_hop",
+          "name": "Citra",
+          "alpha": 12.0,
+          "amount": 75.0
+        },
+        {
+          "day": 3,
+          "use": "dry_hop",
+          "name": "Mosaic",
+          "alpha": 12.0,
+          "amount": 75.0
+        }
+      ],
+      "miscs": [
+        {
+          "use": "boil",
+          "kind": "fining",
+          "name": "Ирландский мох",
+          "unit": "g",
+          "amount": 7.0,
+          "minutes": 15
+        },
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 7.2
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.5
+        },
+        {
+          "ebc": 120.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Карамельный 120 EBC",
+          "amount": 0.6
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 66.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        15,
+        10
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Magnum",
+              "amount": 52.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 7.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 10,
+          "items": [
+            {
+              "minutes": 10,
+              "kind": "hop",
+              "name": "Centennial",
+              "amount": 30.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 0,
+          "items": [
+            {
+              "minutes": 0,
+              "kind": "hop",
+              "name": "Citra",
+              "amount": 50.0,
+              "unit": "g",
+              "whirlpool": 20
+            },
+            {
+              "minutes": 0,
+              "kind": "hop",
+              "name": "Simcoe",
+              "amount": 50.0,
+              "unit": "g",
+              "whirlpool": 20
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "Belgian Dubbel",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Мальтозная",
+          "temp": 64.0,
+          "watts": 2500,
+          "minutes": 45
+        },
+        {
+          "name": "Осахаривание",
+          "temp": 72.0,
+          "watts": 2500,
+          "minutes": 15
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Styrian Golding",
+          "alpha": 3.5,
+          "amount": 70.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Saaz",
+          "alpha": 3.5,
+          "amount": 25.0,
+          "minutes": 15
+        }
+      ],
+      "miscs": [
+        {
+          "use": "boil",
+          "kind": "fining",
+          "name": "Ирландский мох",
+          "unit": "g",
+          "amount": 7.0,
+          "minutes": 15
+        },
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 6.5
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.8
+        },
+        {
+          "ebc": 50.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Ароматический солод",
+          "amount": 0.3
+        },
+        {
+          "ebc": 300.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Special B",
+          "amount": 0.15
+        },
+        {
+          "ebc": 250.0,
+          "use": "boil",
+          "kind": "sugar",
+          "name": "Тёмный канди-сахар",
+          "amount": 0.6,
+          "minutes": 10
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 64.0,
+          "minutes": 45,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 72.0,
+          "minutes": 15,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 90,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        60,
+        15,
+        10
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Styrian Golding",
+              "amount": 70.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "hop",
+              "name": "Saaz",
+              "amount": 25.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 7.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 10,
+          "items": [
+            {
+              "minutes": 10,
+              "kind": "sugar",
+              "name": "Тёмный канди-сахар",
+              "amount": 0.6,
+              "unit": "kg",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "German Pils",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Мальтозная",
+          "temp": 63.0,
+          "watts": 2500,
+          "minutes": 45
+        },
+        {
+          "name": "Осахаривание",
+          "temp": 72.0,
+          "watts": 2500,
+          "minutes": 20
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Perle",
+          "alpha": 8.0,
+          "amount": 37.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Hallertau Tradition",
+          "alpha": 6.0,
+          "amount": 30.0,
+          "minutes": 15
+        },
+        {
+          "use": "whirlpool",
+          "name": "Tettnanger",
+          "alpha": 4.5,
+          "amount": 40.0,
+          "minutes": 15
+        }
+      ],
+      "miscs": [
+        {
+          "use": "boil",
+          "kind": "fining",
+          "name": "Ирландский мох",
+          "unit": "g",
+          "amount": 7.0,
+          "minutes": 15
+        },
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 6.1
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 63.0,
+          "minutes": 45,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 72.0,
+          "minutes": 20,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 90,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        60,
+        15
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Perle",
+              "amount": 37.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "hop",
+              "name": "Hallertau Tradition",
+              "amount": 30.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 7.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 0,
+          "items": [
+            {
+              "minutes": 0,
+              "kind": "hop",
+              "name": "Tettnanger",
+              "amount": 40.0,
+              "unit": "g",
+              "whirlpool": 15
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "Irish Stout",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Осахаривание",
+          "temp": 65.0,
+          "watts": 2500,
+          "minutes": 60
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "East Kent Goldings",
+          "alpha": 5.5,
+          "amount": 60.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "East Kent Goldings",
+          "alpha": 5.5,
+          "amount": 30.0,
+          "minutes": 15
+        }
+      ],
+      "miscs": [
+        {
+          "use": "boil",
+          "kind": "fining",
+          "name": "Ирландский мох",
+          "unit": "g",
+          "amount": 7.0,
+          "minutes": 15
+        },
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 3.9
+        },
+        {
+          "ebc": 3.0,
+          "use": "mash",
+          "kind": "adjunct",
+          "name": "Ячменные хлопья",
+          "amount": 1.0
+        },
+        {
+          "ebc": 1200.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Жжёный ячмень",
+          "amount": 0.55
+        },
+        {
+          "ebc": 900.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Шоколадный солод",
+          "amount": 0.12
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 65.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        15
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "East Kent Goldings",
+              "amount": 60.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "hop",
+              "name": "East Kent Goldings",
+              "amount": 30.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 7.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "Weissbier",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Феруловая пауза",
+          "temp": 45.0,
+          "watts": 2500,
+          "minutes": 15
+        },
+        {
+          "name": "Мальтозная",
+          "temp": 63.0,
+          "watts": 2500,
+          "minutes": 35
+        },
+        {
+          "name": "Осахаривание",
+          "temp": 72.0,
+          "watts": 2500,
+          "minutes": 20
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 90
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Hallertau Mittelfrüh",
+          "alpha": 4.0,
+          "amount": 40.0,
+          "minutes": 60
+        }
+      ],
+      "miscs": [
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 4.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Пшеничный солод",
+          "amount": 3.5
+        },
+        {
+          "ebc": 3.5,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pilsner",
+          "amount": 2.5
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.3
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 45.0,
+          "minutes": 15,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 63.0,
+          "minutes": 35,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 72.0,
+          "minutes": 20,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 90,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        60,
+        15
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Hallertau Mittelfrüh",
+              "amount": 40.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "Ржаной с можжевельником",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Бета-глюкановая пауза",
+          "temp": 45.0,
+          "watts": 2500,
+          "minutes": 15
+        },
+        {
+          "name": "Осахаривание",
+          "temp": 66.0,
+          "watts": 2500,
+          "minutes": 60
+        },
+        {
+          "name": "Мэш-аут",
+          "temp": 78.0,
+          "watts": 2500,
+          "minutes": 10
+        }
+      ],
+      "boil": {
+        "watts": 2500,
+        "minutes": 60
+      },
+      "hops": [
+        {
+          "use": "boil",
+          "name": "Magnum",
+          "alpha": 13.0,
+          "amount": 24.0,
+          "minutes": 60
+        },
+        {
+          "use": "boil",
+          "name": "Hallertau Mittelfrüh",
+          "alpha": 4.0,
+          "amount": 30.0,
+          "minutes": 10
+        }
+      ],
+      "miscs": [
+        {
+          "use": "mash",
+          "kind": "spice",
+          "name": "Можжевеловые ветки",
+          "unit": "g",
+          "amount": 150.0
+        },
+        {
+          "use": "boil",
+          "kind": "spice",
+          "name": "Можжевеловые ягоды, раздавить",
+          "unit": "g",
+          "amount": 15.0,
+          "minutes": 10
+        },
+        {
+          "use": "boil",
+          "kind": "fining",
+          "name": "Ирландский мох",
+          "unit": "g",
+          "amount": 7.0,
+          "minutes": 15
+        },
+        {
+          "use": "boil",
+          "kind": "equipment",
+          "name": "Чиллер",
+          "unit": "g",
+          "minutes": 15
+        }
+      ],
+      "fermentables": [
+        {
+          "ebc": 6.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Pale Ale",
+          "amount": 4.4
+        },
+        {
+          "ebc": 7.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Ржаной солод",
+          "amount": 1.8
+        },
+        {
+          "ebc": 15.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Munich",
+          "amount": 0.5
+        },
+        {
+          "ebc": 120.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Карамельный 120 EBC",
+          "amount": 0.4
+        },
+        {
+          "ebc": 1200.0,
+          "use": "mash",
+          "kind": "grain",
+          "name": "Жжёный ячмень",
+          "amount": 0.08
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 45.0,
+          "minutes": 15,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 66.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 78.0,
+          "minutes": 10,
+          "watts": 2500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        15,
+        10
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Magnum",
+              "amount": 24.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 7.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 10,
+          "items": [
+            {
+              "minutes": 10,
+              "kind": "hop",
+              "name": "Hallertau Mittelfrüh",
+              "amount": 30.0,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 10,
+              "kind": "spice",
+              "name": "Можжевеловые ягоды, раздавить",
+              "amount": 15.0,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "пусто — без программы",
+    "recipe": {
+      "mash": [],
+      "boil": null,
+      "hops": [],
+      "miscs": [],
+      "fermentables": []
+    },
+    "expected": {
+      "steps": [],
+      "timers": [],
+      "slots": []
+    }
+  },
+  {
+    "name": "закладки: вирпул и конец — без таймера, повтор минуты — один таймер, вне кипячения — не закладка",
+    "recipe": {
+      "mash": [
+        {
+          "name": "Осахаривание",
+          "temp": 66,
+          "minutes": 60,
+          "watts": 1500
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "hops": [
+        {
+          "name": "Magnum",
+          "amount": 20,
+          "use": "boil",
+          "minutes": 60
+        },
+        {
+          "name": "Saaz",
+          "amount": 30,
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Saaz",
+          "amount": 40,
+          "use": "whirlpool",
+          "minutes": 20
+        },
+        {
+          "name": "Saaz",
+          "amount": 30,
+          "minutes": 5
+        },
+        {
+          "name": "Citra",
+          "amount": 50,
+          "use": "dry_hop",
+          "day": 3
+        },
+        {
+          "name": "Первое сусло",
+          "amount": 10,
+          "use": "first_wort"
+        }
+      ],
+      "miscs": [
+        {
+          "name": "Ирландский мох",
+          "kind": "fining",
+          "amount": 5,
+          "unit": "g",
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Чиллер",
+          "kind": "equipment",
+          "use": "boil",
+          "minutes": 10
+        },
+        {
+          "name": "Кориандр",
+          "kind": "spice",
+          "amount": 15,
+          "unit": "g",
+          "use": "whirlpool"
+        },
+        {
+          "name": "Желатин",
+          "kind": "fining",
+          "amount": 1,
+          "unit": "pkg",
+          "use": "packaging"
+        }
+      ],
+      "fermentables": [
+        {
+          "name": "Декстроза",
+          "kind": "sugar",
+          "amount": 0.5,
+          "use": "boil",
+          "minutes": 10
+        },
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "use": "mash"
+        }
+      ]
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 66,
+          "minutes": 60,
+          "watts": 1500,
+          "boil": false
+        },
+        {
+          "temp": 100.0,
+          "minutes": 60,
+          "watts": 2500,
+          "boil": true
+        }
+      ],
+      "timers": [
+        15,
+        10,
+        5
+      ],
+      "slots": [
+        {
+          "minutes": 60,
+          "items": [
+            {
+              "minutes": 60,
+              "kind": "hop",
+              "name": "Magnum",
+              "amount": 20,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 15,
+          "items": [
+            {
+              "minutes": 15,
+              "kind": "hop",
+              "name": "Saaz",
+              "amount": 30,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 15,
+              "kind": "fining",
+              "name": "Ирландский мох",
+              "amount": 5,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 10,
+          "items": [
+            {
+              "minutes": 10,
+              "kind": "equipment",
+              "name": "Чиллер",
+              "amount": null,
+              "unit": "g",
+              "whirlpool": null
+            },
+            {
+              "minutes": 10,
+              "kind": "sugar",
+              "name": "Декстроза",
+              "amount": 0.5,
+              "unit": "kg",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 5,
+          "items": [
+            {
+              "minutes": 5,
+              "kind": "hop",
+              "name": "Saaz",
+              "amount": 30,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        },
+        {
+          "minutes": 0,
+          "items": [
+            {
+              "minutes": 0,
+              "kind": "hop",
+              "name": "Saaz",
+              "amount": 40,
+              "unit": "g",
+              "whirlpool": 20
+            },
+            {
+              "minutes": 0,
+              "kind": "spice",
+              "name": "Кориандр",
+              "amount": 15,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "только кипячение",
+    "recipe": {
+      "mash": [],
+      "boil": {
+        "minutes": 30,
+        "watts": 2000
+      },
+      "hops": [
+        {
+          "name": "Хмель",
+          "amount": 10,
+          "use": "boil",
+          "minutes": 30
+        }
+      ],
+      "miscs": [],
+      "fermentables": []
+    },
+    "expected": {
+      "steps": [
+        {
+          "temp": 100.0,
+          "minutes": 30,
+          "watts": 2000,
+          "boil": true
+        }
+      ],
+      "timers": [],
+      "slots": [
+        {
+          "minutes": 30,
+          "items": [
+            {
+              "minutes": 30,
+              "kind": "hop",
+              "name": "Хмель",
+              "amount": 10,
+              "unit": "g",
+              "whirlpool": null
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -12,3 +12,7 @@ tuya-raw.json
 snapshot.json
 dpmap.json
 *.md
+tests
+compose.yaml
+pyproject.toml
+requirements-dev.txt

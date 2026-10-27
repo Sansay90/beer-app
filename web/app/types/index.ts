@@ -1,5 +1,5 @@
-// Типы API сервиса — из сгенерированной схемы (npm run api:types), руками не дублируются.
-import type { components } from './bridge'
+// Типы API сервиса — из OpenAPI-схемы (openapi.json; типы генерирует nuxt-open-fetch), руками не дублируются.
+import type { components } from '#open-fetch-schemas/api'
 
 type Schemas = components['schemas']
 

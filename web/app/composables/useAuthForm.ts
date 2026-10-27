@@ -15,7 +15,7 @@ export function useAuthForm() {
       await action()
       return true
     } catch (e) {
-      const text = e instanceof TypeError ? 'нет связи с сервисом' : e instanceof Error ? e.message : String(e)
+      const text = isOffline(e) ? 'нет связи с сервисом' : errorText(e)
       error.value = text.charAt(0).toUpperCase() + text.slice(1)
       return false
     } finally {

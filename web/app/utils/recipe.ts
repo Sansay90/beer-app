@@ -1,9 +1,12 @@
 // Рецепт: форма редактора ↔ API, проверка по ограничениям пивоварни (/api/limits), программа и напоминания.
-// Программа и закладки выводятся из рецепта так же, как в сервисе (service/app/program.py).
+// Программа и закладки выводятся из рецепта так же, как в сервисе (program.py).
 import type { Addition, AdditionKind, Equipment, Limits, Recipe, WaterAgent } from '~/types'
 import type {
   FermentableRow, FermentationRow, HopRow, MashRow, MiscRow, RecipeDraft, WaterAdditionRow, WaterDraft, YeastRow,
 } from '~/types/recipe'
+import { ADDITION_KINDS } from '~/utils/additions'
+import { calcRecipe, DEFAULT_EFFICIENCY } from '~/utils/calc'
+import { fmtMinutes, plural } from '~/utils/format'
 
 // ── подписи ──────────────────────────────────────────────────────────────────
 export const FERMENTABLE_KINDS = { grain: 'Солод', adjunct: 'Несоложёное', sugar: 'Сахар', extract: 'Экстракт' } as const
@@ -107,7 +110,7 @@ export function toRecipe(d: RecipeDraft): Recipe {
     style: d.style,
     batch: d.batch,
     // без округления: карточка списка и страница рецепта округляют одно и то же число — цифры совпадают
-    targets: { og: calc.og, fg: calc.fg, ibu: calc.ibu, ebc: calc.ebc },
+    targets: { og: calc.og, fg: calc.fg, ibu: calc.ibu, ebc: calc.ebc, abv: calc.abv },
     fermentables: d.fermentables.filter(f => !blank(f))
       .map(f => ({ ...f, name: f.name.trim(), minutes: f.use === 'boil' ? f.minutes : null })),
     hops: d.hops.filter(h => !blank(h)).map(h => ({
@@ -131,7 +134,7 @@ export function toRecipe(d: RecipeDraft): Recipe {
   }
 }
 
-// ── программа пивоварни и закладки (как server/bridge/program.py) ─────────────
+// ── программа пивоварни и закладки (как в сервисе, program.py) ───────────────
 type ProgramSource = Pick<Recipe, 'mash' | 'boil' | 'hops' | 'miscs' | 'fermentables'>
 
 export interface ProgramStep {
@@ -159,22 +162,28 @@ export function programMinutes(r: ProgramSource) {
   return programOf(r).reduce((a, s) => a + (s.minutes || 0), 0)
 }
 
-/** Что класть в кипячение и когда (вирпул — в конце, 0 мин), от ранних к поздним. */
+/** Что класть в кипячение и когда, от ранних к поздним. Вирпул — в конце кипячения (0 мин),
+ *  сколько выдерживать — в whirlpool. */
 export function boilItems(r: ProgramSource): Addition[] {
   if (!r.boil) return []
   const items: Addition[] = []
   const at = (use: string | undefined, minutes: number | null | undefined) =>
     use === 'boil' ? minutes ?? null : use === 'whirlpool' ? 0 : null
+  const stand = (use: string | undefined, minutes: number | null | undefined) => use === 'whirlpool' ? minutes ?? null : null
   for (const h of r.hops ?? []) {
     const m = at(h.use ?? 'boil', h.minutes)
-    if (m != null) items.push({ minutes: m, kind: 'hop', name: h.name, amount: h.amount, unit: 'g' })
+    if (m != null) items.push({ minutes: m, kind: 'hop', name: h.name, amount: h.amount, unit: 'g', whirlpool: stand(h.use, h.minutes) })
   }
   for (const x of r.miscs ?? []) {
     const m = at(x.use ?? 'boil', x.minutes)
-    if (m != null) items.push({ minutes: m, kind: x.kind ?? 'adjunct', name: x.name, amount: x.amount, unit: x.unit ?? 'g' })
+    if (m != null) {
+      items.push({ minutes: m, kind: x.kind ?? 'adjunct', name: x.name, amount: x.amount, unit: x.unit ?? 'g', whirlpool: stand(x.use, x.minutes) })
+    }
   }
   for (const f of r.fermentables ?? []) {
-    if (f.use === 'boil' && f.minutes != null) items.push({ minutes: f.minutes, kind: 'sugar', name: f.name, amount: f.amount, unit: 'kg' })
+    if (f.use === 'boil' && f.minutes != null) {
+      items.push({ minutes: f.minutes, kind: 'sugar', name: f.name, amount: f.amount, unit: 'kg', whirlpool: null })
+    }
   }
   return items.filter(i => i.minutes >= 0 && i.minutes <= r.boil!.minutes).sort((a, b) => b.minutes - a.minutes)
 }
@@ -204,7 +213,7 @@ export function validateRecipe(d: RecipeDraft, l: Limits): string[] {
   // потолок мощности неизвестен (модель ещё не видели) — проверит агент при загрузке в пивоварню
   const maxWatts = l.maxWatts ?? Infinity
   const wattsOk = (w: number) => w >= l.minWatts && w <= maxWatts && w % (l.wattsStep ?? 100) === 0
-  const wattsRange = l.maxWatts ? `${l.minWatts}…${l.maxWatts} W` : `от ${l.minWatts} W, кратно 100`
+  const wattsRange = l.maxWatts ? `${l.minWatts}…${l.maxWatts} W` : `от ${l.minWatts} W, кратно ${l.wattsStep}`
   if (!d.name.trim()) out.push('Нужно название рецепта')
 
   const steps = d.mash.length + (d.boil ? 1 : 0)
@@ -256,15 +265,7 @@ export function programSummary(r: ProgramSource) {
   return steps.length ? `${steps.length} ${plural(steps.length, 'шаг', 'шага', 'шагов')} · ${fmtMinutes(programMinutes(r))}` : 'без программы'
 }
 
-export function plural(n: number, one: string, few: string, many: string) {
-  const m10 = n % 10
-  const m100 = n % 100
-  if (m10 === 1 && m100 !== 11) return one
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few
-  return many
-}
-
-/** Варианты мощности для выпадающего списка: от потолка модели вниз с шагом 100 W. */
+/** Варианты мощности для выпадающего списка: от потолка модели вниз с её шагом мощности. */
 export function wattOptions(l: Limits | null) {
   const out: { label: string; value: number }[] = []
   const step = l?.wattsStep ?? 100

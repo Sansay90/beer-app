@@ -1,5 +1,5 @@
-# Сервис brewapp: HTTP API + SSE для интерфейса, WebSocket для агентов у пивоварен.
-# Данные — в Postgres (сервис db в compose.yaml, адрес — DATABASE_URL); миграции применяются при старте.
+# Сервис brewapp: HTTP API, поток SSE для интерфейса, WebSocket для агентов. Интерфейс — отдельный образ (web/Dockerfile).
+# Сборка из папки service: docker build -t brewapp-service .  (в CI — .github/workflows/deploy.yml)
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -10,7 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     SERVICE_HOST=0.0.0.0 \
     SERVICE_PORT=8000
 
-# tzdata — чтобы время в журналах варки было местным, а не UTC
+# tzdata — чтобы время в журналах было местным, а не UTC
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
@@ -28,7 +28,7 @@ USER brew
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
 
-CMD ["python", "-m", "app.server"]
+CMD ["python", "-m", "app", "serve"]

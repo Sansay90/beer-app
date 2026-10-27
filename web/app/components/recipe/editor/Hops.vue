@@ -18,7 +18,6 @@ const summary = computed(() => {
 function add() {
   rows.value.push(newHop(rows.value.length ? 10 : props.boilMinutes ?? 60))
 }
-
 </script>
 
 <template>

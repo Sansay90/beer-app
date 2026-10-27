@@ -3,10 +3,15 @@ const brewery = useBreweryStore()
 const auth = useAuthStore()
 const { enabled: soundOn, toggle: toggleSound } = useSound()
 
+// на узком экране меню — выдвижная панель: выбранный пункт её закрывает. Своей смены маршрута у панели
+// (autoClose) мало: закрытый раздел вместо страницы показывает витрину, и маршрут Nuxt тогда не меняется
+const open = ref(false)
+const close = () => { open.value = false }
+
 const userItems = computed(() => [
   [{ type: 'label' as const, label: auth.user?.email }],
   [
-    { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings' },
+    { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings', onSelect: close },
     { label: 'Выйти', icon: 'i-lucide-log-out', onSelect: () => auth.logout() },
   ],
 ])
@@ -18,8 +23,13 @@ const nav = computed(() => [
   { label: 'Рецепты', icon: 'i-lucide-book-open', to: '/recipes' },
   { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings' },
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users' }] : []),
-])
+].map(item => ({ ...item, onSelect: close })))
 const drawer = useAuthDrawer()
+
+function login() {
+  close()
+  drawer.show('login')
+}
 
 const link = computed(() => {
   if (!brewery.connected) return { label: 'Нет связи с сервисом', tone: 'text-error', icon: 'i-lucide-server' }
@@ -47,6 +57,7 @@ const themeItems = computed(() => [[
 
 <template>
   <UDashboardSidebar
+    v-model:open="open"
     collapsible
     resizable
     :min-size="13"
@@ -87,13 +98,13 @@ const themeItems = computed(() => [[
           v-else
           icon="i-lucide-log-in"
           :label="collapsed ? undefined : 'Войти'"
-          @click="drawer.show('login')"
           color="primary"
           variant="soft"
           :block="!collapsed"
           :square="collapsed"
           :class="collapsed ? 'mx-auto' : 'justify-start'"
           aria-label="Войти"
+          @click="login"
         />
         <UTooltip v-if="auth.user" :text="link.label" :disabled="!collapsed">
           <div class="flex items-center gap-2 px-2.5 py-1.5 text-sm" :class="collapsed && 'justify-center'">

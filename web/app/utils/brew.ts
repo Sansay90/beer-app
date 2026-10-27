@@ -1,6 +1,8 @@
 // Логика представления варки — чистые функции от снимка сервиса, истории и текущего времени.
 // Стор пивоварни собирает из них геттеры; компоненты только отображают.
 import type { Addition, DeviceStep, HistoryPoint, Snapshot } from '~/types'
+import { slotIcon } from '~/utils/additions'
+import { fmtMinutes, fmtTemp, plural } from '~/utils/format'
 
 export type Tone = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
@@ -227,10 +229,11 @@ export function nextAction({ s, phase, remaining, eta, steps, additions, total, 
   if (!s.deviceRecipe) {
     return { kind: 'noRecipe', title: 'Загрузите рецепт', description: 'В пивоварне нет известного рецепта — выберите его в разделе «Рецепты».', icon: 'i-lucide-book-open', tone: 'neutral', actions: ['chooseRecipe'] }
   }
+  const count = s.deviceRecipe.steps.length
   return {
     kind: 'ready',
     title: s.deviceRecipe.name ? `«${s.deviceRecipe.name}»` : 'Рецепт из Smart Life',
-    description: `${s.deviceRecipe.steps.length} шагов · ${fmtMinutes(Math.round(total / 60))} без учёта нагрева`,
+    description: `${count} ${plural(count, 'шаг', 'шага', 'шагов')} · ${fmtMinutes(Math.round(total / 60))} без учёта нагрева`,
     icon: 'i-lucide-circle-play',
     tone: 'primary',
     actions: ['startRecipe'],

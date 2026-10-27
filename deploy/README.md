@@ -1,12 +1,12 @@
 # deploy — сервис в интернете
 
-Каждый пуш в `main` выкатывается сам (`.github/workflows/deploy.yml`):
+Каждый пуш в `main` выкатывается сам (`.github/workflows/deploy.yml`); pull request проходит только проверку:
 
-1. **Проверка** — типы интерфейса (`npm run typecheck`), сервис и агент компилируются.
-2. **Образ** — `deploy/Dockerfile`: собранный интерфейс внутри сервиса, один контейнер. Уходит в GitHub Container Registry: `ghcr.io/sansay90/beer-app:latest` и `:<коммит>`. Собирается в GitHub, не на сервере: сборке интерфейса нужно больше памяти, чем у сервера.
-3. **Сервер** — по SSH под пользователем `deploy`: свежий `compose.yaml` в `/opt/brewapp`, `docker compose pull` нужного образа, `up -d`. Миграции базы сервис применяет сам при старте. После выкатки — проверка `/api/health` снаружи.
+1. **Проверка** — линтеры (ruff, ESLint), тесты сервиса с Postgres, агента и интерфейса, типы интерфейса, сверка схемы API с типами интерфейса.
+2. **Образы** — сервис (`service/Dockerfile` → `ghcr.io/sansay90/beer-app`) и интерфейс, сервер Nuxt (`web/Dockerfile` → `ghcr.io/sansay90/beer-app-web`), каждый с тегами `latest` и `<коммит>`. Собираются в GitHub, не на сервере: сборке интерфейса нужно больше памяти, чем у сервера.
+3. **Сервер** — по SSH под пользователем `deploy`: свежий `compose.yaml` в `/opt/brewapp`, `docker compose pull` нужных образов, `up -d`. Миграции базы сервис применяет сам при старте. После выкатки — проверка `/api/health` снаружи.
 
-Повторить выкатку без пуша — Actions → «Выкатка» → Run workflow.
+Повторить выкатку без пуша — Actions → «Проверка и выкатка» → Run workflow.
 
 ## Сервер
 
@@ -18,7 +18,7 @@
   .env           секреты сервера (образец — deploy/.env.example), только здесь
 ```
 
-- **nginx** (на сервере, не в Docker) — HTTPS и прокси на `127.0.0.1:8000`: `/etc/nginx/sites-available/brewapp` ← `deploy/nginx.conf`. Поменяли конфиг — скопировать на сервер и `nginx -t && systemctl reload nginx` (выкатка nginx не трогает).
+- **nginx** (на сервере, не в Docker) — HTTPS; `/api` — сервису на `127.0.0.1:8000`, остальное — интерфейсу на `127.0.0.1:3000`: `/etc/nginx/sites-available/brewapp` ← `deploy/nginx.conf`. Поменяли конфиг — скопировать на сервер и `nginx -t && systemctl reload nginx` (выкатка nginx не трогает).
 - **Сертификат** продлевает certbot (таймер systemd, плагин nginx) по `server_name`.
 - **База** — Postgres в контейнере, том `brewapp_pgdata`. Наружу не открыта.
 - **Подкачка** 1 ГБ (`/swapfile`): памяти у сервера меньше гигабайта.
@@ -35,10 +35,10 @@
 
 ## Агент у пивоварни
 
-Агент работает дома, рядом с пивоварней, и сам подключается к серверу: в `agent/.env` — `SERVICE_URL=wss://151-243-208-72.sslip.io/api/agent` и токен агента. Токен выдаётся на сервере:
+Агент работает дома, рядом с пивоварней, и сам подключается к серверу: в `agent/.env` — `SERVICE_URL=wss://151-243-208-72.sslip.io/api/agent` и токен агента; запуск — `docker compose up -d --build` в `agent/` или из `.venv` ([agent/README.md](../agent/README.md#запуск)). Токен выдаётся на сервере:
 
 ```sh
-cd /opt/brewapp && docker compose exec app python -m app.agents new "Название" --email <почта владельца>
+cd /opt/brewapp && docker compose exec app python -m app agents new "Название" --email <почта владельца>
 ```
 
 ## Полезное

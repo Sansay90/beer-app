@@ -82,6 +82,7 @@ function setBoil(on: boolean) {
             <UIcon :name="additionKind(item).icon" class="size-4" :class="additionKind(item).tint" />
             <span class="text-highlighted">{{ additionName(item) }}</span>
             <span v-if="additionAmount(item)" class="num text-muted">{{ additionAmount(item) }}</span>
+            <span v-if="additionNote(item)" class="num text-xs text-muted">· {{ additionNote(item) }}</span>
           </span>
         </div>
       </div>

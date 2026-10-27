@@ -6,8 +6,14 @@ const shown = ref(false)
 </script>
 
 <template>
-  <UInput v-model="value" :type="shown ? 'text' : 'password'" :autocomplete="autocomplete" size="lg" class="w-full"
-          :ui="{ trailing: 'pe-1' }">
+  <UInput
+    v-model="value"
+    :type="shown ? 'text' : 'password'"
+    :autocomplete="autocomplete"
+    size="lg"
+    class="w-full"
+    :ui="{ trailing: 'pe-1' }"
+  >
     <template #trailing>
       <UButton
         color="neutral"

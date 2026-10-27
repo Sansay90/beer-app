@@ -5,19 +5,28 @@
 import type { Photo } from '~/types'
 
 const props = defineProps<{ recipeId: string; editable?: boolean; moderate?: boolean }>()
-const recipes = useRecipesStore()
+const { $api } = useNuxtApp()
+const photoUrl = usePhotoUrl()
 const { exec } = useCommand()
 const confirm = useConfirm()
 
-const photos = ref<Photo[]>([])
+const rid = toRef(() => props.recipeId)
+const { data: photos, error } = useApi('/api/recipes/{rid}/photos', { path: { rid }, key: () => `photos:${rid.value}`, default: () => [] })
+useErrorToast(error)
 const uploading = ref(0)
 const input = ref<HTMLInputElement | null>(null)
 const current = ref<number | null>(null)                 // открытое крупно
 
-async function load() {
-  photos.value = (await exec(() => recipes.photos(props.recipeId))) ?? []
+/** Тело запроса — сама картинка, уменьшенная shrinkPhoto. */
+async function upload(file: File) {
+  const image = await shrinkPhoto(file)
+  return $api('/api/recipes/{rid}/photos', {
+    method: 'POST',
+    path: { rid: props.recipeId },
+    body: image as unknown as string,
+    headers: { 'Content-Type': image.type },
+  })
 }
-watch(() => props.recipeId, load, { immediate: true })
 
 async function add(e: Event) {
   const el = e.target as HTMLInputElement
@@ -25,15 +34,15 @@ async function add(e: Event) {
   el.value = ''
   for (const file of files) {
     uploading.value++
-    const photo = await exec(async () => recipes.addPhoto(props.recipeId, await shrinkPhoto(file)))
+    const photo = await exec(() => upload(file))
     uploading.value--
-    if (photo) photos.value.push(photo)
+    if (photo) photos.value = [...photos.value, photo]
   }
 }
 
 async function remove(p: Photo) {
   const ok = await confirm({ title: 'Удалить фото?', description: 'Снимок пропадёт из рецепта.', confirmLabel: 'Удалить', color: 'error' })
-  if (!ok || !await exec(() => recipes.removePhoto(p.id), 'Фото удалено')) return
+  if (!ok || !await exec(() => $api('/api/photos/{pid}', { method: 'DELETE', path: { pid: p.id } }), 'Фото удалено')) return
   photos.value = photos.value.filter(x => x.id !== p.id)
   current.value = photos.value.length ? Math.min(current.value ?? 0, photos.value.length - 1) : null
 }
@@ -53,7 +62,7 @@ const credits = computed(() => photos.value.map(p => p.credit).filter((c): c is 
         :aria-label="`Фото ${i + 1}`"
         @click="current = i"
       >
-        <img :src="recipes.photoUrl(p.id, true)" alt="" loading="lazy" class="size-full object-cover transition duration-300 group-hover/photo:scale-105">
+        <img :src="photoUrl(p.id, true)" alt="" loading="lazy" class="size-full object-cover transition duration-300 group-hover/photo:scale-105">
       </button>
       <div v-for="n in uploading" :key="`up-${n}`" class="grid aspect-4/3 h-32 shrink-0 place-items-center rounded-lg bg-elevated">
         <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />

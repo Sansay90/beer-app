@@ -24,7 +24,7 @@ const stats = computed(() => {
     ? { value: '—', hint: '' }
     : eta == null
       ? { value: '…', hint: 'считаем скорость' }
-      : { value: `≈ ${fmtMinutes(Math.max(1, Math.round(eta / 60)))}`, hint: rate ? `${rate.toFixed(1)} °C/мин` : '' }
+      : { value: `≈ ${fmtMinutes(Math.max(1, Math.round(eta / 60)))}`, hint: rate ? `${fmtTemp(rate)} °C/мин` : '' }
 
   const program = programLeft == null
     ? { value: '—', hint: '' }

@@ -20,15 +20,10 @@ const ICONS = [
 ].map(n => `lucide:${n}`)
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  // статическая сборка: раздаётся сервисом, позже упаковывается в Capacitor / PWA
-  ssr: false,
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt', 'nuxt-open-fetch'],
+  // публичное — каталог и рецепт — рендерится на сервере (превью ссылок, поиск); личное — SPA (routeRules)
+  ssr: true,
   devtools: { enabled: false },
-  modules: ['@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt'],
-  css: ['~/assets/css/main.css', 'uplot/dist/uPlot.min.css'],
-  icon: {
-    clientBundle: { scan: true, icons: ICONS, sizeLimitKb: 512 },
-  },
   app: {
     head: {
       title: 'Пивоварня',
@@ -37,8 +32,41 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/png', href: '/icon-192.png' }],
     },
   },
+  css: ['~/assets/css/main.css', 'uplot/dist/uPlot.min.css'],
   runtimeConfig: {
-    // адрес сервиса; пусто — тот же хост, что отдал страницу (в dev — тот же хост, порт 8000)
-    public: { bridge: '' },
+    // куда сервер Nuxt проксирует /api (server/routes/api/[...].ts) — NUXT_API_SERVER
+    apiServer: 'http://127.0.0.1:8000',
+    // адрес сервиса для браузера (NUXT_PUBLIC_API_BASE); пусто — /api того же сайта, что отдал страницу
+    public: { apiBase: '' },
+  },
+  routeRules: {
+    '/': { ssr: false },
+    '/settings': { ssr: false },
+    '/admin/**': { ssr: false },
+    '/recipes/new': { ssr: false },
+    '/recipes/*/edit': { ssr: false },
+    '/verify': { ssr: false },
+    '/reset': { ssr: false },
+  },
+  compatibilityDate: '2025-07-15',
+  // модульные тесты утилит (vitest.config.ts) — тоже под nuxt typecheck
+  typescript: {
+    appTsConfig: { include: ['../test/unit/**/*'] },
+  },
+  // стиль кода — ESLint (eslint.config.mjs): без точек с запятой, одинарные кавычки, 2 пробела
+  eslint: {
+    config: {
+      stylistic: { semi: false, quotes: 'single', indent: 2, commaDangle: 'always-multiline', braceStyle: '1tbs' },
+    },
+  },
+  icon: {
+    clientBundle: { scan: true, icons: ICONS, sizeLimitKb: 512 },
+  },
+  // типизированный клиент сервиса: $api и useApi по OpenAPI-схеме (openapi.json, npm run api:types);
+  // сам клиент — plugins/api.ts: адрес сервиса, cookie входа, истёкшая сессия
+  openFetch: {
+    clients: { api: { schema: 'openapi.json' } },
+    disableNuxtPlugin: true,
+    disableNitroPlugin: true,
   },
 })

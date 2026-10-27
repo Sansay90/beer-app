@@ -31,7 +31,7 @@ export const ADDITION_UNITS: { value: AdditionUnit; label: string }[] = [
   { value: 'pkg', label: 'пак.' },
 ]
 
-type Item = Pick<Addition, 'kind' | 'name' | 'amount' | 'unit'>
+type Item = Pick<Addition, 'kind' | 'name' | 'amount' | 'unit'> & Partial<Pick<Addition, 'whirlpool'>>
 
 export function additionKind(a: Item) {
   return ADDITION_KINDS[a.kind ?? 'hop']
@@ -50,6 +50,11 @@ export function unitLabel(unit: AdditionUnit | null | undefined) {
 export function additionAmount(a: Item) {
   if (!a.amount || !additionKind(a).measured) return null
   return `${a.amount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ${unitLabel(a.unit)}`
+}
+
+/** «вирпул 20 мин» — закладка в конце кипячения с выдержкой; null — не вирпул. */
+export function additionNote(a: Item) {
+  return a.whirlpool ? `вирпул ${a.whirlpool} мин` : null
 }
 
 /** Иконка напоминания: тип, если всё по нему одного типа, иначе общая. */

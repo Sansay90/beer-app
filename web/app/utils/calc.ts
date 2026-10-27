@@ -1,9 +1,11 @@
 // Показатели рецепта по ингредиентам и подгонка ингредиентов под цель.
 // OG — экстракт засыпи с учётом эффективности, FG — по сбраживанию дрожжей, IBU — Tinseth, цвет — Morey.
+// Сахар сбраживается целиком, где бы его ни добавили; добавленное на брожении в OG не входит, а в крепость — входит.
 // Объём — сусло после кипячения, эффективность — к нему же. Упрощения: выход экстракта — средний по типу
 // и цвету сырья (справочника пока нет); IBU — по OG, вирпул и сухое охмеление горечи не дают (как у Tinseth).
 import type { Fermentable, Hop, Recipe } from '~/types'
 import type { RecipeDraft } from '~/types/recipe'
+import { abvOf, platoFromSg, sgFromPlato } from '~/utils/beer'
 
 /** Выход экстракта, % массы — средние значения по типу сырья; у солода зависит от цвета (yieldOf). */
 export const YIELD: Record<NonNullable<Fermentable['kind']>, number> = { grain: 80, adjunct: 75, sugar: 100, extract: 95 }
@@ -33,6 +35,8 @@ export interface RecipeCalc {
 // ── экстракт и плотность ─────────────────────────────────────────────────────
 /** Сырьё, которое попадает в сусло до брожения. */
 const inWort = (f: Fermentable) => f.use !== 'fermentation'
+/** Сахар сбраживается целиком; остальное — на степень сбраживания дрожжей. */
+const fullyFermentable = (f: Fermentable) => f.kind === 'sugar'
 /** Затирается — тогда работает эффективность; сахар и экстракт растворяются целиком. */
 const mashed = (f: Fermentable) => (f.use ?? 'mash') === 'mash' && (f.kind ?? 'grain') !== 'sugar' && f.kind !== 'extract'
 
@@ -92,6 +96,16 @@ function ebcFromMcu(mcu: number) {
 }
 
 // ── расчёт ───────────────────────────────────────────────────────────────────
+/** Экстракт, кг, строк засыпи, которые отбирает keep. */
+function extractWhere(r: Source, keep: (f: Fermentable) => boolean) {
+  return (r.fermentables ?? []).filter(keep).reduce((a, f) => a + extractOf(f, efficiencyOf(r)), 0)
+}
+
+/** Плотность от того, что сбраживается на степень дрожжей: всё, кроме сахара. От неё считается FG. */
+function attenuableSg(r: Source, litres: number) {
+  return sgFromExtract(extractWhere(r, f => !fullyFermentable(f)), litres)
+}
+
 export function calcRecipe(r: Source): RecipeCalc {
   const litres = r.batch?.volume ?? null
   const yeast = (r.yeasts ?? []).find(y => y.attenuation != null)
@@ -100,11 +114,12 @@ export function calcRecipe(r: Source): RecipeCalc {
   if (!litres) return out
 
   const fermentables = r.fermentables ?? []
-  const extract = fermentables.filter(inWort).reduce((a, f) => a + extractOf(f, efficiencyOf(r)), 0)
-  if (extract > 0) {
-    out.og = sgFromExtract(extract, litres)
-    out.fg = 1 + (out.og - 1) * (1 - attenuation / 100)
-    out.abv = abvOf(out.og, out.fg)
+  const wort = extractWhere(r, inWort)
+  if (wort > 0) {
+    out.og = sgFromExtract(wort, litres)
+    out.fg = 1 + (attenuableSg(r, litres) - 1) * (1 - attenuation / 100)
+    // крепость — со всем сбраживаемым, и с сахаром, добавленным на брожении
+    out.abv = abvOf(sgFromExtract(extractWhere(r, () => true), litres), out.fg)
   }
   const hops = r.hops ?? []
   if (hops.length) out.ibu = hops.reduce((a, h) => a + hopIbu(h, out.og ?? 1.05, litres, r.boil?.minutes), 0)
@@ -174,12 +189,14 @@ export function fitIbu(d: RecipeDraft, base: FitBase, ibu: number) {
   for (const i of bitter) d.hops[i]!.amount = round(base.hops[i]! * k, 0.1)
 }
 
-/** FG: степень сбраживания дрожжей. */
+/** FG: степень сбраживания дрожжей (сахар сбраживается целиком и в ней не участвует). */
 export function fitFg(d: RecipeDraft, sg: number) {
-  const og = calcRecipe(d).og
+  const litres = d.batch.volume
   const yeast = d.yeasts.find(y => y.attenuation != null) ?? d.yeasts[0]
-  if (!og || !yeast || og <= 1) return
-  yeast.attenuation = Math.min(100, Math.max(0, Math.round(((og - sg) / (og - 1)) * 100)))
+  if (!litres || !yeast || !calcRecipe(d).og) return
+  const attenuable = attenuableSg(d, litres)
+  if (attenuable <= 1) return
+  yeast.attenuation = Math.min(100, Math.max(0, Math.round(((attenuable - sg) / (attenuable - 1)) * 100)))
 }
 
 /** Самый тёмный солод — им подгоняется цвет. */

@@ -10,43 +10,44 @@ import ssl
 import threading
 from email.message import EmailMessage
 
-from . import db
-
 log = logging.getLogger("brewapp.mail")
 TIMEOUT_S = 20
 
 
-def send(to, subject, text):
-    host = db.env("SMTP_HOST")
-    if not host:
-        log.warning("SMTP не настроен — письмо не отправлено. Кому: %s · %s\n%s", to, subject, text)
-        return
-    threading.Thread(target=_send, args=(host, to, subject, text), name="mail", daemon=True).start()
+class Mailer:
+    def __init__(self, settings):
+        self.host, self.port = settings.smtp_host, settings.smtp_port
+        self.user, self.password = settings.smtp_user, settings.smtp_password
+        self.sender = settings.smtp_from or settings.smtp_user
 
+    def send(self, to, subject, text):
+        if not self.host:
+            log.warning("SMTP не настроен — письмо не отправлено. Кому: %s · %s\n%s", to, subject, text)
+            return
+        threading.Thread(target=self._send, args=(to, subject, text), name="mail", daemon=True).start()
 
-def _send(host, to, subject, text):
-    port = int(db.env("SMTP_PORT", "465"))
-    user, password = db.env("SMTP_USER"), db.env("SMTP_PASSWORD")
-    msg = EmailMessage()
-    msg["From"] = db.env("SMTP_FROM") or user
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.set_content(text)
-    ctx = ssl.create_default_context()
-    try:
-        if port == 465:
-            with smtplib.SMTP_SSL(host, port, context=ctx, timeout=TIMEOUT_S) as smtp:
-                if user:
-                    smtp.login(user, password)
-                smtp.send_message(msg)
-        else:
-            with smtplib.SMTP(host, port, timeout=TIMEOUT_S) as smtp:
-                smtp.starttls(context=ctx)
-                if user:
-                    smtp.login(user, password)
-                smtp.send_message(msg)
-    except Exception as e:
-        log.error("письмо на %s не отправлено: %s", to, e)
+    def _send(self, to, subject, text):
+        msg = EmailMessage()
+        msg["From"] = self.sender
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.set_content(text)
+        ctx = ssl.create_default_context()
+        try:
+            if self.port == 465:
+                with smtplib.SMTP_SSL(self.host, self.port, context=ctx, timeout=TIMEOUT_S) as smtp:
+                    self._deliver(smtp, msg)
+            else:
+                with smtplib.SMTP(self.host, self.port, timeout=TIMEOUT_S) as smtp:
+                    smtp.starttls(context=ctx)
+                    self._deliver(smtp, msg)
+        except Exception as e:
+            log.error("письмо на %s не отправлено: %s", to, e)
+
+    def _deliver(self, smtp, msg):
+        if self.user:
+            smtp.login(self.user, self.password)
+        smtp.send_message(msg)
 
 
 def verify_letter(email, link):

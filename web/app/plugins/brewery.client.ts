@@ -10,7 +10,7 @@ export default defineNuxtPlugin({
     let source: EventSource | null = null
 
     function open() {
-      source = new EventSource(`${nuxtApp.$bridgeUrl}/api/stream`, { withCredentials: true })
+      source = new EventSource(`${nuxtApp.$apiBase}/api/stream`, { withCredentials: true })
       source.addEventListener('open', () => {
         brewery.setConnected(true)
         brewery.resync()                     // догнать то, что пропустили, пока связи не было
@@ -26,10 +26,11 @@ export default defineNuxtPlugin({
       brewery.setConnected(false)
     }
 
-    watch(() => auth.user?.id, (id) => {
+    // поток — когда страница ожила: отрисованное на сервере сверяется с состоянием «ещё без связи»
+    onNuxtReady(() => watch(() => auth.user?.id, (id) => {
       close()
       if (id) open()
-    }, { immediate: true })
+    }, { immediate: true }))
 
     if (import.meta.hot) import.meta.hot.dispose(close)
   },

@@ -1,10 +1,18 @@
 <script setup lang="ts">
-const recipes = useRecipesStore()
+// Каталог: опубликованные рецепты и свои. Рендерится на сервере — для поисковиков и превью ссылок.
 const brewery = useBreweryStore()
 const auth = useAuthStore()
-const { exec } = useCommand()
 
-// опубликованные рецепты всех и свои; «Мои» — только свои, в том числе неопубликованные
+const DESCRIPTION = 'Рецепты домашнего пива от пивоваров: засыпь, хмель, дрожжи, вода и программа затирания. '
+  + 'Плотность, горечь, цвет и крепость считаются по ингредиентам.'
+useSeoMeta({ title: 'Рецепты пива', description: DESCRIPTION, ogTitle: 'Рецепты пива', ogDescription: DESCRIPTION, ogType: 'website' })
+
+// опубликованные рецепты всех и свои; после входа и выхода список другой
+const { data: list, status, error } = useApi('/api/recipes', { key: 'recipes', watch: [() => auth.user?.id], default: () => [] })
+const loaded = computed(() => status.value === 'success')
+useErrorToast(error)
+
+// «Мои» — только свои, в том числе неопубликованные
 const scope = ref<'all' | 'mine'>('all')
 const SCOPES = [{ label: 'Все', value: 'all' }, { label: 'Мои', value: 'mine' }]
 
@@ -12,11 +20,9 @@ const query = ref('')
 const styleCode = ref<string>('all')
 const sort = ref<'recent' | 'name' | 'brews'>('recent')
 
-onMounted(() => exec(recipes.fetchList))
-
 const styleItems = computed(() => {
   const seen = new Map<string, string>()
-  for (const r of recipes.list) {
+  for (const r of list.value) {
     if (r.style) seen.set(r.style.code ?? 'custom', r.style.code ? styleLabel(r.style) : 'Авторские')
   }
   return [{ label: 'Все стили', value: 'all' }, ...[...seen].sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ label, value }))]
@@ -30,15 +36,15 @@ const SORTS = [
 
 const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
-  const list = recipes.list.filter((r) => {
+  const found = list.value.filter((r) => {
     if (scope.value === 'mine' && !r.mine) return false
     const key = r.style ? r.style.code ?? 'custom' : null
     if (styleCode.value !== 'all' && key !== styleCode.value) return false
     return !q || r.name.toLowerCase().includes(q) || r.style?.name.toLowerCase().includes(q) || r.style?.code?.toLowerCase() === q
   })
-  if (sort.value === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-  if (sort.value === 'brews') return [...list].sort((a, b) => b.brews - a.brews || (b.lastBrewedAt ?? 0) - (a.lastBrewedAt ?? 0))
-  return list                              // сервис отдаёт недавно изменённые первыми
+  if (sort.value === 'name') return [...found].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+  if (sort.value === 'brews') return [...found].sort((a, b) => b.brews - a.brews || (b.lastBrewedAt ?? 0) - (a.lastBrewedAt ?? 0))
+  return found                             // сервис отдаёт недавно изменённые первыми
 })
 </script>
 
@@ -58,7 +64,7 @@ const shown = computed(() => {
 
     <template #body>
       <UEmpty
-        v-if="recipes.loaded && !recipes.list.length && !auth.user"
+        v-if="loaded && !list.length && !auth.user"
         icon="i-lucide-book-open"
         title="Опубликованных рецептов пока нет"
         description="Здесь появятся рецепты, которыми поделились пивовары."
@@ -67,7 +73,7 @@ const shown = computed(() => {
         class="m-auto"
       />
       <UEmpty
-        v-else-if="recipes.loaded && !recipes.list.length"
+        v-else-if="loaded && !list.length"
         icon="i-lucide-book-open"
         title="Рецептов пока нет"
         description="Засыпь, хмель, дрожжи и программа для пивоварни — всё в одном рецепте."
@@ -94,14 +100,14 @@ const shown = computed(() => {
           />
         </div>
         <UEmpty
-          v-else-if="recipes.loaded && scope === 'mine' && !recipes.list.some(r => r.mine)"
+          v-else-if="loaded && scope === 'mine' && !list.some(r => r.mine)"
           icon="i-lucide-notebook-pen"
           title="Своих рецептов пока нет"
           description="Новый рецепт виден только вам, пока вы его не опубликуете."
           :actions="[{ label: 'Новый рецепт', icon: 'i-lucide-plus', to: '/recipes/new' }]"
           variant="naked"
         />
-        <UEmpty v-else-if="recipes.loaded" icon="i-lucide-search-x" title="Ничего не нашлось" description="Измените запрос или фильтр по стилю." variant="naked" />
+        <UEmpty v-else-if="loaded" icon="i-lucide-search-x" title="Ничего не нашлось" description="Измените запрос или фильтр по стилю." variant="naked" />
       </div>
     </template>
   </UDashboardPanel>

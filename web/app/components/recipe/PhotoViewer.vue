@@ -6,7 +6,7 @@ import type { Photo } from '~/types'
 const props = defineProps<{ photos: Photo[]; title?: string; to?: string; removable?: boolean }>()
 const index = defineModel<number | null>('index', { default: null })
 const emit = defineEmits<{ remove: [photo: Photo] }>()
-const recipes = useRecipesStore()
+const photoUrl = usePhotoUrl()
 
 const open = computed({
   get: () => index.value != null,
@@ -27,7 +27,7 @@ const date = (p: Photo) => new Date(p.createdAt * 1000).toLocaleDateString('ru-R
   <UModal v-model:open="open" :title="title || 'Фото пива'" :ui="{ content: 'max-w-5xl overflow-hidden' }">
     <template #content>
       <div v-if="shown" class="relative bg-black">
-        <img :src="recipes.photoUrl(shown.id)" alt="" class="mx-auto max-h-[78vh] w-auto object-contain">
+        <img :src="photoUrl(shown.id)" alt="" class="mx-auto max-h-[78vh] w-auto object-contain">
         <template v-if="photos.length > 1">
           <UButton icon="i-lucide-chevron-left" color="neutral" variant="soft" class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full" aria-label="Предыдущее" @click="step(-1)" />
           <UButton icon="i-lucide-chevron-right" color="neutral" variant="soft" class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full" aria-label="Следующее" @click="step(1)" />

@@ -28,7 +28,7 @@ export const usePush = createSharedComposable(() => {
   /** Подписать браузер и сообщить сервису; ключ сервера сменился — подписаться заново. */
   async function subscribe() {
     const { reg, sub } = await current()
-    const key = keyBytes(unwrap(await $api.GET('/api/push/key')).publicKey)
+    const key = keyBytes((await $api('/api/push/key')).publicKey)
     let s = sub
     if (s && !sameKey(s, key)) {
       await s.unsubscribe()
@@ -36,9 +36,10 @@ export const usePush = createSharedComposable(() => {
     }
     s ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
     const { endpoint, keys } = s.toJSON()
-    unwrap(await $api.POST('/api/push/subscriptions', {
+    await $api('/api/push/subscriptions', {
+      method: 'POST',
       body: { endpoint: endpoint!, keys: { p256dh: keys!.p256dh!, auth: keys!.auth! }, userAgent: navigator.userAgent },
-    }))
+    })
   }
 
   /** При запуске приложения: подписка уже есть — освежить её на сервисе. */
@@ -67,14 +68,14 @@ export const usePush = createSharedComposable(() => {
   async function disable() {
     const { sub } = await current()
     if (sub) {
-      await $api.DELETE('/api/push/subscriptions', { body: { endpoint: sub.endpoint } }).catch(() => {})
+      await $api('/api/push/subscriptions', { method: 'DELETE', body: { endpoint: sub.endpoint } }).catch(() => {})
       await sub.unsubscribe()
     }
     state.value = 'off'
   }
 
   async function test() {
-    return unwrap(await $api.POST('/api/push/test')).devices
+    return (await $api('/api/push/test', { method: 'POST' })).devices
   }
 
   /** Убрать системное уведомление, когда его подтвердили в приложении. */

@@ -1,7 +1,7 @@
-# brewapp на сервере: Postgres и сервис (интерфейс — внутри образа). Лежит в /opt/brewapp, туда же его кладёт
-# выкатка (.github/workflows/deploy.yml) вместе с новым образом. Настройки — /opt/brewapp/.env (образец —
-# deploy/.env.example). HTTPS и домен — nginx на сервере (deploy/nginx.conf), сервис слушает только 127.0.0.1.
-# Агенты пивоварен подключаются извне: wss://<домен>/api/agent.
+# brewapp на сервере: Postgres, сервис (API) и интерфейс (сервер Nuxt). Лежит в /opt/brewapp, туда же его кладёт
+# выкатка (.github/workflows/deploy.yml) вместе с новыми образами. Настройки — /opt/brewapp/.env (образец —
+# deploy/.env.example). HTTPS и домен — nginx на сервере (deploy/nginx.conf): /api → app, остальное → web;
+# оба слушают только 127.0.0.1. Агенты пивоварен подключаются извне: wss://<домен>/api/agent.
 name: brewapp
 
 services:
@@ -32,8 +32,20 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://brewapp:${POSTGRES_PASSWORD}@db:5432/brewapp
-      # запросы приходят только от nginx на этом же сервере — его заголовкам X-Forwarded-* можно верить
+      # запросы приходят только от nginx на этом же сервере и от web — их заголовкам X-Forwarded-* можно верить
       FORWARDED_ALLOW_IPS: "*"
+
+  web:
+    image: ghcr.io/sansay90/beer-app-web:${APP_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      # страницы, которые рендерит сервер, берут данные у сервиса напрямую, по сети compose
+      NUXT_API_SERVER: http://app:8000
 
 volumes:
   pgdata:

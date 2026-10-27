@@ -77,16 +77,25 @@ async function submit() {
         <UFormField label="Почта" name="email">
           <UInput v-model="form.email" type="email" autocomplete="email" size="lg" class="w-full" autofocus />
         </UFormField>
-        <UFormField v-if="mode !== 'forgot'" label="Пароль" name="password"
-                    :help="mode === 'register' ? `Не короче ${PASSWORD_MIN} символов` : undefined">
+        <UFormField
+          v-if="mode !== 'forgot'"
+          label="Пароль"
+          name="password"
+          :help="mode === 'register' ? `Не короче ${PASSWORD_MIN} символов` : undefined"
+        >
           <template v-if="mode === 'login'" #hint>
             <UButton label="Забыли пароль?" variant="link" size="sm" class="p-0" @click="mode = 'forgot'" />
           </template>
           <AuthPassword v-model="form.password" :autocomplete="mode === 'register' ? 'new-password' : 'current-password'" />
         </UFormField>
         <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="error" />
-        <UButton type="submit" :label="{ login: 'Войти', register: 'Зарегистрироваться', forgot: 'Прислать ссылку' }[mode]"
-                 size="lg" block :loading="pending" />
+        <UButton
+          type="submit"
+          :label="{ login: 'Войти', register: 'Зарегистрироваться', forgot: 'Прислать ссылку' }[mode]"
+          size="lg"
+          block
+          :loading="pending"
+        />
       </UForm>
     </template>
 

@@ -98,7 +98,7 @@ def to_steps(program):
             steps.append(Step(temp=BOIL_TEMP if boil else float(s["temp"]), minutes=int(s["minutes"]),
                               watts=int(s["watts"]), additions=list(program.get("timers") or []) if boil else []))
         except (KeyError, TypeError, ValueError) as e:
-            raise ValueError(f"шаг {i}: неполные данные ({e})")
+            raise ValueError(f"шаг {i}: неполные данные ({e})") from None
     if not steps:
         raise ValueError("в рецепте нет программы: ни пауз, ни кипячения")
     return steps

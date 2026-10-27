@@ -1,7 +1,11 @@
 # в образ идут только requirements.txt, миграции и пакет app
 .venv
-__pycache__
-*.pyc
+**/__pycache__
+**/*.pyc
 .env
 data
+tests
 *.md
+pyproject.toml
+requirements-dev.txt
+compose.yaml

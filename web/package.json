@@ -4,11 +4,16 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
     "preview": "nuxt preview",
-    "api:schema": "cd ../service && .venv\\Scripts\\python.exe -m app.export_openapi",
-    "api:types": "npm run api:schema && openapi-typescript openapi.json -o app/types/bridge.d.ts",
-    "typecheck": "nuxt typecheck"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "typecheck": "nuxt typecheck",
+    "api:schema": "node scripts/api-schema.mjs",
+    "api:types": "npm run api:schema && nuxt prepare"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.147",
@@ -17,7 +22,7 @@
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
     "nuxt": "^4.1.0",
-    "openapi-fetch": "^0.17.0",
+    "nuxt-open-fetch": "^0.13.9",
     "pinia": "^4.1.0",
     "tailwindcss": "^4.3.3",
     "uplot": "^1.6.31",
@@ -25,8 +30,10 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.13.0",
+    "@nuxt/eslint": "^1.17.0",
+    "eslint": "^10.13.0",
     "typescript": "~5.9.3",
+    "vitest": "^5.0.5",
     "vue-tsc": "^3.3.13"
   }
 }

@@ -1,0 +1,14 @@
+[project]
+name = "brewapp-service"
+version = "0.4.0"
+description = "Сервис brewapp: рецепты, вход, связь с агентами пивоварен"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = [
+  # uvicorn в потоке тестов: обработчики сигналов ставятся только в главном потоке
+  "ignore::DeprecationWarning:websockets.*",
+]

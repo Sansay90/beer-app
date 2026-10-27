@@ -63,7 +63,7 @@ const tip = computed(() => {
     top: `${(slot.cy / H) * 100}%`,
     shift: x < 0.25 ? '-12px' : x > 0.75 ? 'calc(-100% + 12px)' : '-50%',
     when: whenInBoil(slot.minutes, slot.boil),
-    items: slot.items.map(a => ({ ...additionKind(a), name: additionName(a), amount: additionAmount(a) })),
+    items: slot.items.map(a => ({ ...additionKind(a), name: additionName(a), amount: additionAmount(a), note: additionNote(a) })),
   }
 })
 </script>
@@ -127,6 +127,7 @@ const tip = computed(() => {
         <UIcon :name="item.icon" class="size-4 shrink-0" :class="item.tint" />
         <span class="font-medium text-highlighted">{{ item.name }}</span>
         <span v-if="item.amount" class="num ml-auto pl-3 text-muted">{{ item.amount }}</span>
+        <span v-if="item.note" class="num text-muted">· {{ item.note }}</span>
       </div>
     </div>
   </div>

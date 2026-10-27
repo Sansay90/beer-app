@@ -1,0 +1,20 @@
+# Агент brewapp в Docker — на компьютере рядом с пивоварней, сам по себе. Из папки brewapp/agent:
+#   docker compose up -d --build      запустить (и пересобрать после обновления)
+#   docker compose logs -f            журнал агента
+# Настройки — agent/.env (образец — .env.example): адрес сервиса, токен агента и BREWERY_IP обязательно —
+# автопоиск пивоварни по широковещанию из контейнера не работает.
+name: brewapp-agent
+
+services:
+  agent:
+    build: .
+    image: brewapp-agent
+    container_name: brewapp-agent
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+    volumes:
+      # ключи пивоварни и память агента — те же, что у агента, запущенного из .venv
+      - ./devices.json:/config/devices.json:ro
+      - ./data:/data

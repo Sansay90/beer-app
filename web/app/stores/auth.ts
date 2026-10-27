@@ -11,48 +11,47 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function refresh() {
     try {
-      const { data, response } = await $api.GET('/api/auth/me')
-      user.value = response.ok ? data ?? null : null
+      user.value = await $api('/api/auth/me')
       unreachable.value = false
-    } catch {
+    } catch (e) {                     // 401 — гость
       user.value = null
-      unreachable.value = true
+      unreachable.value = isOffline(e)
     }
     checked.value = true
     return user.value
   }
 
   async function login(email: string, password: string) {
-    user.value = unwrap(await $api.POST('/api/auth/login', { body: { email, password } }))
+    user.value = await $api('/api/auth/login', { method: 'POST', body: { email, password } })
   }
 
   async function register(email: string, password: string) {
-    user.value = unwrap(await $api.POST('/api/auth/register', { body: { email, password } }))
+    user.value = await $api('/api/auth/register', { method: 'POST', body: { email, password } })
   }
 
   async function forgot(email: string) {
-    unwrap(await $api.POST('/api/auth/forgot', { body: { email } }))
+    await $api('/api/auth/forgot', { method: 'POST', body: { email } })
   }
 
   async function reset(token: string, password: string) {
-    user.value = unwrap(await $api.POST('/api/auth/reset', { body: { token, password } }))
+    user.value = await $api('/api/auth/reset', { method: 'POST', body: { token, password } })
   }
 
   async function verify(token: string) {
-    const me = unwrap(await $api.POST('/api/auth/verify', { body: { token } }))
+    const me = await $api('/api/auth/verify', { method: 'POST', body: { token } })
     if (user.value?.id === me.id) user.value = me
     return me
   }
 
   async function resendVerify() {
-    unwrap(await $api.POST('/api/auth/verify/resend'))
+    await $api('/api/auth/verify/resend', { method: 'POST' })
   }
 
   async function logout() {
     // уведомления этого браузера были для этого пользователя
     const push = usePush()
     if (push.state.value === 'on') await push.disable().catch(() => {})
-    await $api.POST('/api/auth/logout').catch(() => {})
+    await $api('/api/auth/logout', { method: 'POST' }).catch(() => {})
     // данные прежнего пользователя в сторах и открытый поток событий сбрасывает полная перезагрузка
     window.location.assign(`${useRuntimeConfig().app.baseURL}recipes`)
   }

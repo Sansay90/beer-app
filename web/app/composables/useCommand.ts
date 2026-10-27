@@ -1,6 +1,30 @@
-/** Выполнить действие стора с индикатором и тостом: успех — коротко, ошибка — текстом сервиса. */
+/** Ошибку запроса — тостом: нет связи или текст сервиса. errors — error из useFetch / useAsyncData:
+ *  их ошибки показываются сами, как у команд. */
+export function useErrorToast(...errors: Ref<unknown>[]) {
+  const toast = useToast()
+
+  function show(e: unknown) {
+    const offline = isOffline(e)
+    toast.add({
+      title: offline ? 'Нет связи с сервисом' : 'Не получилось',
+      description: offline ? 'Попробуйте чуть позже.' : errorText(e),
+      color: 'error',
+      icon: 'i-lucide-circle-alert',
+    })
+  }
+
+  for (const error of errors) {
+    watch(error, e => e && show(e))
+    // ошибка уже есть — пришла с отрисованной на сервере страницей: тост — когда страница оживёт, не во время сверки
+    if (import.meta.client && error.value) onNuxtReady(() => show(error.value))
+  }
+  return show
+}
+
+/** Выполнить действие (запрос, изменяющий данные) с индикатором и тостом: успех — коротко, ошибка — текстом сервиса. */
 export function useCommand() {
   const toast = useToast()
+  const showError = useErrorToast()
   const pending = ref(false)
 
   async function exec<T>(action: () => Promise<T>, success?: string): Promise<T | undefined> {
@@ -10,13 +34,7 @@ export function useCommand() {
       if (success) toast.add({ title: success, color: 'success', icon: 'i-lucide-circle-check' })
       return result
     } catch (e) {
-      const offline = e instanceof TypeError                       // fetch не достучался до сервиса
-      toast.add({
-        title: offline ? 'Нет связи с сервисом' : 'Не получилось',
-        description: offline ? 'Попробуйте чуть позже.' : e instanceof Error ? e.message : String(e),
-        color: 'error',
-        icon: 'i-lucide-circle-alert',
-      })
+      showError(e)
       return undefined
     } finally {
       pending.value = false

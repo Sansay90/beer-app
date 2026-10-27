@@ -5,6 +5,27 @@
     "version": "0.4"
   },
   "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Сервис жив — для проверок Docker и мониторинга",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "tags": [
@@ -276,122 +297,13 @@
         }
       }
     },
-    "/api/health": {
+    "/api/admin/users": {
       "get": {
         "tags": [
-          "состояние"
+          "администрирование"
         ],
-        "summary": "Сервис жив — для проверок Docker и мониторинга",
-        "operationId": "health_api_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/state": {
-      "get": {
-        "tags": [
-          "состояние"
-        ],
-        "summary": "Get State",
-        "operationId": "get_state_api_state_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Snapshot"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/history": {
-      "get": {
-        "tags": [
-          "состояние"
-        ],
-        "summary": "Точки графика [unix-время, °C, цель °C]",
-        "operationId": "get_history_api_history_get",
-        "parameters": [
-          {
-            "name": "minutes",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 360,
-              "title": "Minutes"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "array",
-                    "prefixItems": [
-                      {
-                        "type": "number"
-                      },
-                      {
-                        "type": "number"
-                      },
-                      {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      }
-                    ],
-                    "minItems": 3,
-                    "maxItems": 3
-                  },
-                  "title": "Response Get History Api History Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/events": {
-      "get": {
-        "tags": [
-          "состояние"
-        ],
-        "summary": "Недавние события, новые первыми",
-        "operationId": "get_events_api_events_get",
+        "summary": "Пользователи",
+        "operationId": "admin_users_api_admin_users_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -399,10 +311,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/BrewEvent"
+                    "$ref": "#/components/schemas/AdminUser"
                   },
                   "type": "array",
-                  "title": "Response Get Events Api Events Get"
+                  "title": "Response Admin Users Api Admin Users Get"
                 }
               }
             }
@@ -410,337 +322,41 @@
         }
       }
     },
-    "/api/limits": {
-      "get": {
+    "/api/admin/users/{uid}/role": {
+      "put": {
         "tags": [
-          "состояние"
+          "администрирование"
         ],
-        "summary": "Ограничения пивоварни; гостю и без пивоварни — по умолчанию",
-        "operationId": "get_limits_api_limits_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Limits"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/stream": {
-      "get": {
-        "tags": [
-          "состояние"
-        ],
-        "summary": "SSE: `state` — Snapshot, `event` — BrewEvent",
-        "operationId": "stream_api_stream_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "text/event-stream": {}
-            }
-          }
-        }
-      }
-    },
-    "/api/power": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Power",
-        "operationId": "power_api_power_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OnOff"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/manual": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Задать ручной режим",
-        "operationId": "manual_api_manual_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ManualMode"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/start": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Старт / продолжить",
-        "operationId": "start_api_start_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pause": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Pause",
-        "operationId": "pause_api_pause_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pump": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Pump",
-        "operationId": "pump_api_pump_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OnOff"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/flow": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Flow",
-        "operationId": "flow_api_flow_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FlowLevel"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/settings": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Калибровка и компенсация кипения",
-        "operationId": "settings_api_settings_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SettingsUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/alert/confirm": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Подтвердить подсказку пивоварни",
-        "operationId": "confirm_alert_api_alert_confirm_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/additions/{minutes}/ack": {
-      "post": {
-        "tags": [
-          "управление"
-        ],
-        "summary": "Закладка сделана — снять напоминание",
-        "operationId": "ack_addition_api_additions__minutes__ack_post",
+        "summary": "Сменить роль",
+        "operationId": "admin_set_role_api_admin_users__uid__role_put",
         "parameters": [
           {
-            "name": "minutes",
+            "name": "uid",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "title": "Minutes"
+              "type": "string",
+              "title": "Uid"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleIn"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Ok"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             }
@@ -1292,6 +908,467 @@
         }
       }
     },
+    "/api/state": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Get State",
+        "operationId": "get_state_api_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Точки графика [unix-время, °C, цель °C]",
+        "operationId": "get_history_api_history_get",
+        "parameters": [
+          {
+            "name": "minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 360,
+              "title": "Minutes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "title": "Response Get History Api History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Недавние события, новые первыми",
+        "operationId": "get_events_api_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BrewEvent"
+                  },
+                  "type": "array",
+                  "title": "Response Get Events Api Events Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/limits": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Ограничения пивоварни; гостю и без пивоварни — по умолчанию",
+        "operationId": "get_limits_api_limits_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Limits"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "SSE: `state` — Snapshot, `event` — BrewEvent",
+        "operationId": "stream_api_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/power": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Power",
+        "operationId": "power_api_power_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manual": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Задать ручной режим",
+        "operationId": "manual_api_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualMode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/start": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Старт / продолжить",
+        "operationId": "start_api_start_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pause": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Pause",
+        "operationId": "pause_api_pause_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pump": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Pump",
+        "operationId": "pump_api_pump_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flow": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Flow",
+        "operationId": "flow_api_flow_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlowLevel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Калибровка и компенсация кипения",
+        "operationId": "settings_api_settings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert/confirm": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Подтвердить подсказку пивоварни",
+        "operationId": "confirm_alert_api_alert_confirm_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/additions/{minutes}/ack": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Закладка сделана — снять напоминание",
+        "operationId": "ack_addition_api_additions__minutes__ack_post",
+        "parameters": [
+          {
+            "name": "minutes",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Minutes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recipe/start": {
       "post": {
         "tags": [
@@ -1452,83 +1529,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipment"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/users": {
-      "get": {
-        "tags": [
-          "администрирование"
-        ],
-        "summary": "Пользователи",
-        "operationId": "admin_users_api_admin_users_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AdminUser"
-                  },
-                  "type": "array",
-                  "title": "Response Admin Users Api Admin Users Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/users/{uid}/role": {
-      "put": {
-        "tags": [
-          "администрирование"
-        ],
-        "summary": "Сменить роль",
-        "operationId": "admin_set_role_api_admin_users__uid__role_put",
-        "parameters": [
-          {
-            "name": "uid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Uid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoleIn"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             }
@@ -1726,6 +1726,18 @@
             ],
             "title": "Unit",
             "default": "g"
+          },
+          "whirlpool": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whirlpool",
+            "description": "вирпул: закладывают в конце кипячения и выдерживают столько минут; None — не вирпул"
           }
         },
         "type": "object",
@@ -2325,7 +2337,7 @@
         },
         "type": "object",
         "title": "Equipment",
-        "description": "Профиль оборудования пивоварни: эффективность — значение новых рецептов, по испарению считается промывочная вода."
+        "description": "Профиль оборудования пивоварни: эффективность — значение новых рецептов, по испарению считается\nпромывочная вода."
       },
       "Fermentable": {
         "properties": {
@@ -3603,10 +3615,23 @@
               }
             ],
             "title": "Ebc"
+          },
+          "abv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abv",
+            "description": "крепость, % об. — с сахаром, добавленным на брожении"
           }
         },
         "type": "object",
-        "title": "Targets"
+        "title": "Targets",
+        "description": "Показатели по ингредиентам: сервис считает их сам при сохранении (calc.py) — присланные не сохраняются."
       },
       "Timer": {
         "properties": {
