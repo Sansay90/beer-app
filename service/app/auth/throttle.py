@@ -40,3 +40,5 @@ class AuthLimits:
         self.letters_by_email = Throttle(5, 60 * 60)         # писем со ссылками на одну почту в час
         self.letters_by_ip = Throttle(30, 60 * 60)
         self.signups_by_ip = Throttle(30, 60 * 60)
+        self.comments_burst = Throttle(5, 60)                # комментариев от одного человека в минуту
+        self.comments_by_user = Throttle(60, 60 * 60)        # и в час

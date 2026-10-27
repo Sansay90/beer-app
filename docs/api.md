@@ -34,6 +34,10 @@ HTTP API сервиса для интерфейса и WebSocket для аген
 
 Видно всем, и гостю: `GET /api/brewers/{ник}` — пивовар (ник, аватар, `joinedAt`, сколько опубликованных рецептов), его рецепты — `GET /api/recipes?author={ник}`; аватар — `GET /api/avatars/{id}?v=…` (кеш навсегда: у нового аватара новая версия). Автор у рецептов — `{id, name, avatar}`, почты в ответах для других нет нигде.
 
+## Обсуждение и голоса
+
+`GET /api/recipes/{id}/comments` — комментарии, старые первыми (ответ — с `parentId`); видно тем, кому виден рецепт. `POST` там же `{text, parentId?}` — написать (вошедшему; чаще 5 в минуту или 60 в час — 429). `PATCH /api/comments/{id}` `{text}` — изменить свой, `DELETE` — удалить свой (администратору — любой). Голос: `PUT /api/recipes/{id}/vote` и `PUT /api/comments/{id}/vote` `{"value": 1 | -1 | 0}` → `{likes, dislikes, vote}`; за своё — 403. У рецептов в списке и в `meta` — `likes`, `dislikes`, `comments`, `brewsTotal` (сколько раз варили все), в `meta` ещё `vote` — свой голос.
+
 ## Команды пивоварне
 
 `POST /api/power`, `/manual`, `/start`, `/pause`, `/pump`, `/flow`, `/settings`, `/alert/confirm`, `/additions/{minutes}/ack`, `/recipe/start`, `/recipes/{id}/upload` — сервис передаёт команду агенту пивоварни пользователя и ждёт ответа до 35 с. Ответ — `{"ok": true}` или ошибка из таблицы выше. Команды не копятся: агента нет на связи — сразу 503.

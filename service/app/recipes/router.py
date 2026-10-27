@@ -1,4 +1,4 @@
-"""Рецепты и фото пива. Гость видит опубликованные, пользователь — ещё и свои (права — access.py)."""
+"""Рецепты, обсуждение и фото пива. Гость видит опубликованные, пользователь — ещё и свои (права — access.py)."""
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -6,11 +6,25 @@ from starlette.concurrency import run_in_threadpool
 
 from ..auth.dependencies import CurrentUser, Viewer
 from ..brewery.control import UserBrewery
+from ..deps import LimitsDep
 from ..schemas import Ok
 from . import photos as photo
 from .calc import targets
+from .discussion import Discussion
 from .program import build_program
-from .schemas import Photo, Recipe, RecipeDetail, RecipeSummary, SavedRecipe, VisibilityIn
+from .schemas import (
+    CommentEdit,
+    CommentIn,
+    CommentOut,
+    Photo,
+    Recipe,
+    RecipeDetail,
+    RecipeSummary,
+    SavedRecipe,
+    VisibilityIn,
+    VoteIn,
+    Votes,
+)
 from .store import RecipeStore
 
 router = APIRouter(tags=["рецепты"])
@@ -27,6 +41,18 @@ def user_recipes(user: CurrentUser) -> RecipeStore:
 
 ViewerRecipes = Annotated[RecipeStore, Depends(viewer_recipes)]
 UserRecipes = Annotated[RecipeStore, Depends(user_recipes)]
+
+
+def viewer_discussion(viewer: Viewer) -> Discussion:
+    return Discussion(viewer)
+
+
+def user_discussion(user: CurrentUser) -> Discussion:
+    return Discussion(user)
+
+
+ViewerDiscussion = Annotated[Discussion, Depends(viewer_discussion)]
+UserDiscussion = Annotated[Discussion, Depends(user_discussion)]
 
 
 @router.get("/recipes", response_model=list[RecipeSummary],
@@ -99,6 +125,48 @@ async def upload(rid: str, recipes: UserRecipes, brewery: UserBrewery):
     recipe = await run_in_threadpool(recipes.get, rid)
     await run_in_threadpool(brewery.check, recipe)
     return await brewery.run("upload", program=build_program(rid, recipe))
+
+
+# ── обсуждение и голоса ───────────────────────────────────────────────────────
+@router.get("/recipes/{rid}/comments", response_model=list[CommentOut], summary="Комментарии к рецепту",
+            description="Старые первыми; ответ — с parentId (уровень один).")
+def list_comments(rid: str, discussion: ViewerDiscussion):
+    return discussion.comments(rid)
+
+
+@router.post("/recipes/{rid}/comments", response_model=CommentOut, summary="Написать комментарий",
+             description="Вошедшему; не чаще 5 в минуту и 60 в час.")
+def add_comment(rid: str, body: CommentIn, discussion: UserDiscussion, limits: LimitsDep):
+    key = f"user:{discussion.uid}"
+    if wait := max(limits.comments_burst.wait(key), limits.comments_by_user.wait(key)):
+        raise HTTPException(429, f"слишком часто — попробуйте через {max(1, round(wait / 60))} мин")
+    comment = discussion.add(rid, body.text, body.parentId)
+    limits.comments_burst.add(key)
+    limits.comments_by_user.add(key)
+    return comment
+
+
+@router.patch("/comments/{cid}", response_model=CommentOut, summary="Изменить свой комментарий")
+def edit_comment(cid: str, body: CommentEdit, discussion: UserDiscussion):
+    return discussion.edit(cid, body.text)
+
+
+@router.delete("/comments/{cid}", response_model=Ok, summary="Удалить комментарий",
+               description="Свой — автору, любой — администратору; с ответами остаётся «комментарий удалён».")
+def delete_comment(cid: str, discussion: UserDiscussion):
+    discussion.remove(cid)
+    return Ok()
+
+
+@router.put("/recipes/{rid}/vote", response_model=Votes, summary="Голос за рецепт",
+            description="1 — нравится, −1 — не нравится, 0 — снять; за свой рецепт — нельзя.")
+def vote_recipe(rid: str, body: VoteIn, discussion: UserDiscussion):
+    return discussion.vote_recipe(rid, body.value)
+
+
+@router.put("/comments/{cid}/vote", response_model=Votes, summary="Голос за комментарий")
+def vote_comment(cid: str, body: VoteIn, discussion: UserDiscussion):
+    return discussion.vote_comment(cid, body.value)
 
 
 # ── фото пива ─────────────────────────────────────────────────────────────────

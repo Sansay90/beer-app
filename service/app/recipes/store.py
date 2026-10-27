@@ -10,7 +10,8 @@ from ..auth.profile import author as author_of
 from ..auth.profile import by_nick
 from ..db import session
 from ..errors import Conflict, Forbidden, Invalid, NotFound
-from ..models import Brew, Favorite, Recipe, RecipePhoto, User, parse_id, unix, utcnow
+from ..models import Brew, Favorite, Recipe, RecipePhoto, RecipeVote, User, parse_id, unix, utcnow
+from .discussion import comment_counts, tally, votes_of
 from .program import program_steps
 
 
@@ -18,6 +19,14 @@ def excerpt(text, limit=220):
     """Первый абзац описания одной строкой: карточка всё равно обрежет до двух строк."""
     text = " ".join(re.split(r"\n\s*\n", (text or "").strip())[0].split())
     return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def brews_total(s, ids):
+    """{id рецепта: сколько раз его варили все пивовары} — варки через пивоварню; кто варил, не раскрывается."""
+    if not ids:
+        return {}
+    return dict(s.exec(select(Brew.recipe_id, func.count()).where(Brew.recipe_id.in_(ids))
+                       .group_by(Brew.recipe_id)).all())
 
 
 class RecipeStore:
@@ -59,6 +68,8 @@ class RecipeStore:
                 for rid, pid in s.exec(select(RecipePhoto.recipe_id, RecipePhoto.id)
                                        .where(RecipePhoto.recipe_id.in_(ids)).order_by(RecipePhoto.created_at)).all():
                     photos.setdefault(rid, []).append(str(pid))
+            votes, comments = tally(s, RecipeVote, "recipe_id", ids), comment_counts(s, ids)
+            total = brews_total(s, ids)
         out = []
         for r, name, avatar_version, has_avatar in rows:
             steps = program_steps(r.data)
@@ -70,7 +81,9 @@ class RecipeStore:
                         "about": excerpt(r.data.get("notes")), "photos": photos.get(r.id, []),
                         "author": author_of(r.user_id, name, avatar_version, has_avatar),
                         "mine": r.user_id == self.uid, "visibility": r.visibility,
-                        "publishedAt": unix(r.published_at), "favorite": r.id in starred})
+                        "publishedAt": unix(r.published_at), "favorite": r.id in starred,
+                        "likes": votes.get(r.id, (0, 0))[0], "dislikes": votes.get(r.id, (0, 0))[1],
+                        "comments": comments.get(r.id, 0), "brewsTotal": total.get(r.id, 0)})
         return out
 
     def get(self, rid):
@@ -83,9 +96,14 @@ class RecipeStore:
             r = self._view(s, rid)
             u = s.get(User, r.user_id)
             favorite = self.uid is not None and s.get(Favorite, (self.uid, r.id)) is not None
+            likes, dislikes = tally(s, RecipeVote, "recipe_id", [r.id]).get(r.id, (0, 0))
+            vote = votes_of(s, RecipeVote, "recipe_id", self.uid, [r.id]).get(r.id, 0)
             meta = {"author": author_of(u.id, u.name, u.avatar_version, u.avatar is not None),
                     "mine": r.user_id == self.uid,
                     "visibility": r.visibility, "publishedAt": unix(r.published_at), "favorite": favorite,
+                    "likes": likes, "dislikes": dislikes, "vote": vote,
+                    "comments": comment_counts(s, [r.id]).get(r.id, 0),
+                    "brewsTotal": brews_total(s, [r.id]).get(r.id, 0),
                     "canEdit": can_edit(self.viewer, r), "canModerate": can_moderate(self.viewer, r)}
             return {**r.data, "meta": meta}
 

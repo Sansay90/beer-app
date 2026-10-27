@@ -61,6 +61,8 @@ useSeoMeta({
           <RecipeViewMiscs v-if="recipe.miscs?.length" :items="recipe.miscs" />
           <RecipeViewProgram :recipe="recipe" />
           <RecipeViewFermentation v-if="recipe.fermentation?.length" :items="recipe.fermentation" />
+          <!-- якорь: на него ведёт «N комментариев» в шапке рецепта -->
+          <RecipeViewComments id="comments" :recipe-id="id" class="scroll-mt-6" />
         </div>
 
         <aside class="space-y-4 xl:sticky xl:top-0 xl:self-start">

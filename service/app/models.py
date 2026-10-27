@@ -6,7 +6,9 @@ users ─┬─ sessions                  входы: cookie-токен — хэ
        ├─ devices ─┬─ readings      температура во времени
        │           ├─ events        события пивоварни
        │           └─ brews         варки: рецепт, начало, конец, исход
-       ├─ recipes ── recipe_photos  рецепт — JSONB; фото пива
+       ├─ recipes ─┬─ recipe_photos      рецепт — JSONB; фото пива
+       │           ├─ recipe_votes       лайки и дизлайки рецепта
+       │           └─ comments ── comment_votes   обсуждение: комментарии и ответы, голоса за них
        └─ favorites ── recipes      избранное: чужие и свои рецепты, сохранённые без копии
 """
 import uuid
@@ -111,6 +113,38 @@ class Favorite(SQLModel, table=True):
     __tablename__ = "favorites"
     user_id: uuid.UUID = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
     recipe_id: uuid.UUID = Field(foreign_key="recipes.id", ondelete="CASCADE", primary_key=True, index=True)
+    created_at: datetime = ts()
+
+
+class RecipeVote(SQLModel, table=True):
+    """Голос за рецепт: value 1 — нравится, −1 — не нравится; один на человека, за свой рецепт — нельзя."""
+    __tablename__ = "recipe_votes"
+    user_id: uuid.UUID = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
+    recipe_id: uuid.UUID = Field(foreign_key="recipes.id", ondelete="CASCADE", primary_key=True, index=True)
+    value: int
+    created_at: datetime = ts()
+
+
+class Comment(SQLModel, table=True):
+    """Комментарий к рецепту. parent_id — ответ на комментарий (один уровень: ответ на ответ — в ту же ветку).
+    Удалённый с ответами остаётся пустым (deleted_at) — ветка не рассыпается; без ответов — удаляется."""
+    __tablename__ = "comments"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    recipe_id: uuid.UUID = fk("recipes.id")
+    user_id: uuid.UUID = fk("users.id")
+    parent_id: uuid.UUID | None = fk("comments.id", nullable=True, ondelete="CASCADE")
+    text: str
+    created_at: datetime = ts()
+    edited_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+
+
+class CommentVote(SQLModel, table=True):
+    """Голос за комментарий — как за рецепт."""
+    __tablename__ = "comment_votes"
+    user_id: uuid.UUID = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
+    comment_id: uuid.UUID = Field(foreign_key="comments.id", ondelete="CASCADE", primary_key=True, index=True)
+    value: int
     created_at: datetime = ts()
 
 

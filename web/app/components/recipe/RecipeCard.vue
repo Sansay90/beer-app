@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Карточка рецепта в списке: бокал в цвет пива, начало описания, цифры одной строкой, внизу — миниатюры фото пива.
+// Карточка рецепта в списке: бокал в цвет пива, начало описания, цифры одной строкой, отклик (нравится, не нравится,
+// комментарии, сколько раз сварили все), внизу — миниатюры фото пива.
 // Высота у всех карточек одна: описание всегда в две строки, цифры и низ — фиксированной высоты.
 // Ссылка на рецепт — название, растянутое на всю карточку; миниатюры — кнопки поверх неё: фото открываются тут же.
 // Чужой рецепт — с автором внизу, свой опубликованный — со значком глобуса.
@@ -32,6 +33,13 @@ const stats = computed(() => {
     ebc != null && { value: num(ebc), unit: 'EBC' },
   ].filter(s => !!s)
 })
+
+const counts = computed(() => [
+  { label: 'нравится', icon: 'i-lucide-thumbs-up', value: props.recipe.likes },
+  { label: 'не нравится', icon: 'i-lucide-thumbs-down', value: props.recipe.dislikes },
+  { label: 'комментариев', icon: 'i-lucide-message-circle', value: props.recipe.comments },
+  { label: 'раз сварили', icon: 'i-lucide-beer', value: props.recipe.brewsTotal },
+])
 
 // миниатюр — не больше MAX, остальные — счётчиком
 const MAX_THUMBS = 3
@@ -109,22 +117,31 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
         <span v-if="!stats.length" class="text-dimmed">Только программа пивоварни</span>
       </div>
 
-      <div class="mt-auto flex h-11 items-end justify-between gap-3 text-xs text-dimmed tabular-nums">
-        <span class="flex min-w-0 items-center gap-1.5 pb-1">
-          <span class="truncate">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
-          <template v-if="!recipe.mine">
-            <span aria-hidden="true">·</span>
-            <!-- поверх ссылки-карточки (z-10): ведёт на страницу автора -->
-            <NuxtLink v-if="recipe.author.name" :to="brewerPath(recipe.author.name)" class="relative z-10 flex min-w-0 items-center gap-1 hover:text-highlighted">
-              <UserAvatar :user="recipe.author" class="size-5" />
-              <span class="truncate">{{ recipe.author.name }}</span>
-            </NuxtLink>
-            <span v-else class="flex min-w-0 items-center gap-1">
-              <UserAvatar :user="recipe.author" class="size-5" />
-              <span class="truncate">{{ UNKNOWN_BREWER }}</span>
-            </span>
-          </template>
+      <!-- отклик пивоваров: нравится, не нравится, комментарии, сколько раз сварили все -->
+      <div class="mt-2 flex items-center gap-4 text-sm text-muted tabular-nums">
+        <span v-for="c in counts" :key="c.label" class="flex items-center gap-1" :title="c.label">
+          <UIcon :name="c.icon" class="size-4 shrink-0" />{{ c.value }}<span class="sr-only">{{ c.label }}</span>
         </span>
+      </div>
+
+      <div class="mt-auto flex items-end justify-between gap-3 pt-2 text-xs text-dimmed tabular-nums">
+        <div class="min-w-0 pb-1">
+          <span class="flex min-w-0 items-center gap-1.5">
+            <span class="truncate">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
+            <template v-if="!recipe.mine">
+              <span aria-hidden="true">·</span>
+              <!-- поверх ссылки-карточки (z-10): ведёт на страницу автора -->
+              <NuxtLink v-if="recipe.author.name" :to="brewerPath(recipe.author.name)" class="relative z-10 flex min-w-0 items-center gap-1 hover:text-highlighted">
+                <UserAvatar :user="recipe.author" class="size-5" />
+                <span class="truncate">{{ recipe.author.name }}</span>
+              </NuxtLink>
+              <span v-else class="flex min-w-0 items-center gap-1">
+                <UserAvatar :user="recipe.author" class="size-5" />
+                <span class="truncate">{{ UNKNOWN_BREWER }}</span>
+              </span>
+            </template>
+          </span>
+        </div>
         <div v-if="thumbs.length" class="relative z-10 flex shrink-0 -space-x-2.5">
           <button
             v-for="(pid, i) in thumbs"

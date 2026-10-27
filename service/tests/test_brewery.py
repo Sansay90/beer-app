@@ -138,3 +138,21 @@ def test_foreign_brewery_rejected(service, brewer, agents, caplog):
     assert asyncio.run(hello()) == 1008                       # чужую пивоварню не привязать
     assert brewer.get("/state")[1]["online"] is True
     assert not [r for r in caplog.records if r.levelname == "ERROR"]
+
+
+def test_brews_of_published_recipe_counted_for_all(service, brewer, agents, recipe):
+    """Чужой опубликованный рецепт сварили — варка к нему привязана, «сколько раз варили» видят все."""
+    author = service.client()
+    author.signup("author@test.local")
+    author.ok("POST", "/auth/verify", {"token": service.outbox.link("verify")})
+    rid = author.ok("POST", "/recipes", recipe)["id"]
+    author.ok("PUT", f"/recipes/{rid}/visibility", {"visibility": "public"})
+
+    agent = online(service, brewer, agents)
+    brewer.ok("POST", f"/recipes/{rid}/upload")
+    brewer.ok("POST", "/recipe/start")
+    agent.brewery.push({"104": 2, "144": 1, "6": 2, "10": 250})
+    brews = eventually(lambda: brewer.get("/brews")[1])
+    assert brews[0]["recipeId"] == rid
+    assert service.client().get("/recipes")[1][0]["brewsTotal"] == 1
+    assert author.get(f"/recipes/{rid}")[1]["meta"]["brewsTotal"] == 1

@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from sqlmodel import select
 
+from ..access import PUBLIC
 from ..db import session
 from ..errors import NotFound
 from ..models import Brew, Event, Reading, Recipe, from_unix, parse_id, unix, utcnow
@@ -66,7 +67,8 @@ class Journal:
         self._submit(lambda s: s.add(row))
 
     def start_brew(self, device_id, user_id, brew_id, name, recipe_id, recipe, at):
-        """Повтор после переподключения агента варку не задваивает; чужой рецепт к варке не привязывается."""
+        """Повтор после переподключения агента варку не задваивает. Рецепт привязывается, если он свой или
+        опубликован (по нему считается «сколько раз варили»); id чужого личного агент не подставит."""
         bid = parse_id(brew_id)
         if bid is None:
             return
@@ -76,7 +78,7 @@ class Journal:
                 return
             r = s.get(Recipe, rid) if (rid := parse_id(recipe_id)) else None
             s.add(Brew(id=bid, user_id=user_id, device_id=device_id, name=name,
-                       recipe_id=r.id if r is not None and r.user_id == user_id else None,
+                       recipe_id=r.id if r is not None and (r.user_id == user_id or r.visibility == PUBLIC) else None,
                        recipe=recipe or {}, started_at=from_unix(at)))
         self._submit(write)
 

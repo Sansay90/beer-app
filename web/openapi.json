@@ -985,6 +985,302 @@
         }
       }
     },
+    "/api/recipes/{rid}/comments": {
+      "get": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Комментарии к рецепту",
+        "description": "Старые первыми; ответ — с parentId (уровень один).",
+        "operationId": "list_comments_api_recipes__rid__comments_get",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentOut"
+                  },
+                  "title": "Response List Comments Api Recipes  Rid  Comments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Написать комментарий",
+        "description": "Вошедшему; не чаще 5 в минуту и 60 в час.",
+        "operationId": "add_comment_api_recipes__rid__comments_post",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/{cid}": {
+      "patch": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Изменить свой комментарий",
+        "operationId": "edit_comment_api_comments__cid__patch",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Удалить комментарий",
+        "description": "Свой — автору, любой — администратору; с ответами остаётся «комментарий удалён».",
+        "operationId": "delete_comment_api_comments__cid__delete",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes/{rid}/vote": {
+      "put": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Голос за рецепт",
+        "description": "1 — нравится, −1 — не нравится, 0 — снять; за свой рецепт — нельзя.",
+        "operationId": "vote_recipe_api_recipes__rid__vote_put",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Votes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/{cid}/vote": {
+      "put": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Голос за комментарий",
+        "operationId": "vote_comment_api_comments__cid__vote_put",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Votes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recipes/{rid}/photos": {
       "get": {
         "tags": [
@@ -2495,6 +2791,127 @@
         ],
         "title": "Brewer"
       },
+      "CommentEdit": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CommentEdit"
+      },
+      "CommentIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Text"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentid",
+            "description": "ответ на комментарий; ответ на ответ встаёт в ту же ветку"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CommentIn"
+      },
+      "CommentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentid"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Author"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "createdAt": {
+            "type": "number",
+            "title": "Createdat"
+          },
+          "edited": {
+            "type": "boolean",
+            "title": "Edited"
+          },
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes"
+          },
+          "dislikes": {
+            "type": "integer",
+            "title": "Dislikes"
+          },
+          "vote": {
+            "type": "integer",
+            "title": "Vote",
+            "description": "голос того, кто спрашивает"
+          },
+          "canEdit": {
+            "type": "boolean",
+            "title": "Canedit"
+          },
+          "canDelete": {
+            "type": "boolean",
+            "title": "Candelete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "createdAt",
+          "edited",
+          "deleted",
+          "likes",
+          "dislikes",
+          "vote",
+          "canEdit",
+          "canDelete"
+        ],
+        "title": "CommentOut",
+        "description": "Комментарий; удалённый с ответами — пустой (deleted), без автора."
+      },
       "Credentials": {
         "properties": {
           "email": {
@@ -3541,6 +3958,33 @@
             "description": "в избранном у того, кто спрашивает",
             "default": false
           },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "default": 0
+          },
+          "dislikes": {
+            "type": "integer",
+            "title": "Dislikes",
+            "default": 0
+          },
+          "vote": {
+            "type": "integer",
+            "title": "Vote",
+            "description": "голос того, кто спрашивает: 1, −1 или 0",
+            "default": 0
+          },
+          "comments": {
+            "type": "integer",
+            "title": "Comments",
+            "default": 0
+          },
+          "brewsTotal": {
+            "type": "integer",
+            "title": "Brewstotal",
+            "description": "сколько раз варили все пивовары",
+            "default": 0
+          },
           "canEdit": {
             "type": "boolean",
             "title": "Canedit",
@@ -3678,6 +4122,30 @@
             "title": "Favorite",
             "description": "в избранном у того, кто спрашивает",
             "default": false
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "«нравится»",
+            "default": 0
+          },
+          "dislikes": {
+            "type": "integer",
+            "title": "Dislikes",
+            "description": "«не нравится»",
+            "default": 0
+          },
+          "comments": {
+            "type": "integer",
+            "title": "Comments",
+            "description": "комментариев, без удалённых",
+            "default": 0
+          },
+          "brewsTotal": {
+            "type": "integer",
+            "title": "Brewstotal",
+            "description": "сколько раз варили все пивовары (через пивоварню)",
+            "default": 0
           }
         },
         "type": "object",
@@ -4207,6 +4675,43 @@
           "visibility"
         ],
         "title": "VisibilityIn"
+      },
+      "VoteIn": {
+        "properties": {
+          "value": {
+            "type": "integer",
+            "title": "Value",
+            "description": "1 — нравится, −1 — не нравится, 0 — снять голос"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "VoteIn"
+      },
+      "Votes": {
+        "properties": {
+          "likes": {
+            "type": "integer",
+            "title": "Likes"
+          },
+          "dislikes": {
+            "type": "integer",
+            "title": "Dislikes"
+          },
+          "vote": {
+            "type": "integer",
+            "title": "Vote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "likes",
+          "dislikes",
+          "vote"
+        ],
+        "title": "Votes"
       },
       "Water": {
         "properties": {

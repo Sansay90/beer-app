@@ -169,6 +169,10 @@ class RecipeSummary(BaseModel):
     visibility: Visibility = "private"
     publishedAt: float | None = None
     favorite: bool = Field(False, description="в избранном у того, кто спрашивает")
+    likes: int = Field(0, description="«нравится»")
+    dislikes: int = Field(0, description="«не нравится»")
+    comments: int = Field(0, description="комментариев, без удалённых")
+    brewsTotal: int = Field(0, description="сколько раз варили все пивовары (через пивоварню)")
 
 
 class RecipeMeta(BaseModel):
@@ -178,12 +182,52 @@ class RecipeMeta(BaseModel):
     visibility: Visibility
     publishedAt: float | None = None
     favorite: bool = Field(False, description="в избранном у того, кто спрашивает")
+    likes: int = 0
+    dislikes: int = 0
+    vote: int = Field(0, description="голос того, кто спрашивает: 1, −1 или 0")
+    comments: int = 0
+    brewsTotal: int = Field(0, description="сколько раз варили все пивовары")
     canEdit: bool = Field(description="править, удалять, публиковать, добавлять фото — рецепт свой")
     canModerate: bool = Field(description="снять с публикации, удалить, убрать фото — администратор, рецепт чужой")
 
 
 class RecipeDetail(Recipe):
     meta: RecipeMeta
+
+
+class VoteIn(BaseModel):
+    value: int = Field(description="1 — нравится, −1 — не нравится, 0 — снять голос")
+
+
+class Votes(BaseModel):
+    likes: int
+    dislikes: int
+    vote: int
+
+
+class CommentIn(BaseModel):
+    text: str = Field(max_length=4000)
+    parentId: str | None = Field(None, description="ответ на комментарий; ответ на ответ встаёт в ту же ветку")
+
+
+class CommentEdit(BaseModel):
+    text: str = Field(max_length=4000)
+
+
+class CommentOut(BaseModel):
+    """Комментарий; удалённый с ответами — пустой (deleted), без автора."""
+    id: str
+    parentId: str | None = None
+    author: Author | None = None
+    text: str
+    createdAt: float
+    edited: bool
+    deleted: bool
+    likes: int
+    dislikes: int
+    vote: int = Field(description="голос того, кто спрашивает")
+    canEdit: bool
+    canDelete: bool
 
 
 class VisibilityIn(BaseModel):
