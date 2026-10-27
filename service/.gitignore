@@ -3,4 +3,4 @@ __pycache__/
 .env
 
 # данные старых версий: журналы и импорт до Postgres
-data/
+/data/

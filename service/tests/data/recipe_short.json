@@ -1,0 +1,52 @@
+{
+  "name": "Тест: паузы по 2 мин",
+  "batch": {},
+  "targets": {},
+  "fermentables": [],
+  "hops": [
+    {
+      "use": "boil",
+      "name": "Тест-хмель А",
+      "amount": 10.0,
+      "minutes": 2
+    },
+    {
+      "use": "boil",
+      "name": "Тест-хмель Б",
+      "amount": 5.0,
+      "minutes": 1
+    }
+  ],
+  "miscs": [],
+  "yeasts": [],
+  "water": {
+    "source": {},
+    "additions": []
+  },
+  "mash": [
+    {
+      "name": "Пауза 1",
+      "temp": 30.0,
+      "watts": 2500,
+      "minutes": 2
+    },
+    {
+      "name": "Пауза 2",
+      "temp": 40.0,
+      "watts": 1500,
+      "minutes": 2
+    },
+    {
+      "name": "Пауза 3",
+      "temp": 50.0,
+      "watts": 1000,
+      "minutes": 2
+    }
+  ],
+  "boil": {
+    "watts": 2500,
+    "minutes": 3
+  },
+  "fermentation": [],
+  "notes": "Короткая программа для проверки на воде: подсказки, шаги, закладки, конец программы."
+}
