@@ -57,7 +57,7 @@ async function openPhoto(i: number) {
 const footer = computed(() => {
   const r = props.recipe
   const program = r.steps ? fmtMinutes(r.minutes) : 'без программы'
-  if (!r.mine) return `${program} · автор ${r.author}`          // варки — свои, по чужому рецепту их не видно
+  if (!r.mine) return program                     // варки — свои, по чужому рецепту их не видно; автор — ссылкой рядом
   if (!r.brews) return `${program} · ещё не варили`
   return `${program} · варили ${r.brews} ${plural(r.brews, 'раз', 'раза', 'раз')},`
 })
@@ -110,7 +110,21 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
       </div>
 
       <div class="mt-auto flex h-11 items-end justify-between gap-3 text-xs text-dimmed tabular-nums">
-        <span class="truncate pb-1">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
+        <span class="flex min-w-0 items-center gap-1.5 pb-1">
+          <span class="truncate">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
+          <template v-if="!recipe.mine">
+            <span aria-hidden="true">·</span>
+            <!-- поверх ссылки-карточки (z-10): ведёт на страницу автора -->
+            <NuxtLink v-if="recipe.author.name" :to="brewerPath(recipe.author.name)" class="relative z-10 flex min-w-0 items-center gap-1 hover:text-highlighted">
+              <UserAvatar :user="recipe.author" class="size-5" />
+              <span class="truncate">{{ recipe.author.name }}</span>
+            </NuxtLink>
+            <span v-else class="flex min-w-0 items-center gap-1">
+              <UserAvatar :user="recipe.author" class="size-5" />
+              <span class="truncate">{{ UNKNOWN_BREWER }}</span>
+            </span>
+          </template>
+        </span>
         <div v-if="thumbs.length" class="relative z-10 flex shrink-0 -space-x-2.5">
           <button
             v-for="(pid, i) in thumbs"

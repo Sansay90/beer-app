@@ -2,6 +2,7 @@
 // Фото пива по рецепту: лента снимков, добавление (уменьшается в браузере, utils/photo.ts), просмотр — PhotoViewer.
 // У чужих снимков — подпись автора и лицензии (credit): её требуют свободные лицензии.
 // editable — рецепт свой (добавить и удалить фото), moderate — администратор у чужого (только удалить).
+// Удалить — кнопкой на миниатюре и в просмотре.
 import type { Photo } from '~/types'
 
 const props = defineProps<{ recipeId: string; editable?: boolean; moderate?: boolean }>()
@@ -44,7 +45,8 @@ async function remove(p: Photo) {
   const ok = await confirm({ title: 'Удалить фото?', description: 'Снимок пропадёт из рецепта.', confirmLabel: 'Удалить', color: 'error' })
   if (!ok || !await exec(() => $api('/api/photos/{pid}', { method: 'DELETE', path: { pid: p.id } }), 'Фото удалено')) return
   photos.value = photos.value.filter(x => x.id !== p.id)
-  current.value = photos.value.length ? Math.min(current.value ?? 0, photos.value.length - 1) : null
+  // удаляли из просмотра — он остаётся на соседнем снимке; с миниатюры — не открывается
+  if (current.value != null) current.value = photos.value.length ? Math.min(current.value, photos.value.length - 1) : null
 }
 
 const credits = computed(() => photos.value.map(p => p.credit).filter((c): c is string => !!c))
@@ -53,17 +55,29 @@ const credits = computed(() => photos.value.map(p => p.credit).filter((c): c is 
 <template>
   <div v-if="editable || photos.length">
     <div class="flex gap-3 overflow-x-auto pb-1">
-      <button
-        v-for="(p, i) in photos"
-        :key="p.id"
-        type="button"
-        class="group/photo relative aspect-4/3 h-32 shrink-0 overflow-hidden rounded-lg bg-elevated ring ring-default focus-visible:outline-2 focus-visible:outline-primary"
-        :title="p.credit ? `Фото: ${p.credit}` : undefined"
-        :aria-label="`Фото ${i + 1}`"
-        @click="current = i"
-      >
-        <img :src="photoUrl(p.id, true)" alt="" loading="lazy" class="size-full object-cover transition duration-300 group-hover/photo:scale-105">
-      </button>
+      <div v-for="(p, i) in photos" :key="p.id" class="relative shrink-0">
+        <button
+          type="button"
+          class="group/photo relative block aspect-4/3 h-32 overflow-hidden rounded-lg bg-elevated ring ring-default focus-visible:outline-2 focus-visible:outline-primary"
+          :title="p.credit ? `Фото: ${p.credit}` : undefined"
+          :aria-label="`Фото ${i + 1}`"
+          @click="current = i"
+        >
+          <img :src="photoUrl(p.id, true)" alt="" loading="lazy" class="size-full object-cover transition duration-300 group-hover/photo:scale-105">
+        </button>
+        <!-- удалить — видно всегда, без наведения: так его находят -->
+        <UButton
+          v-if="editable || moderate"
+          icon="i-lucide-trash-2"
+          color="neutral"
+          variant="solid"
+          size="sm"
+          square
+          class="absolute top-1.5 right-1.5 bg-default/85 text-default shadow-sm hover:bg-default hover:text-error"
+          :aria-label="`Удалить фото ${i + 1}`"
+          @click="remove(p)"
+        />
+      </div>
       <div v-for="n in uploading" :key="`up-${n}`" class="grid aspect-4/3 h-32 shrink-0 place-items-center rounded-lg bg-elevated">
         <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />
       </div>

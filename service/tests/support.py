@@ -139,8 +139,9 @@ class Client:
         assert status == 200, (method, path, status, data)
         return data
 
-    def signup(self, email, password="password123"):
-        return self.post("/auth/register", {"email": email, "password": password})
+    def signup(self, email, password="password123", name=None):
+        """name — ник; по умолчанию часть почты до «@»."""
+        return self.post("/auth/register", {"email": email, "password": password, "name": name or email.split("@")[0]})
 
 
 class Agent:

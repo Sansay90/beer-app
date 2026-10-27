@@ -54,7 +54,7 @@ async function remove() {
     title: 'Удалить рецепт?',
     description: meta.value.canEdit
       ? `«${props.recipe.name}» будет удалён без возможности восстановления. История варок останется.`
-      : `«${props.recipe.name}» автора ${meta.value.author} будет удалён без возможности восстановления.`,
+      : `«${props.recipe.name}» автора ${brewerName(meta.value.author)} будет удалён без возможности восстановления.`,
     confirmLabel: 'Удалить',
     confirmIcon: 'i-lucide-trash-2',
     color: 'error',

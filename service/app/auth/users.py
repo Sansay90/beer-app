@@ -16,6 +16,7 @@ from ..db import session
 from ..errors import Conflict, Invalid, NotFound
 from ..models import Recipe, User, parse_id, unix
 from .passwords import check_password, dummy_hash, hash_password, verify_password
+from .profile import TAKEN, avatar_url, check_nick, nick_key, nick_taken
 
 EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 
@@ -28,11 +29,12 @@ def normalize_email(email):
     return e
 
 
-def register(email, password, admins=frozenset()):
+def register(email, password, nick=None, admins=frozenset()):
     """Новый пользователь (или владелец данных до входа, если он единственный). admins — почты администраторов
-    (ADMIN_EMAILS). Invalid — неверные данные или почта уже занята."""
+    (ADMIN_EMAILS); nick — необязателен. Invalid — неверные данные, почта или ник уже заняты."""
     email = normalize_email(email)
     check_password(password)
+    nick = check_nick(nick) if nick and nick.strip() else None
     taken = Invalid("эта почта уже зарегистрирована — войдите или восстановите пароль")
     with session() as s:
         if s.exec(select(User.id).where(User.email == email)).first():
@@ -41,8 +43,11 @@ def register(email, password, admins=frozenset()):
         legacy = users[0] if len(users) == 1 and users[0].email is None else None
         if admins and email not in admins:
             legacy = None                              # данные до входа забирает только администратор
-        user = legacy or User(name="")
-        user.name, user.email, user.password_hash = email.split("@")[0], email, hash_password(password)
+        if nick and nick_taken(s, nick, legacy.id if legacy else None):
+            raise Invalid(TAKEN)
+        user = legacy or User()
+        user.email, user.password_hash = email, hash_password(password)
+        user.name, user.name_key = nick, nick_key(nick) if nick else None
         if admins:
             user.role = ADMIN if email in admins else USER
         elif legacy is not None or not users:            # установка у себя: владелец — администратор
@@ -50,8 +55,8 @@ def register(email, password, admins=frozenset()):
         s.add(user)
         try:
             s.commit()
-        except IntegrityError:
-            raise taken from None
+        except IntegrityError:                           # успели раньше — почта или ник
+            raise Invalid("почта или ник уже заняты — проверьте и попробуйте ещё раз") from None
         return user
 
 
@@ -74,6 +79,7 @@ def by_email(email):
 
 def me(user):
     return {"id": str(user.id), "email": user.email, "name": user.name,
+            "avatar": avatar_url(user.id, user.avatar_version, user.avatar is not None),
             "emailVerified": user.email_verified_at is not None, "role": user.role}
 
 

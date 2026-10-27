@@ -6,6 +6,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import delete, select
 
 from ..access import PRIVATE, PUBLIC, VISIBILITIES, can_edit, can_moderate, can_publish, can_view
+from ..auth.profile import author as author_of
+from ..auth.profile import by_nick
 from ..db import session
 from ..errors import Conflict, Forbidden, Invalid, NotFound
 from ..models import Brew, Favorite, Recipe, RecipePhoto, User, parse_id, unix, utcnow
@@ -26,17 +28,24 @@ class RecipeStore:
         self.viewer = viewer
         self.uid = viewer.id if viewer is not None else None
 
-    def list(self, mine=False, favorites=False):
+    def list(self, mine=False, favorites=False, author=None):
         """Опубликованные рецепты всех и свои, недавно изменённые первыми; mine — только свои,
-        favorites — только избранные (из тех, что видно: снятый с публикации чужой рецепт пропадает)."""
+        favorites — только избранные (из тех, что видно: снятый с публикации чужой рецепт пропадает),
+        author — ник: рецепты этого пивовара (его опубликованные; свои — все)."""
         visible = Recipe.visibility == PUBLIC
         if self.uid is not None:
             visible = or_(visible, Recipe.user_id == self.uid)
         with session() as s:
-            q = select(Recipe, User.name).join(User, User.id == Recipe.user_id)
+            q = (select(Recipe, User.name, User.avatar_version, User.avatar.is_not(None))
+                 .join(User, User.id == Recipe.user_id))
             q = q.where(Recipe.user_id == self.uid) if mine else q.where(visible)
             if favorites:
                 q = q.join(Favorite, (Favorite.recipe_id == Recipe.id) & (Favorite.user_id == self.uid))
+            if author is not None:
+                brewer = by_nick(s, author)
+                if brewer is None:
+                    return []
+                q = q.where(Recipe.user_id == brewer.id)
             rows = s.exec(q.order_by(Recipe.updated_at.desc())).all()
             brewed, starred = {}, set()
             if self.uid is not None:                      # варки и избранное — свои, чужие никому не видны
@@ -45,13 +54,13 @@ class RecipeStore:
                     .where(Brew.user_id == self.uid, Brew.recipe_id.is_not(None)).group_by(Brew.recipe_id)).all()}
                 starred = set(s.exec(select(Favorite.recipe_id).where(Favorite.user_id == self.uid)).all())
             photos = {}
-            ids = [r.id for r, _ in rows]
+            ids = [r.id for r, *_ in rows]
             if ids:
                 for rid, pid in s.exec(select(RecipePhoto.recipe_id, RecipePhoto.id)
                                        .where(RecipePhoto.recipe_id.in_(ids)).order_by(RecipePhoto.created_at)).all():
                     photos.setdefault(rid, []).append(str(pid))
         out = []
-        for r, author in rows:
+        for r, name, avatar_version, has_avatar in rows:
             steps = program_steps(r.data)
             n, last = brewed.get(r.id, (0, None))
             out.append({"id": str(r.id), "name": r.name, "style": r.data.get("style"),
@@ -59,7 +68,8 @@ class RecipeStore:
                         "steps": len(steps), "minutes": sum(int(x["minutes"]) for x in steps),
                         "brews": n, "lastBrewedAt": unix(last), "updatedAt": unix(r.updated_at),
                         "about": excerpt(r.data.get("notes")), "photos": photos.get(r.id, []),
-                        "author": author, "mine": r.user_id == self.uid, "visibility": r.visibility,
+                        "author": author_of(r.user_id, name, avatar_version, has_avatar),
+                        "mine": r.user_id == self.uid, "visibility": r.visibility,
                         "publishedAt": unix(r.published_at), "favorite": r.id in starred})
         return out
 
@@ -71,9 +81,10 @@ class RecipeStore:
         """Рецепт и то, что о нём знать интерфейсу: автор, видимость, что можно тому, кто спрашивает."""
         with session() as s:
             r = self._view(s, rid)
-            author = s.get(User, r.user_id)
+            u = s.get(User, r.user_id)
             favorite = self.uid is not None and s.get(Favorite, (self.uid, r.id)) is not None
-            meta = {"author": author.name if author else "", "mine": r.user_id == self.uid,
+            meta = {"author": author_of(u.id, u.name, u.avatar_version, u.avatar is not None),
+                    "mine": r.user_id == self.uid,
                     "visibility": r.visibility, "publishedAt": unix(r.published_at), "favorite": favorite,
                     "canEdit": can_edit(self.viewer, r), "canModerate": can_moderate(self.viewer, r)}
             return {**r.data, "meta": meta}

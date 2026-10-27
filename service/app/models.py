@@ -51,10 +51,15 @@ def fk(target, *, nullable=False, ondelete="CASCADE", index=True):
 
 
 class User(SQLModel, table=True):
-    """Пользователь. Без почты — владелец данных, заведённых до входа: его забирает первая регистрация (auth.py)."""
+    """Пользователь. Без почты — владелец данных, заведённых до входа: его забирает первая регистрация (auth.py).
+    name — ник, его видят все (нет — «Неизвестный пивовар»); почта — только сам пользователь и администратор
+    (auth/profile.py)."""
     __tablename__ = "users"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str
+    name: str | None = None
+    name_key: str | None = Field(default=None, unique=True)        # ник для сравнения: строчными, «ё» как «е»
+    avatar: bytes | None = Field(default=None, sa_type=LargeBinary)  # JPEG 256×256
+    avatar_version: int = Field(default=0, sa_column_kwargs={"server_default": "0"})  # в адресе — для кеша
     email: str | None = Field(default=None, unique=True)           # строчными буквами
     password_hash: str | None = None
     email_verified_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))

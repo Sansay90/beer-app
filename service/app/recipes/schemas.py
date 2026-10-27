@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ..auth.schemas import Author
+
 AdditionKind = Literal["hop", "spice", "fining", "water", "adjunct", "sugar", "equipment"]
 Unit = Literal["g", "kg", "ml", "pcs", "pkg"]
 
@@ -162,7 +164,7 @@ class RecipeSummary(BaseModel):
     updatedAt: float
     about: str = Field("", description="первый абзац описания (notes) — для карточки")
     photos: list[str] = Field([], description="id фото пива, старые первыми — миниатюры на карточке")
-    author: str = Field("", description="имя автора")
+    author: Author = Field(description="автор: ник и аватар, без почты")
     mine: bool = Field(False, description="рецепт того, кто спрашивает")
     visibility: Visibility = "private"
     publishedAt: float | None = None
@@ -171,7 +173,7 @@ class RecipeSummary(BaseModel):
 
 class RecipeMeta(BaseModel):
     """Что о рецепте знать интерфейсу: автор, видимость и что можно тому, кто спрашивает (access.py)."""
-    author: str
+    author: Author
     mine: bool
     visibility: Visibility
     publishedAt: float | None = None

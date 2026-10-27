@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Шапка рецепта: бокал, название, стиль, автор или видимость, описание, фото пива.
 import type { RecipeDetail } from '~/types'
+import { NuxtLink } from '#components'
 
 const props = defineProps<{ recipe: RecipeDetail; recipeId: string; ebc?: number | null }>()
 
@@ -14,9 +15,16 @@ const meta = computed(() => props.recipe.meta)
       <div class="min-w-0">
         <h1 class="truncate text-3xl font-semibold text-highlighted">{{ recipe.name }}</h1>
         <div class="truncate text-muted">{{ styleLabel(recipe.style) }}</div>
-        <div v-if="!meta.mine" class="mt-1 truncate text-sm text-muted">
-          автор <span class="font-medium text-highlighted">{{ meta.author }}</span>
-        </div>
+        <component
+          :is="meta.author.name ? NuxtLink : 'div'"
+          v-if="!meta.mine"
+          :to="meta.author.name ? brewerPath(meta.author.name) : undefined"
+          class="mt-1.5 flex w-fit max-w-full items-center gap-2 text-muted"
+          :class="meta.author.name && 'hover:text-highlighted'"
+        >
+          <UserAvatar :user="meta.author" class="size-7" />
+          <span class="truncate">автор <span class="font-medium text-highlighted">{{ brewerName(meta.author) }}</span></span>
+        </component>
         <UBadge
           v-else
           class="mt-2"

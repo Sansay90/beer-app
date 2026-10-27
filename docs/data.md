@@ -27,7 +27,7 @@ users ─┬─ sessions                  входы
 
 | Таблица | Главное |
 |---|---|
-| `users` | `email` (строчными, уникальна; пусто — владелец данных до входа), `password_hash` (scrypt), `email_verified_at`, `role` (`user` / `admin`), `name` — пока часть почты до `@` |
+| `users` | `email` (строчными, уникальна; пусто — владелец данных до входа), `password_hash` (scrypt), `email_verified_at`, `role` (`user` / `admin`), `name` — ник (необязателен, его видят все), `name_key` — ник для сравнения (строчными, «ё» как «е», уникален), `avatar` (JPEG 256×256), `avatar_version` — в адресе аватара, чтобы новый не брался из кеша |
 | `sessions` | `token_hash` (SHA-256 токена из cookie), `expires_at` — 30 дней с последнего захода, `user_agent` |
 | `auth_tokens` | `kind` (`verify` / `reset`), `token_hash`, `expires_at`, `used_at` — одноразовые |
 | `agents` | `token_hash`, `name`, `last_seen_at` |

@@ -31,11 +31,12 @@ UserRecipes = Annotated[RecipeStore, Depends(user_recipes)]
 
 @router.get("/recipes", response_model=list[RecipeSummary],
             summary="Опубликованные рецепты и свои, недавно изменённые первыми",
-            description="mine — только свои, favorites — только избранные.")
-def list_recipes(recipes: ViewerRecipes, mine: bool = False, favorites: bool = False):
+            description="mine — только свои, favorites — только избранные, author — рецепты пивовара по нику.")
+def list_recipes(recipes: ViewerRecipes, mine: bool = False, favorites: bool = False,
+                 author: str | None = Query(None, max_length=40)):
     if (mine or favorites) and recipes.viewer is None:
         raise HTTPException(401, "войдите")
-    return recipes.list(mine, favorites)
+    return recipes.list(mine, favorites, author)
 
 
 @router.get("/recipes/{rid}", response_model=RecipeDetail,

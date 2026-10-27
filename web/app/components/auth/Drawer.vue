@@ -5,7 +5,7 @@ const toast = useToast()
 const { open, mode, next } = useAuthDrawer()
 const { pending, error, run } = useAuthForm()
 
-const form = reactive({ email: '', password: '' })
+const form = reactive({ email: '', password: '', name: '' })
 const sent = ref('')                               // «забыли пароль»: на какую почту ушла ссылка
 
 const TITLES = { login: 'Вход', register: 'Регистрация', forgot: 'Новый пароль' }
@@ -23,7 +23,7 @@ watch([open, mode], () => {
 
 function validate(s: typeof form) {
   if (mode.value === 'forgot') return checkEmail(s.email)
-  if (mode.value === 'register') return [...checkEmail(s.email), ...checkNewPassword(s.password)]
+  if (mode.value === 'register') return [...checkEmail(s.email), ...(s.name.trim() ? checkNick(s.name) : []), ...checkNewPassword(s.password)]
   return [...checkEmail(s.email), ...(s.password ? [] : [{ name: 'password', message: 'Введите пароль' }])]
 }
 
@@ -36,7 +36,7 @@ async function submit() {
   if (mode.value === 'login') {
     if (await run(() => auth.login(form.email, form.password))) await done()
   } else if (mode.value === 'register') {
-    if (!await run(() => auth.register(form.email, form.password))) return
+    if (!await run(() => auth.register(form.email, form.password, form.name))) return
     toast.add({
       title: 'Аккаунт создан',
       description: `Ссылка для подтверждения почты — в письме на ${auth.user?.email}.`,
@@ -85,6 +85,9 @@ async function submit() {
       <UForm v-else :state="form" :validate="validate" :validate-on="['change']" class="space-y-5" @submit="submit">
         <UFormField label="Почта" name="email">
           <UInput v-model="form.email" type="email" autocomplete="email" size="lg" class="w-full" autofocus />
+        </UFormField>
+        <UFormField v-if="mode === 'register'" label="Ник" name="name" :help="NICK_OPTIONAL_HELP">
+          <UInput v-model="form.name" autocomplete="nickname" size="lg" class="w-full" maxlength="24" />
         </UFormField>
         <UFormField
           v-if="mode !== 'forgot'"

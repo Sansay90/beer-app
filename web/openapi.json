@@ -38,7 +38,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Credentials"
+                "$ref": "#/components/schemas/RegisterIn"
               }
             }
           },
@@ -137,6 +137,110 @@
         ],
         "summary": "Кто вошёл",
         "operationId": "get_me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Сменить ник",
+        "description": "Ник уникален без учёта регистра и «е/ё»; занят или не по правилам — 400.",
+        "operationId": "set_name_api_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me/avatar": {
+      "put": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Поставить аватар",
+        "description": "Тело — сама картинка, JPEG, PNG или WebP, до 5 МБ; сервис обрежет её до квадрата 256 px.",
+        "operationId": "set_avatar_api_auth_me_avatar_put",
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Убрать аватар",
+        "operationId": "remove_avatar_api_auth_me_avatar_delete",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -374,13 +478,95 @@
         }
       }
     },
+    "/api/brewers/{nick}": {
+      "get": {
+        "tags": [
+          "пивовары"
+        ],
+        "summary": "Пивовар по нику",
+        "description": "Его опубликованные рецепты — GET /api/recipes?author={nick}.",
+        "operationId": "get_brewer_api_brewers__nick__get",
+        "parameters": [
+          {
+            "name": "nick",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Nick"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brewer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/avatars/{uid}": {
+      "get": {
+        "tags": [
+          "пивовары"
+        ],
+        "summary": "Аватар — сама картинка",
+        "description": "Адрес с ?v= берётся из ответа сервиса: у нового аватара новая версия, поэтому кеш вечный.",
+        "operationId": "get_avatar_api_avatars__uid__get",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/jpeg": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recipes": {
       "get": {
         "tags": [
           "рецепты"
         ],
         "summary": "Опубликованные рецепты и свои, недавно изменённые первыми",
-        "description": "mine — только свои, favorites — только избранные.",
+        "description": "mine — только свои, favorites — только избранные, author — рецепты пивовара по нику.",
         "operationId": "list_recipes_api_recipes_get",
         "parameters": [
           {
@@ -401,6 +587,23 @@
               "type": "boolean",
               "default": false,
               "title": "Favorites"
+            }
+          },
+          {
+            "name": "author",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Author"
             }
           }
         ],
@@ -1880,7 +2083,14 @@
             "title": "Email"
           },
           "name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Name"
           },
           "role": {
@@ -1909,13 +2119,50 @@
         "required": [
           "id",
           "email",
-          "name",
           "role",
           "emailVerified",
           "createdAt",
           "recipes"
         ],
         "title": "AdminUser"
+      },
+      "Author": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "по нему интерфейс рисует бокал, если аватара нет"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "ник; нет — «Неизвестный пивовар», страницы у такого нет"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Author",
+        "description": "Пивовар, как его видят все: без почты."
       },
       "Batch": {
         "properties": {
@@ -2205,6 +2452,48 @@
           "energyWh"
         ],
         "title": "BrewSummary"
+      },
+      "Brewer": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "по нему интерфейс рисует бокал, если аватара нет"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          },
+          "joinedAt": {
+            "type": "number",
+            "title": "Joinedat",
+            "description": "когда зарегистрировался"
+          },
+          "recipes": {
+            "type": "integer",
+            "title": "Recipes",
+            "description": "опубликованных рецептов"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "joinedAt",
+          "recipes"
+        ],
+        "title": "Brewer"
       },
       "Credentials": {
         "properties": {
@@ -2751,8 +3040,28 @@
             "title": "Email"
           },
           "name": {
-            "type": "string",
-            "title": "Name"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "ник — его видят все; нет — «Неизвестный пивовар»"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar",
+            "description": "адрес аватара; нет — интерфейс рисует бокал"
           },
           "emailVerified": {
             "type": "boolean",
@@ -2771,7 +3080,6 @@
         "required": [
           "id",
           "email",
-          "name",
           "emailVerified",
           "role"
         ],
@@ -2846,6 +3154,21 @@
         },
         "type": "object",
         "title": "Misc"
+      },
+      "NameIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Name",
+            "description": "новый ник"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NameIn"
       },
       "Ok": {
         "properties": {
@@ -3187,8 +3510,7 @@
       "RecipeMeta": {
         "properties": {
           "author": {
-            "type": "string",
-            "title": "Author"
+            "$ref": "#/components/schemas/Author"
           },
           "mine": {
             "type": "boolean",
@@ -3322,10 +3644,8 @@
             "default": []
           },
           "author": {
-            "type": "string",
-            "title": "Author",
-            "description": "имя автора",
-            "default": ""
+            "$ref": "#/components/schemas/Author",
+            "description": "автор: ник и аватар, без почты"
           },
           "mine": {
             "type": "boolean",
@@ -3368,9 +3688,43 @@
           "steps",
           "minutes",
           "brews",
-          "updatedAt"
+          "updatedAt",
+          "author"
         ],
         "title": "RecipeSummary"
+      },
+      "RegisterIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Password"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "ник, необязателен: 3–24 знака, буквы (русские или латинские), цифры, _ и -"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegisterIn"
       },
       "ResetIn": {
         "properties": {

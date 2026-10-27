@@ -34,9 +34,13 @@ def test_agent_restart_mid_brew(service, brewer, agents, recipe):
     token = agent.token
     brew_id = start_brew(brewer, agent, recipe)
 
+    hub = service.state.hub
+    old_link = next(iter(hub.links.values()))
     agent.stop()                                            # та же память, пивоварня ещё не ответила
     again = agents(token, brewery=FakeBrewery())
-    assert eventually(lambda: brewer.get("/state")[1]["online"])
+    # ждать новое соединение агента, а не «в сети»: новая пивоварня ещё молчит, и «в сети» было бы только
+    # у старого снимка — до первого состояния нового агента (на медленной машине его не поймать)
+    assert eventually(lambda: any(link is not old_link for link in hub.links.values()))
     assert brewer.get(f"/brews/{brew_id}")[1]["status"] == "running"
     again.brewery.set_online(True)
     again.brewery.push({**IDLE, "1": True, "104": 2, "101": 1, "144": 2, "6": 2, "10": 400})

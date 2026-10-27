@@ -30,7 +30,7 @@ def test_guest(people, recipe):
     owner.ok("PUT", f"/recipes/{rid}/visibility", {"visibility": "public"})
     listed = guest.get("/recipes")[1]
     assert [r["name"] for r in listed] == [recipe["name"]]
-    assert listed[0]["author"] == "owner" and listed[0]["mine"] is False and listed[0]["visibility"] == "public"
+    assert listed[0]["author"]["name"] == "owner" and listed[0]["mine"] is False and listed[0]["visibility"] == "public"
     meta = guest.get(f"/recipes/{rid}")[1]["meta"]
     assert meta["canEdit"] is False and meta["canModerate"] is False
     assert owner.get(f"/recipes/{rid}")[1]["meta"]["canEdit"] is True

@@ -1,12 +1,14 @@
 """Вход по почте и паролю: регистрация, вход и выход, подтверждение почты и новый пароль по ссылке из письма."""
 from fastapi import APIRouter, HTTPException, Request, Response
+from starlette.concurrency import run_in_threadpool
 
 from ..deps import LimitsDep, MailerDep, SettingsDep
 from ..mail import reset_letter, verify_letter
+from ..recipes.photos import TYPES
 from ..schemas import Ok
-from . import sessions, users
+from . import profile, sessions, users
 from .dependencies import SESSION_COOKIE, CurrentUser
-from .schemas import Credentials, EmailIn, Me, ResetIn, TokenIn
+from .schemas import Credentials, EmailIn, Me, NameIn, RegisterIn, ResetIn, TokenIn
 
 router = APIRouter(prefix="/auth", tags=["вход"])
 
@@ -51,11 +53,11 @@ def send_verify(base, mailer, user):
 
 @router.post("/register", response_model=Me, summary="Зарегистрироваться и войти",
              description="Письмо со ссылкой подтверждения почты уходит сразу; входить можно и до подтверждения.")
-def register(body: Credentials, request: Request, response: Response, settings: SettingsDep, mailer: MailerDep,
+def register(body: RegisterIn, request: Request, response: Response, settings: SettingsDep, mailer: MailerDep,
              limits: LimitsDep):
     throttle((limits.signups_by_ip, client_ip(request)))
     base = site_url(request, settings)                  # до записи: без адреса для ссылки регистрировать нельзя
-    user = users.register(body.email, body.password, settings.admins)
+    user = users.register(body.email, body.password, body.name, settings.admins)
     start_session(request, response, user)
     send_verify(base, mailer, user)
     return users.me(user)
@@ -85,6 +87,31 @@ def logout(request: Request, response: Response):
 @router.get("/me", response_model=Me, summary="Кто вошёл")
 def get_me(user: CurrentUser):
     return users.me(user)
+
+
+@router.patch("/me", response_model=Me, summary="Сменить ник",
+              description="Ник уникален без учёта регистра и «е/ё»; занят или не по правилам — 400.")
+def set_name(body: NameIn, user: CurrentUser):
+    return users.me(profile.set_name(user.id, body.name))
+
+
+@router.put("/me/avatar", response_model=Me, summary="Поставить аватар",
+            description="Тело — сама картинка, JPEG, PNG или WebP, до 5 МБ; сервис обрежет её до квадрата 256 px.",
+            openapi_extra={"requestBody": {"required": True, "content": {
+                t: {"schema": {"type": "string", "format": "binary"}} for t in TYPES}}})
+async def set_avatar(request: Request, user: CurrentUser):
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > profile.AVATAR_MAX_BYTES:
+            raise HTTPException(413, "картинка больше 5 МБ")
+    avatar = await run_in_threadpool(profile.prepare_avatar, bytes(data))
+    return users.me(await run_in_threadpool(profile.set_avatar, user.id, avatar))
+
+
+@router.delete("/me/avatar", response_model=Me, summary="Убрать аватар")
+def remove_avatar(user: CurrentUser):
+    return users.me(profile.set_avatar(user.id, None))
 
 
 @router.post("/verify", response_model=Me, summary="Подтвердить почту по ссылке из письма")

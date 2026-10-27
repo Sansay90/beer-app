@@ -8,9 +8,11 @@ const { enabled: soundOn, toggle: toggleSound } = useSound()
 const open = ref(false)
 const close = () => { open.value = false }
 
+// настройки — здесь, а не пунктом меню: они личные и нужны редко
 const userItems = computed(() => [
-  [{ type: 'label' as const, label: auth.user?.email }],
+  [{ type: 'label' as const, label: auth.user?.name ?? auth.user?.email }],
   [
+    ...(auth.user?.name ? [{ label: 'Моя страница', icon: 'i-lucide-user', to: brewerPath(auth.user.name), onSelect: close }] : []),
     { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings', onSelect: close },
     { label: 'Выйти', icon: 'i-lucide-log-out', onSelect: () => auth.logout() },
   ],
@@ -40,7 +42,6 @@ const recipes = computed(() => {
 const nav = computed(() => [
   { label: 'Варка', icon: 'i-lucide-flame', to: '/', onSelect: close },
   recipes.value,
-  { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings', onSelect: close },
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users', onSelect: close }] : []),
 ])
 const drawer = useAuthDrawer()
@@ -109,8 +110,7 @@ const themeItems = computed(() => [[
       <div class="flex w-full flex-col gap-1">
         <UDropdownMenu v-if="auth.user" :items="userItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }">
           <UButton
-            icon="i-lucide-circle-user"
-            :label="collapsed ? undefined : auth.user.email"
+            :label="collapsed ? undefined : auth.user.name ?? auth.user.email"
             color="neutral"
             variant="ghost"
             :block="!collapsed"
@@ -120,7 +120,11 @@ const themeItems = computed(() => [[
             :class="collapsed ? 'mx-auto' : 'justify-start'"
             :ui="{ label: 'truncate' }"
             aria-label="Аккаунт"
-          />
+          >
+            <template #leading>
+              <UserAvatar :user="auth.user" class="size-7" />
+            </template>
+          </UButton>
         </UDropdownMenu>
         <UButton
           v-else

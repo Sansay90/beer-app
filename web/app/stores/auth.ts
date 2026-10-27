@@ -27,8 +27,27 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = await $api('/api/auth/login', { method: 'POST', body: { email, password } })
   }
 
-  async function register(email: string, password: string) {
-    user.value = await $api('/api/auth/register', { method: 'POST', body: { email, password } })
+  /** name — ник, необязателен: пустой не отправляется. */
+  async function register(email: string, password: string, name = '') {
+    user.value = await $api('/api/auth/register', { method: 'POST', body: { email, password, name: name.trim() || null } })
+  }
+
+  /** Профиль: ник и аватар (картинка уменьшается в браузере, квадрат обрезает сервис). */
+  async function setName(name: string) {
+    user.value = await $api('/api/auth/me', { method: 'PATCH', body: { name: name.trim() } })
+  }
+
+  async function setAvatar(file: File) {
+    const image = await shrinkPhoto(file)
+    user.value = await $api('/api/auth/me/avatar', {
+      method: 'PUT',
+      body: image as unknown as string,
+      headers: { 'Content-Type': image.type },
+    })
+  }
+
+  async function removeAvatar() {
+    user.value = await $api('/api/auth/me/avatar', { method: 'DELETE' })
   }
 
   async function forgot(email: string) {
@@ -69,5 +88,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   watch(user, (u) => { if (u) expiredOn.value = null })
 
-  return { user, checked, unreachable, expiredOn, isAdmin, refresh, login, register, forgot, reset, verify, resendVerify, logout, expired }
+  return {
+    user, checked, unreachable, expiredOn, isAdmin,
+    refresh, login, register, setName, setAvatar, removeAvatar, forgot, reset, verify, resendVerify, logout, expired,
+  }
 })

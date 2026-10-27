@@ -28,7 +28,7 @@ def test_register_and_verify(service):
     assert c.ok("POST", "/auth/verify", {"token": token})["emailVerified"] is True
     assert c.post("/auth/verify", {"token": token})[0] == 400      # ссылка одноразовая
     assert c.ok("GET", "/auth/me")["emailVerified"] is True
-    assert c.get("/auth/me")[1]["name"] == "owner"
+    assert c.get("/auth/me")[1]["name"] == "Owner"                 # ник — как ввели, не из почты
 
 
 def test_first_signup_claims_data_before_login(service, recipe):

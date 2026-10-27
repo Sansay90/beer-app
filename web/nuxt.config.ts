@@ -44,6 +44,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/': { ssr: false },
     '/settings': { ssr: false },
+    '/settings/**': { ssr: false },
     '/admin/**': { ssr: false },
     '/recipes/new': { ssr: false },
     '/recipes/*/edit': { ssr: false },

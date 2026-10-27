@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import db, errors
 from .auth.admin import router as admin_router
+from .auth.brewers import router as brewers_router
 from .auth.router import router as auth_router
 from .auth.throttle import AuthLimits
 from .brewery.devices import DeviceStore
@@ -60,7 +61,7 @@ def api_router():
     def health():
         return Ok()
 
-    for router in (auth_router, admin_router, recipes_router, brewery_router, push_router):
+    for router in (auth_router, admin_router, brewers_router, recipes_router, brewery_router, push_router):
         api.include_router(router)
     return api
 
