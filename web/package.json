@@ -1,0 +1,32 @@
+{
+  "name": "brewapp-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "api:schema": "cd ../server && .venv\\Scripts\\python.exe -m bridge.export_openapi",
+    "api:types": "npm run api:schema && openapi-typescript openapi.json -o app/types/bridge.d.ts",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.147",
+    "@nuxt/ui": "^4.12.0",
+    "@pinia/nuxt": "^1.0.3",
+    "@vueuse/core": "^14.4.0",
+    "@vueuse/nuxt": "^14.4.0",
+    "nuxt": "^4.1.0",
+    "openapi-fetch": "^0.17.0",
+    "pinia": "^4.1.0",
+    "tailwindcss": "^4.3.3",
+    "uplot": "^1.6.31",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3",
+    "vue-tsc": "^3.3.13"
+  }
+}

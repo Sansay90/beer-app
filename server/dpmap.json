@@ -1,0 +1,434 @@
+{
+  "1": {
+    "code": "switch",
+    "type": "Boolean",
+    "access": "rw",
+    "values": {},
+    "ru": "Питание",
+    "zh": "开关"
+  },
+  "2": {
+    "code": "start",
+    "type": "Boolean",
+    "access": "rw",
+    "values": {},
+    "ru": "Старт / пауза",
+    "zh": "启动/暂停"
+  },
+  "6": {
+    "code": "appointment_time",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 2880,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": "min"
+    },
+    "ru": "Таймер текущего режима, мин (ручной — время работы, рецепт — шаг)",
+    "zh": "剩余时间"
+  },
+  "9": {
+    "code": "cook_temperature",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 100,
+      "min": 0,
+      "scale": 1,
+      "step": 1,
+      "unit": "°C"
+    },
+    "ru": "Температура готовки (в схеме помечена как тестовая)",
+    "zh": "烹饪温度（测试）"
+  },
+  "10": {
+    "code": "temp_current",
+    "type": "Integer",
+    "access": "ro",
+    "values": {
+      "max": 1001,
+      "min": -200,
+      "scale": 1,
+      "step": 1,
+      "unit": "°C"
+    },
+    "ru": "Текущая температура, десятые °C",
+    "zh": "当前温度"
+  },
+  "11": {
+    "code": "temp_unit_convert",
+    "type": "Enum",
+    "access": "rw",
+    "values": {
+      "range": [
+        "c",
+        "f"
+      ]
+    },
+    "ru": "Шкала °C / °F (только отображение; DP калибровок не пересчитываются)",
+    "zh": "温标切换"
+  },
+  "101": {
+    "code": "work_mode",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 9,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Тип работы 0–9 (0 — ручной, 1 — рецепты; остальное уточнить)",
+    "zh": "工作类型"
+  },
+  "102": {
+    "code": "work_time",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 28809999,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": "min"
+    },
+    "ru": "Ручной режим: время работы, мин",
+    "zh": "手动模式-工作时间"
+  },
+  "103": {
+    "code": "work_power",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 9999999,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Ручной режим: мощность, байт = W/100 + 2 (27 = 2500 W)",
+    "zh": "手动模式-功率选择"
+  },
+  "104": {
+    "code": "work_status",
+    "type": "Integer",
+    "access": "ro",
+    "values": {
+      "max": 2,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Состояние работы 0–2 (простой / работа / пауза — уточнить)",
+    "zh": "工作状态"
+  },
+  "105": {
+    "code": "error_code",
+    "type": "Integer",
+    "access": "ro",
+    "values": {
+      "max": 3,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Код ошибки 0–3",
+    "zh": "故障代码"
+  },
+  "106": {
+    "code": "timing_on",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 9999999,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": "min"
+    },
+    "ru": "Таймер выключения, мин",
+    "zh": "定时关机"
+  },
+  "107": {
+    "code": "current_remain_hop",
+    "type": "Integer",
+    "access": "ro",
+    "values": {
+      "max": 2880,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": "min"
+    },
+    "ru": "Авто: минут до закладки хмеля",
+    "zh": "自动模式 - 剩余 hop 时间"
+  },
+  "108": {
+    "code": "pump",
+    "type": "Boolean",
+    "access": "rw",
+    "values": {},
+    "ru": "Насос рециркуляции",
+    "zh": "水泵开关"
+  },
+  "109": {
+    "code": "power_model",
+    "type": "Enum",
+    "access": "rw",
+    "values": {
+      "range": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28"
+      ]
+    },
+    "ru": "Модель пивоварни (в приложении «B14») — заводская настройка, НЕ ТРОГАТЬ",
+    "zh": "型号选择"
+  },
+  "110": {
+    "code": "setwoter",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 10,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Поток насоса, уровень 0–10 (как в приложении)",
+    "zh": "水流设置"
+  },
+  "111": {
+    "code": "temp_set_hua",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 2200,
+      "min": 680,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Уставка в °F",
+    "zh": "华氏度设置"
+  },
+  "112": {
+    "code": "temp_dis_hua",
+    "type": "Integer",
+    "access": "ro",
+    "values": {
+      "max": 2121,
+      "min": -40,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Текущая температура в °F",
+    "zh": "华氏度显示"
+  },
+  "128": {
+    "code": "book1",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Рецепт (единственный): бинарный блок, формат в PROTOCOL.md",
+    "zh": "食谱1参数"
+  },
+  "129": {
+    "code": "book2",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱2参数"
+  },
+  "130": {
+    "code": "book3",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱3参数"
+  },
+  "131": {
+    "code": "book4",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱4参数"
+  },
+  "132": {
+    "code": "book5",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱5参数"
+  },
+  "133": {
+    "code": "book6",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱6参数"
+  },
+  "134": {
+    "code": "book7",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱7参数"
+  },
+  "135": {
+    "code": "book8",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱8参数"
+  },
+  "136": {
+    "code": "book9",
+    "type": "Raw",
+    "access": "rw",
+    "values": {
+      "maxlen": 128
+    },
+    "ru": "Слот рецепта из схемы Tuya — прошивка не поддерживает",
+    "zh": "食谱9参数"
+  },
+  "138": {
+    "code": "temp_set",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 1001,
+      "min": 200,
+      "scale": 1,
+      "step": 1,
+      "unit": "°C"
+    },
+    "ru": "Ручной режим: уставка, десятые °C (1001 = кипение)",
+    "zh": "手动模式 - 温度设置"
+  },
+  "139": {
+    "code": "temp_calibrate",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 100,
+      "min": -100,
+      "scale": 1,
+      "step": 1,
+      "unit": "°C"
+    },
+    "ru": "Калибровка температуры C1, десятые °C (±10 °C)",
+    "zh": "参数-温度校准"
+  },
+  "140": {
+    "code": "boil_compensation",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 100,
+      "min": 0,
+      "scale": 1,
+      "step": 1,
+      "unit": "°C"
+    },
+    "ru": "Компенсация кипения C2, десятые °C (0–10 °C)",
+    "zh": "参数-沸点补偿"
+  },
+  "142": {
+    "code": "confirm_alert",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 1,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Подсказка: подтвердить и продолжить",
+    "zh": "提示功能-确认继续"
+  },
+  "143": {
+    "code": "work_alert",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 2,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Подсказка 0–2 (засыпь солода / хмель — уточнить)",
+    "zh": "提示功能"
+  },
+  "144": {
+    "code": "current_step",
+    "type": "Integer",
+    "access": "rw",
+    "values": {
+      "max": 99,
+      "min": 0,
+      "scale": 0,
+      "step": 1,
+      "unit": ""
+    },
+    "ru": "Авто: текущий шаг",
+    "zh": "自动模式 - 当前步骤"
+  }
+}

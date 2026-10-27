@@ -1,0 +1,39 @@
+// Типы API посредника — из сгенерированной схемы (npm run api:types), руками не дублируются.
+import type { components } from './bridge'
+
+type Schemas = components['schemas']
+
+export type Snapshot = Schemas['Snapshot']
+export type BrewEvent = Schemas['BrewEvent']
+export type Addition = Schemas['Addition']
+export type AdditionSlot = Schemas['AdditionSlot']
+export type AdditionKind = NonNullable<Addition['kind']>
+export type AdditionUnit = NonNullable<Addition['unit']>
+export type DeviceStep = Schemas['DeviceStep']
+export type DeviceRecipe = Schemas['DeviceRecipe']
+export type Limits = Schemas['Limits']
+export type Recipe = Schemas['Recipe']
+export type StyleRef = Schemas['StyleRef']
+export type Targets = Schemas['Targets']
+export type Batch = Schemas['Batch']
+export type Fermentable = Schemas['Fermentable']
+export type Hop = Schemas['Hop']
+export type Misc = Schemas['Misc']
+export type Yeast = Schemas['Yeast']
+export type Water = Schemas['Water']
+export type WaterProfile = Schemas['WaterProfile']
+export type WaterAddition = Schemas['WaterAddition']
+export type WaterAgent = WaterAddition['agent']
+export type MashStep = Schemas['MashStep']
+export type Boil = Schemas['Boil']
+export type FermentationStep = Schemas['FermentationStep']
+export type RecipeSummary = Schemas['RecipeSummary']
+export type Photo = Schemas['Photo']
+export type Equipment = Schemas['Equipment']
+export type BrewSummary = Schemas['BrewSummary']
+export type BrewDetail = Schemas['BrewDetail']
+export type ManualMode = Schemas['ManualMode']
+export type SettingsUpdate = Schemas['SettingsUpdate']
+
+/** Точка графика: [unix-время, °C, цель °C]. */
+export type HistoryPoint = [number, number, number | null]

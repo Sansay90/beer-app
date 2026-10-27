@@ -1,0 +1,94 @@
+<script setup lang="ts">
+const brewery = useBreweryStore()
+const { enabled: soundOn, toggle: toggleSound } = useSound()
+const colorMode = useColorMode()
+
+const nav = [
+  { label: 'Варка', icon: 'i-lucide-flame', to: '/' },
+  { label: 'Рецепты', icon: 'i-lucide-book-open', to: '/recipes' },
+  { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings' },
+]
+
+const link = computed(() => {
+  if (!brewery.connected) return { label: 'Нет связи с посредником', tone: 'text-error', icon: 'i-lucide-server' }
+  if (!brewery.online) return { label: 'Пивоварня не в сети', tone: 'text-warning', icon: 'i-lucide-wifi-off' }
+  return { label: 'Пивоварня на связи', tone: 'text-success', icon: 'i-lucide-wifi' }
+})
+
+const THEMES = [
+  { value: 'system', label: 'как в системе', icon: 'i-lucide-monitor' },
+  { value: 'light', label: 'светлая', icon: 'i-lucide-sun' },
+  { value: 'dark', label: 'тёмная', icon: 'i-lucide-moon' },
+]
+const theme = computed(() => THEMES.find(t => t.value === colorMode.preference) ?? THEMES[0]!)
+const themeItems = computed(() => [[
+  { type: 'label' as const, label: 'Тема' },
+  ...THEMES.map(t => ({
+    label: t.label[0]!.toUpperCase() + t.label.slice(1),
+    icon: t.icon,
+    type: 'checkbox' as const,
+    checked: colorMode.preference === t.value,
+    onUpdateChecked: () => { colorMode.preference = t.value },
+  })),
+]])
+</script>
+
+<template>
+  <UDashboardSidebar
+    collapsible
+    resizable
+    :min-size="13"
+    :default-size="15"
+    :max-size="20"
+    class="bg-elevated/25"
+    :ui="{ footer: 'lg:border-t lg:border-default' }"
+  >
+    <template #header="{ collapsed }">
+      <div class="flex items-center gap-2.5" :class="collapsed ? 'mx-auto' : 'px-1'">
+        <div class="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
+          <UIcon name="i-lucide-beer" class="size-5" />
+        </div>
+        <span v-if="!collapsed" class="font-semibold text-highlighted">Пивоварня</span>
+      </div>
+    </template>
+
+    <template #default="{ collapsed }">
+      <UNavigationMenu :items="nav" :collapsed="collapsed" orientation="vertical" tooltip />
+    </template>
+
+    <template #footer="{ collapsed }">
+      <div class="flex w-full flex-col gap-1">
+        <UTooltip :text="link.label" :disabled="!collapsed">
+          <div class="flex items-center gap-2 px-2.5 py-1.5 text-sm" :class="collapsed && 'justify-center'">
+            <UIcon :name="link.icon" class="size-5 shrink-0" :class="link.tone" />
+            <span v-if="!collapsed" class="truncate text-muted">{{ link.label }}</span>
+          </div>
+        </UTooltip>
+        <UTooltip :text="soundOn ? 'Звук включён' : 'Звук выключен'" :disabled="!collapsed">
+          <UButton
+            :icon="soundOn ? 'i-lucide-bell-ring' : 'i-lucide-bell-off'"
+            :label="collapsed ? undefined : soundOn ? 'Звук включён' : 'Звук выключен'"
+            :color="soundOn ? 'primary' : 'neutral'"
+            variant="ghost"
+            :block="!collapsed"
+            :square="collapsed"
+            :class="collapsed ? 'mx-auto' : 'justify-start'"
+            @click="toggleSound"
+          />
+        </UTooltip>
+        <UDropdownMenu :items="themeItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }">
+          <UButton
+            :icon="theme.icon"
+            :label="collapsed ? undefined : `Тема: ${theme.label}`"
+            color="neutral"
+            variant="ghost"
+            :block="!collapsed"
+            :square="collapsed"
+            :class="collapsed ? 'mx-auto' : 'justify-start'"
+            :aria-label="`Тема: ${theme.label}`"
+          />
+        </UDropdownMenu>
+      </div>
+    </template>
+  </UDashboardSidebar>
+</template>

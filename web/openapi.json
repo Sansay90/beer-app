@@ -1,0 +1,3082 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "brewapp bridge",
+    "version": "0.2"
+  },
+  "paths": {
+    "/api/state": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Get State",
+        "operationId": "get_state_api_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Точки графика [unix-время, °C, цель °C]",
+        "operationId": "get_history_api_history_get",
+        "parameters": [
+          {
+            "name": "minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 360,
+              "title": "Minutes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "title": "Response Get History Api History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Недавние события, новые первыми",
+        "operationId": "get_events_api_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BrewEvent"
+                  },
+                  "type": "array",
+                  "title": "Response Get Events Api Events Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/limits": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Get Limits",
+        "operationId": "get_limits_api_limits_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Limits"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "SSE: `state` — Snapshot, `event` — BrewEvent",
+        "operationId": "stream_api_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/power": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Power",
+        "operationId": "power_api_power_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manual": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Задать ручной режим",
+        "operationId": "manual_api_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualMode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/start": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Старт / продолжить",
+        "operationId": "start_api_start_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pause": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Pause",
+        "operationId": "pause_api_pause_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pump": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Pump",
+        "operationId": "pump_api_pump_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnOff"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flow": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Flow",
+        "operationId": "flow_api_flow_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlowLevel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Калибровка и компенсация кипения",
+        "operationId": "settings_api_settings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert/confirm": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Подтвердить подсказку пивоварни",
+        "operationId": "confirm_alert_api_alert_confirm_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/additions/{minutes}/ack": {
+      "post": {
+        "tags": [
+          "управление"
+        ],
+        "summary": "Закладка сделана — снять напоминание",
+        "operationId": "ack_addition_api_additions__minutes__ack_post",
+        "parameters": [
+          {
+            "name": "minutes",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Minutes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes": {
+      "get": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Рецепты, недавно изменённые первыми",
+        "operationId": "list_recipes_api_recipes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecipeSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Recipes Api Recipes Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Создать рецепт",
+        "operationId": "create_recipe_api_recipes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Recipe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedRecipe"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes/{rid}": {
+      "get": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Get Recipe",
+        "operationId": "get_recipe_api_recipes__rid__get",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recipe"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Сохранить рецепт",
+        "operationId": "update_recipe_api_recipes__rid__put",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Recipe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedRecipe"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Delete Recipe",
+        "operationId": "delete_recipe_api_recipes__rid__delete",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes/{rid}/upload": {
+      "post": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Загрузить рецепт в пивоварню",
+        "operationId": "upload_api_recipes__rid__upload_post",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes/{rid}/photos": {
+      "get": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Фото пива по рецепту",
+        "operationId": "list_photos_api_recipes__rid__photos_get",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Photo"
+                  },
+                  "title": "Response List Photos Api Recipes  Rid  Photos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Добавить фото пива",
+        "description": "Тело — сама картинка, JPEG, PNG или WebP, до 10 МБ (интерфейс заранее уменьшает её). credit — автор и лицензия, если фото чужое.",
+        "operationId": "add_photo_api_recipes__rid__photos_post",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          },
+          {
+            "name": "credit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 300
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Credit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Photo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/photos/{pid}": {
+      "get": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Фото — сама картинка",
+        "operationId": "get_photo_api_photos__pid__get",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "thumb",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "превью до 480 px вместо полного снимка",
+              "default": false,
+              "title": "Thumb"
+            },
+            "description": "превью до 480 px вместо полного снимка"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/jpeg": {},
+              "image/png": {},
+              "image/webp": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Удалить фото",
+        "operationId": "delete_photo_api_photos__pid__delete",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipe/start": {
+      "post": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Запустить рецепт пивоварни",
+        "operationId": "start_recipe_api_recipe_start_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews": {
+      "get": {
+        "tags": [
+          "история"
+        ],
+        "summary": "Варки, новые первыми",
+        "description": "recipe — только варки по этому рецепту.",
+        "operationId": "list_brews_api_brews_get",
+        "parameters": [
+          {
+            "name": "recipe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recipe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrewSummary"
+                  },
+                  "title": "Response List Brews Api Brews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews/{bid}": {
+      "get": {
+        "tags": [
+          "история"
+        ],
+        "summary": "Варка: рецепт, температура [время, °C, цель] и события",
+        "operationId": "get_brew_api_brews__bid__get",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/equipment": {
+      "get": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Профиль оборудования",
+        "operationId": "get_equipment_api_equipment_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipment"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Сохранить профиль оборудования",
+        "operationId": "put_equipment_api_equipment_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Equipment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/key": {
+      "get": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Ключ сервера для подписки браузера",
+        "operationId": "push_key_api_push_key_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushKey"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/subscriptions": {
+      "post": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Подписать браузер",
+        "operationId": "push_subscribe_api_push_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Отписать браузер",
+        "operationId": "push_unsubscribe_api_push_subscriptions_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushEndpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/test": {
+      "post": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Проверочное уведомление",
+        "operationId": "push_test_api_push_test_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTest"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Addition": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes",
+            "description": "минут до конца кипячения"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "hop",
+              "spice",
+              "fining",
+              "water",
+              "adjunct",
+              "sugar",
+              "equipment"
+            ],
+            "title": "Kind",
+            "default": "hop"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount",
+            "description": "у оборудования не бывает"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "kg",
+              "ml",
+              "pcs",
+              "pkg"
+            ],
+            "title": "Unit",
+            "default": "g"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes"
+        ],
+        "title": "Addition",
+        "description": "Что заложить в кипячение: хмель, специи, осветлитель, соли, добавка, сахар или оборудование (чиллер)."
+      },
+      "AdditionSlot": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes",
+            "description": "минут до конца кипячения"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Addition"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "пусто — рецепт загружен не из приложения"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes",
+          "items",
+          "label"
+        ],
+        "title": "AdditionSlot",
+        "description": "Таймер пивоварни и всё, что закладывают по нему: на одну минуту — один писк."
+      },
+      "Batch": {
+        "properties": {
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л сусла после кипячения — к нему считаются OG, IBU и цвет"
+          },
+          "efficiency": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Efficiency",
+            "description": "эффективность, %: экстракт в сусле после кипячения / экстракт засыпи"
+          }
+        },
+        "type": "object",
+        "title": "Batch"
+      },
+      "Boil": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "watts": {
+            "type": "integer",
+            "title": "Watts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes",
+          "watts"
+        ],
+        "title": "Boil"
+      },
+      "BrewDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "finished",
+              "stopped"
+            ],
+            "title": "Status"
+          },
+          "recipeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipeid",
+            "description": "рецепт библиотеки; None — рецепт из Smart Life или удалён"
+          },
+          "startedAt": {
+            "type": "number",
+            "title": "Startedat",
+            "description": "unix-время"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "energyWh": {
+            "type": "number",
+            "title": "Energywh",
+            "description": "оценка расхода электричества ТЭНом, Вт·ч (±20–30 %)"
+          },
+          "recipe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeviceRecipe"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "рецепт, как он был в пивоварне на момент варки"
+          },
+          "readings": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              ],
+              "type": "array",
+              "maxItems": 3,
+              "minItems": 3
+            },
+            "type": "array",
+            "title": "Readings",
+            "description": "[unix-время, °C, цель °C]"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/BrewEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "startedAt",
+          "energyWh",
+          "readings",
+          "events"
+        ],
+        "title": "BrewDetail"
+      },
+      "BrewEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "alert",
+              "alertCleared",
+              "step",
+              "addition",
+              "added",
+              "end",
+              "powerOff",
+              "error",
+              "offline",
+              "online"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "at": {
+            "type": "number",
+            "title": "At"
+          },
+          "alert": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "addition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdditionSlot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "text",
+          "at"
+        ],
+        "title": "BrewEvent"
+      },
+      "BrewSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "finished",
+              "stopped"
+            ],
+            "title": "Status"
+          },
+          "recipeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipeid",
+            "description": "рецепт библиотеки; None — рецепт из Smart Life или удалён"
+          },
+          "startedAt": {
+            "type": "number",
+            "title": "Startedat",
+            "description": "unix-время"
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endedat"
+          },
+          "energyWh": {
+            "type": "number",
+            "title": "Energywh",
+            "description": "оценка расхода электричества ТЭНом, Вт·ч (±20–30 %)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "startedAt",
+          "energyWh"
+        ],
+        "title": "BrewSummary"
+      },
+      "DeviceRecipe": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "известно, если рецепт загружен из приложения"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "steps"
+        ],
+        "title": "DeviceRecipe"
+      },
+      "DeviceSettings": {
+        "properties": {
+          "calibration": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration"
+          },
+          "boilCompensation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boilcompensation"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "maxWatts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxwatts"
+          }
+        },
+        "type": "object",
+        "title": "DeviceSettings"
+      },
+      "DeviceStep": {
+        "properties": {
+          "temp": {
+            "type": "number",
+            "title": "Temp"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "watts": {
+            "type": "integer",
+            "title": "Watts"
+          },
+          "additions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Additions",
+            "description": "таймеры закладок, мин до конца шага"
+          },
+          "boil": {
+            "type": "boolean",
+            "title": "Boil"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temp",
+          "minutes",
+          "watts",
+          "additions",
+          "boil"
+        ],
+        "title": "DeviceStep"
+      },
+      "Energy": {
+        "properties": {
+          "wh": {
+            "type": "number",
+            "title": "Wh",
+            "description": "Вт·ч с начала текущей программы (варки)"
+          },
+          "watts": {
+            "type": "integer",
+            "title": "Watts",
+            "description": "оценка мощности ТЭНа сейчас"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wh",
+          "watts"
+        ],
+        "title": "Energy",
+        "description": "Оценка расхода электричества ТЭНом (±20–30 %) — energy.py."
+      },
+      "Equipment": {
+        "properties": {
+          "efficiency": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Efficiency",
+            "description": "эффективность для новых рецептов, %",
+            "default": 75
+          },
+          "evaporation": {
+            "type": "number",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Evaporation",
+            "description": "испарение при кипячении, л/ч",
+            "default": 3.0
+          }
+        },
+        "type": "object",
+        "title": "Equipment",
+        "description": "Профиль оборудования пивоварни: эффективность — значение новых рецептов, по испарению считается промывочная вода."
+      },
+      "Fermentable": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "grain",
+              "adjunct",
+              "sugar",
+              "extract"
+            ],
+            "title": "Kind",
+            "default": "grain"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount",
+            "description": "кг"
+          },
+          "ebc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebc"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "mash",
+              "boil",
+              "fermentation"
+            ],
+            "title": "Use",
+            "default": "mash"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes",
+            "description": "кипячение — за сколько минут до конца"
+          }
+        },
+        "type": "object",
+        "title": "Fermentable"
+      },
+      "FermentationStep": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "temp": {
+            "type": "number",
+            "title": "Temp"
+          },
+          "days": {
+            "type": "number",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temp",
+          "days"
+        ],
+        "title": "FermentationStep"
+      },
+      "FlowLevel": {
+        "properties": {
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "level"
+        ],
+        "title": "FlowLevel"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Hop": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha",
+            "description": "альфа-кислоты, %"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount",
+            "description": "г"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "mash",
+              "first_wort",
+              "boil",
+              "whirlpool",
+              "dry_hop"
+            ],
+            "title": "Use",
+            "default": "boil"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes",
+            "description": "кипячение — за сколько минут до конца; вирпул — сколько стоит"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day",
+            "description": "сухое охмеление — день брожения"
+          }
+        },
+        "type": "object",
+        "title": "Hop"
+      },
+      "Limits": {
+        "properties": {
+          "maxSteps": {
+            "type": "integer",
+            "title": "Maxsteps"
+          },
+          "maxAdditions": {
+            "type": "integer",
+            "title": "Maxadditions",
+            "description": "разных времён закладок на кипячение"
+          },
+          "minTemp": {
+            "type": "number",
+            "title": "Mintemp"
+          },
+          "maxTemp": {
+            "type": "number",
+            "title": "Maxtemp"
+          },
+          "boilTemp": {
+            "type": "number",
+            "title": "Boiltemp"
+          },
+          "minWatts": {
+            "type": "integer",
+            "title": "Minwatts"
+          },
+          "maxWatts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxwatts",
+            "description": "потолок модели; None — модель неизвестна"
+          }
+        },
+        "type": "object",
+        "required": [
+          "maxSteps",
+          "maxAdditions",
+          "minTemp",
+          "maxTemp",
+          "boilTemp",
+          "minWatts"
+        ],
+        "title": "Limits",
+        "description": "Ограничения контроллера (PROTOCOL.md) — интерфейс проверяет рецепт по ним же."
+      },
+      "ManualMode": {
+        "properties": {
+          "setpoint": {
+            "type": "number",
+            "title": "Setpoint"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "watts": {
+            "type": "integer",
+            "title": "Watts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setpoint",
+          "minutes",
+          "watts"
+        ],
+        "title": "ManualMode"
+      },
+      "MashStep": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "temp": {
+            "type": "number",
+            "title": "Temp"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "watts": {
+            "type": "integer",
+            "title": "Watts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temp",
+          "minutes",
+          "watts"
+        ],
+        "title": "MashStep"
+      },
+      "Misc": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "spice",
+              "fining",
+              "adjunct",
+              "equipment"
+            ],
+            "title": "Kind",
+            "default": "adjunct"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount",
+            "description": "у оборудования не бывает"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "kg",
+              "ml",
+              "pcs",
+              "pkg"
+            ],
+            "title": "Unit",
+            "default": "g"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "mash",
+              "boil",
+              "whirlpool",
+              "fermentation",
+              "packaging"
+            ],
+            "title": "Use",
+            "default": "boil"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes",
+            "description": "кипячение — за сколько минут до конца"
+          }
+        },
+        "type": "object",
+        "title": "Misc"
+      },
+      "Ok": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "Ok"
+      },
+      "OnOff": {
+        "properties": {
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "on"
+        ],
+        "title": "OnOff"
+      },
+      "Photo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "credit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit",
+            "description": "автор и лицензия, если фото чужое"
+          },
+          "createdAt": {
+            "type": "number",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt"
+        ],
+        "title": "Photo",
+        "description": "Фото пива по рецепту; сама картинка — GET /api/photos/{id}."
+      },
+      "PushEndpoint": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint"
+        ],
+        "title": "PushEndpoint"
+      },
+      "PushKey": {
+        "properties": {
+          "publicKey": {
+            "type": "string",
+            "title": "Publickey",
+            "description": "VAPID-ключ сервера, base64url — applicationServerKey для pushManager.subscribe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "publicKey"
+        ],
+        "title": "PushKey"
+      },
+      "PushKeys": {
+        "properties": {
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushKeys"
+      },
+      "PushSubscriptionIn": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeys"
+          },
+          "userAgent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useragent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionIn",
+        "description": "PushSubscription.toJSON() браузера."
+      },
+      "PushTest": {
+        "properties": {
+          "devices": {
+            "type": "integer",
+            "title": "Devices",
+            "description": "сколько устройств подписано — на столько и отправлено"
+          }
+        },
+        "type": "object",
+        "required": [
+          "devices"
+        ],
+        "title": "PushTest"
+      },
+      "Recipe": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StyleRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "batch": {
+            "$ref": "#/components/schemas/Batch"
+          },
+          "targets": {
+            "$ref": "#/components/schemas/Targets"
+          },
+          "fermentables": {
+            "items": {
+              "$ref": "#/components/schemas/Fermentable"
+            },
+            "type": "array",
+            "title": "Fermentables",
+            "default": []
+          },
+          "hops": {
+            "items": {
+              "$ref": "#/components/schemas/Hop"
+            },
+            "type": "array",
+            "title": "Hops",
+            "default": []
+          },
+          "miscs": {
+            "items": {
+              "$ref": "#/components/schemas/Misc"
+            },
+            "type": "array",
+            "title": "Miscs",
+            "default": []
+          },
+          "yeasts": {
+            "items": {
+              "$ref": "#/components/schemas/Yeast"
+            },
+            "type": "array",
+            "title": "Yeasts",
+            "default": []
+          },
+          "water": {
+            "$ref": "#/components/schemas/Water"
+          },
+          "mash": {
+            "items": {
+              "$ref": "#/components/schemas/MashStep"
+            },
+            "type": "array",
+            "title": "Mash",
+            "default": []
+          },
+          "boil": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Boil"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fermentation": {
+            "items": {
+              "$ref": "#/components/schemas/FermentationStep"
+            },
+            "type": "array",
+            "title": "Fermentation",
+            "default": []
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "Recipe"
+      },
+      "RecipeSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StyleRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targets": {
+            "$ref": "#/components/schemas/Targets"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л сусла после кипячения"
+          },
+          "steps": {
+            "type": "integer",
+            "title": "Steps",
+            "description": "шагов программы пивоварни"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes",
+            "description": "длительность программы без учёта нагрева"
+          },
+          "brews": {
+            "type": "integer",
+            "title": "Brews",
+            "description": "сколько раз варили"
+          },
+          "lastBrewedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastbrewedat"
+          },
+          "updatedAt": {
+            "type": "number",
+            "title": "Updatedat"
+          },
+          "about": {
+            "type": "string",
+            "title": "About",
+            "description": "первый абзац описания (notes) — для карточки",
+            "default": ""
+          },
+          "photos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Photos",
+            "description": "id фото пива, старые первыми — миниатюры на карточке",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "targets",
+          "steps",
+          "minutes",
+          "brews",
+          "updatedAt"
+        ],
+        "title": "RecipeSummary"
+      },
+      "SavedRecipe": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "SavedRecipe"
+      },
+      "SettingsUpdate": {
+        "properties": {
+          "calibration": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration"
+          },
+          "boilCompensation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boilcompensation"
+          }
+        },
+        "type": "object",
+        "title": "SettingsUpdate"
+      },
+      "Snapshot": {
+        "properties": {
+          "online": {
+            "type": "boolean",
+            "title": "Online"
+          },
+          "power": {
+            "type": "boolean",
+            "title": "Power"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "idle",
+                  "paused",
+                  "running"
+                ]
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "manual",
+                  "recipe"
+                ]
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "temp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp"
+          },
+          "setpoint": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setpoint"
+          },
+          "manualMinutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manualminutes"
+          },
+          "manualWatts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manualwatts"
+          },
+          "pump": {
+            "type": "boolean",
+            "title": "Pump"
+          },
+          "flow": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow"
+          },
+          "step": {
+            "type": "integer",
+            "title": "Step"
+          },
+          "stepTarget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steptarget"
+          },
+          "timer": {
+            "$ref": "#/components/schemas/Timer"
+          },
+          "alert": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "malt",
+                  "mashEnd"
+                ]
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert"
+          },
+          "error": {
+            "type": "integer",
+            "title": "Error"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/DeviceSettings"
+          },
+          "deviceRecipe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeviceRecipe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "additions": {
+            "items": {
+              "$ref": "#/components/schemas/AdditionSlot"
+            },
+            "type": "array",
+            "title": "Additions"
+          },
+          "additionsPending": {
+            "items": {
+              "$ref": "#/components/schemas/AdditionSlot"
+            },
+            "type": "array",
+            "title": "Additionspending",
+            "description": "закладки, о которых напомнили, — ждут «Заложил»"
+          },
+          "energy": {
+            "$ref": "#/components/schemas/Energy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "online",
+          "power",
+          "running",
+          "pump",
+          "step",
+          "timer",
+          "error",
+          "settings",
+          "additions",
+          "additionsPending",
+          "energy"
+        ],
+        "title": "Snapshot"
+      },
+      "StyleRef": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "стиль BJCP 2021, напр. 5B; None — свой стиль"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "StyleRef"
+      },
+      "Targets": {
+        "properties": {
+          "og": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Og",
+            "description": "начальная плотность, SG"
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fg",
+            "description": "конечная плотность, SG"
+          },
+          "ibu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ibu"
+          },
+          "ebc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebc"
+          }
+        },
+        "type": "object",
+        "title": "Targets"
+      },
+      "Timer": {
+        "properties": {
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes",
+            "description": "DP 6: минуты шага с округлением вверх"
+          },
+          "remaining": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining",
+            "description": "оценка остатка шага, с"
+          },
+          "counting": {
+            "type": "boolean",
+            "title": "Counting",
+            "description": "идёт ли отсчёт (температура шага достигнута)"
+          },
+          "at": {
+            "type": "number",
+            "title": "At",
+            "description": "момент оценки, unix-время посредника"
+          }
+        },
+        "type": "object",
+        "required": [
+          "counting",
+          "at"
+        ],
+        "title": "Timer"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Water": {
+        "properties": {
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio",
+            "description": "гидромодуль — заторная вода к засыпи, л/кг"
+          },
+          "source": {
+            "$ref": "#/components/schemas/WaterProfile",
+            "description": "исходная вода; нули — осмос"
+          },
+          "additions": {
+            "items": {
+              "$ref": "#/components/schemas/WaterAddition"
+            },
+            "type": "array",
+            "title": "Additions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "Water",
+        "description": "Заторная вода = гидромодуль × засыпь; промывочная — остальное до объёма перед кипячением\nс поправкой на дробину (считает интерфейс: испарение — у оборудования, а не в рецепте)."
+      },
+      "WaterAddition": {
+        "properties": {
+          "agent": {
+            "type": "string",
+            "enum": [
+              "cacl2",
+              "cacl2_anhydrous",
+              "gypsum",
+              "nacl",
+              "nahco3",
+              "caco3",
+              "epsom",
+              "lactic80",
+              "lactic88",
+              "other"
+            ],
+            "title": "Agent"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "для agent = other",
+            "default": ""
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "mash",
+              "sparge"
+            ],
+            "title": "Target",
+            "default": "mash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent"
+        ],
+        "title": "WaterAddition",
+        "description": "Соль (г) или кислота (мл) в заторную или промывочную воду."
+      },
+      "WaterProfile": {
+        "properties": {
+          "ca": {
+            "type": "number",
+            "title": "Ca",
+            "default": 0
+          },
+          "mg": {
+            "type": "number",
+            "title": "Mg",
+            "default": 0
+          },
+          "na": {
+            "type": "number",
+            "title": "Na",
+            "default": 0
+          },
+          "cl": {
+            "type": "number",
+            "title": "Cl",
+            "default": 0
+          },
+          "so4": {
+            "type": "number",
+            "title": "So4",
+            "default": 0
+          },
+          "hco3": {
+            "type": "number",
+            "title": "Hco3",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "WaterProfile",
+        "description": "Ионы, мг/л."
+      },
+      "Yeast": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "form": {
+            "type": "string",
+            "enum": [
+              "dry",
+              "liquid"
+            ],
+            "title": "Form",
+            "default": "dry"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "kg",
+              "ml",
+              "pcs",
+              "pkg"
+            ],
+            "title": "Unit",
+            "default": "pkg"
+          },
+          "attenuation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attenuation",
+            "description": "степень сбраживания, %"
+          }
+        },
+        "type": "object",
+        "title": "Yeast"
+      }
+    }
+  }
+}

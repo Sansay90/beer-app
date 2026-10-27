@@ -1,0 +1,52 @@
+# Посредник brewapp + Postgres. Из папки brewapp/server:
+#   docker compose up -d --build      запустить всё (и пересобрать после правок кода)
+#   docker compose up -d db           только базу — для посредника, запущенного локально (.venv)
+#   docker compose logs -f bridge     журнал посредника
+#   docker compose down               остановить (данные базы остаются в томе pgdata)
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: brewapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: brewapp
+      POSTGRES_USER: brewapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
+      TZ: ${TZ:-Europe/Moscow}
+    ports:
+      # только этот ПК — чтобы посредник из .venv тоже мог подключиться
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brewapp -d brewapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  bridge:
+    build: .
+    image: brewapp-bridge
+    container_name: brewapp-bridge
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # только этот ПК. Для телефона — "8000:8000", но авторизации пока нет: управлять сможет любой в Wi-Fi
+      - "127.0.0.1:8000:8000"
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      DATABASE_URL: postgresql+psycopg://brewapp:${POSTGRES_PASSWORD}@db:5432/brewapp
+      # автопоиск по UDP-широковещанию из контейнера не доходит — адрес пивоварни задаётся явно (.env)
+      BREWERY_IP: ${BREWERY_IP:?задайте BREWERY_IP в .env — IP пивоварни в домашней сети}
+      BREWERY_VERSION: ${BREWERY_VERSION:-3.4}
+      # Web Push: ключ сервера (python -m bridge.push) и контакт для push-сервисов
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:brewapp@example.com}
+    volumes:
+      # ключи пивоварни — только для первичного заведения устройства в базе
+      - ./devices.json:/config/devices.json:ro
+
+volumes:
+  pgdata:
