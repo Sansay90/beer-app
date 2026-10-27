@@ -2,8 +2,10 @@
  *  их ошибки показываются сами, как у команд. */
 export function useErrorToast(...errors: Ref<unknown>[]) {
   const toast = useToast()
+  const auth = useAuthStore()
 
   function show(e: unknown) {
+    if (auth.expiredOn && errorStatus(e) === 401) return       // вход истёк — об этом говорит панель входа
     const offline = isOffline(e)
     toast.add({
       title: offline ? 'Нет связи с сервисом' : 'Не получилось',

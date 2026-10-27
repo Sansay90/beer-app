@@ -8,14 +8,14 @@ const { data: recipe, error } = await useRecipe(id)
 const { data: equipment, error: equipmentError } = useEquipment()
 useErrorToast(equipmentError)
 
-// рецепта нет или он закрыт — к списку: на сервере перенаправлением, в браузере ещё и с тостом
-const showError = useErrorToast()
-async function notFound(e: unknown) {
-  if (import.meta.client) showError(e)
-  await navigateTo('/recipes', { replace: true })
-}
-if (error.value) await notFound(error.value)
-watch(error, e => e && notFound(e))
+// рецепта нет, он закрыт или сервис не ответил — страница ошибки (error.vue) с честным кодом: 404, 5xx
+const failure = (e: unknown) => createError({
+  status: isOffline(e) ? 503 : errorStatus(e) ?? 500,
+  message: errorText(e),
+  fatal: true,
+})
+if (error.value) throw failure(error.value)
+watch(error, e => e && showError(failure(e)))
 
 const style = computed(() => styleByCode(recipe.value?.style?.code))
 const volumes = computed(() => waterVolumes(recipe.value ?? {}, equipment.value?.evaporation))

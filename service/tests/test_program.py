@@ -83,3 +83,6 @@ def test_check_boil_items():
         check_boil_items({**RECIPE, "boil": None})
     with pytest.raises(Invalid, match="за 70 мин"):
         check_boil_items({**RECIPE, "hops": [{"name": "Saaz", "use": "boil", "minutes": 70}]})
+    with pytest.raises(Invalid, match="укажите, за сколько минут"):
+        check_boil_items({**RECIPE, "hops": [{"name": "Saaz", "amount": 20}]})     # use по умолчанию — кипячение
+    check_boil_items({**RECIPE, "hops": [{"name": "Citra", "use": "dry_hop", "day": 3}]})

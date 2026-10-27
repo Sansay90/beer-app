@@ -62,6 +62,15 @@ async function submit() {
         title="Нет связи с сервисом"
         description="Попробуйте чуть позже."
       />
+      <UAlert
+        v-else-if="auth.expiredOn && mode === 'login'"
+        class="mb-6"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-lock"
+        title="Вход истёк"
+        description="Войдите снова — открытая страница и несохранённые правки останутся."
+      />
       <div v-if="sent" class="space-y-6">
         <div class="flex gap-3">
           <UIcon name="i-lucide-mail-check" class="mt-0.5 size-5 shrink-0 text-primary" />

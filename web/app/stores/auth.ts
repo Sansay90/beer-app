@@ -3,9 +3,11 @@ import type { Me } from '~/types'
 /** Кто вошёл. Сама сессия — httpOnly-cookie сервиса, здесь только профиль. */
 export const useAuthStore = defineStore('auth', () => {
   const { $api } = useNuxtApp()
+  const router = useRouter()
   const user = ref<Me | null>(null)
   const checked = ref(false)          // сервис уже спрашивали
   const unreachable = ref(false)      // сервис не ответил
+  const expiredOn = ref<string | null>(null)    // страница, на которой истёк вход: она остаётся открытой
   // права решает сервис (service/app/access.py), здесь — только что показывать
   const isAdmin = computed(() => user.value?.role === 'admin')
 
@@ -56,10 +58,16 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.assign(`${useRuntimeConfig().app.baseURL}recipes`)
   }
 
-  /** Сервис ответил 401: сессия истекла или её закрыли (новый пароль на другом устройстве). */
+  /** Сервис ответил 401: сессия истекла или её закрыли (новый пароль на другом устройстве). Открытая страница
+   *  не подменяется витриной (layouts/default.vue) — несохранённое не теряется; войти снова — в панели входа. */
   function expired() {
+    if (!user.value && !expiredOn.value) return       // гость — входа и не было
     user.value = null
+    expiredOn.value = router.currentRoute.value.path
+    useAuthDrawer().show('login')                     // и после закрытой панели — снова, при следующей попытке
   }
 
-  return { user, checked, unreachable, isAdmin, refresh, login, register, forgot, reset, verify, resendVerify, logout, expired }
+  watch(user, (u) => { if (u) expiredOn.value = null })
+
+  return { user, checked, unreachable, expiredOn, isAdmin, refresh, login, register, forgot, reset, verify, resendVerify, logout, expired }
 })

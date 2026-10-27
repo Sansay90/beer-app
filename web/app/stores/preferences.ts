@@ -10,16 +10,20 @@ export const usePreferencesStore = defineStore('preferences', () => {
   return { sound, gravityUnit }
 })
 
+/** Настройка: пока её не меняли, cookie нет (гостю и поисковикам сервер её не ставит), значение — fallback. */
 function preference<T extends string | boolean>(name: string, fallback: T) {
-  const value = useCookie<T>(name, { default: () => fallback, maxAge: YEAR_S, sameSite: 'lax' })
+  const cookie = useCookie<T | undefined>(name, { maxAge: YEAR_S, sameSite: 'lax' })
   // прежде настройки жили в localStorage — переносятся один раз, после отрисовки страницы
   if (import.meta.client) {
     onNuxtReady(() => {
       const old = localStorage.getItem(name)
       if (old == null) return
       localStorage.removeItem(name)
-      value.value = (typeof fallback === 'boolean' ? old === 'true' : old) as T
+      cookie.value = (typeof fallback === 'boolean' ? old === 'true' : old) as T
     })
   }
-  return value
+  return computed<T>({
+    get: () => cookie.value ?? fallback,
+    set: (value) => { cookie.value = value },
+  })
 }

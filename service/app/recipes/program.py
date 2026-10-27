@@ -106,17 +106,20 @@ def check_program(program, limits):
 
 
 def check_boil_items(recipe):
-    """Invalid, если закладка на кипячении не помещается в его длительность или кипячения нет."""
+    """Invalid, если закладка на кипячении без времени, не помещается в его длительность или кипячения нет —
+    как проверка рецепта в интерфейсе (validateRecipe): иначе закладка молча выпала бы из программы."""
     boil = recipe.get("boil")
     # хмель и добавки без use — на кипячении (как в boil_items), засыпь без use — в заторе
     sources = [*((h, "boil") for h in recipe.get("hops") or []), *((m, "boil") for m in recipe.get("miscs") or []),
                *((f, "mash") for f in recipe.get("fermentables") or [])]
     for src, default in sources:
-        if (src.get("use") or default) != "boil" or src.get("minutes") is None:
+        if (src.get("use") or default) != "boil":
             continue
         name = src.get("name") or "закладка"
         if not boil:
             raise Invalid(f"«{name}» — на кипячении, а кипячения в программе нет")
+        if src.get("minutes") is None:
+            raise Invalid(f"«{name}»: укажите, за сколько минут до конца кипячения")
         if not 0 <= src["minutes"] <= boil["minutes"]:
             raise Invalid(f"«{name}» за {src['minutes']} мин — кипячение длится {boil['minutes']} мин")
 

@@ -25,7 +25,7 @@ FastAPI, Postgres (SQLModel, миграции Alembic), Python 3.13. Код — 
 
 ```
 app/
-  main.py        сборка приложения: create_app(), lifespan, роутеры, раздача интерфейса
+  main.py        сборка приложения: create_app(), lifespan, роутеры (сервис отдаёт только /api)
   cli.py         python -m app: serve · agents new|list · vapid · openapi
   config.py      настройки — переменные окружения или service/.env (pydantic-settings)
   deps.py        общие объекты из app.state — зависимости для роутеров
@@ -33,7 +33,7 @@ app/
   access.py      роли и права — в одном месте
   security.py    изменяющие запросы — только со своего сайта (проверка Origin)
   db.py          подключение и миграции · models.py — таблицы · schemas.py — общие схемы API
-  mail.py        письма (SMTP; без него — в журнал) · web.py — раздача собранного интерфейса
+  mail.py        письма (SMTP; без него — в журнал)
   auth/          вход: пароли, сессии и ссылки из писем, лимиты попыток, пользователи и роли; роутеры /auth и /admin
   recipes/       рецепты: хранение и права (store), программа пивоварни (program), показатели (calc), фото; роутер
   brewery/       пивоварни: агенты на связи (hub), устройства, журнал варок, поток SSE, команды (control); роутер

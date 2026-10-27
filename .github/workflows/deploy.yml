@@ -85,7 +85,8 @@ jobs:
   build:
     name: Образ ${{ matrix.name }}
     needs: [python, web]
-    if: github.event_name != 'pull_request'
+    # образы (и тег latest) — только из main: ручной запуск с другой ветки лишь проверяет
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       matrix:

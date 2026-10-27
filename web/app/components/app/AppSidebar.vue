@@ -57,6 +57,7 @@ const themeItems = computed(() => [[
 
 <template>
   <UDashboardSidebar
+    id="main"
     v-model:open="open"
     collapsible
     resizable

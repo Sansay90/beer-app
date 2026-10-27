@@ -2,8 +2,8 @@ import type { paths } from '#open-fetch-schemas/api'
 
 /** Клиент сервиса $api (nuxt-open-fetch поверх $fetch): пути, параметры, тела и ответы — из OpenAPI-схемы;
  *  useApi — тот же клиент в useFetch. Сервис — /api того же сайта или runtimeConfig.public.apiBase.
- *  Вход — httpOnly-cookie сервиса: запросы идут с ним. Истёкшая сессия (401) — пользователь вышел, и закрытые
- *  разделы сами покажут приглашение войти (layouts/default.vue). */
+ *  Вход — httpOnly-cookie сервиса: запросы идут с ним. Истёкшая сессия (401) — пользователь вышел: открытая
+ *  страница остаётся, войти снова — в панели поверх неё (auth.expired, layouts/default.vue). */
 export default defineNuxtPlugin({
   name: 'api',
   setup(nuxtApp) {

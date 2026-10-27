@@ -36,6 +36,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // куда сервер Nuxt проксирует /api (server/routes/api/[...].ts) — NUXT_API_SERVER
     apiServer: 'http://127.0.0.1:8000',
+    // перед Nuxt свой прокси (nginx), и его X-Forwarded-* можно передать сервису — NUXT_TRUST_PROXY=1
+    trustProxy: false,
     // адрес сервиса для браузера (NUXT_PUBLIC_API_BASE); пусто — /api того же сайта, что отдал страницу
     public: { apiBase: '' },
   },
