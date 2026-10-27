@@ -26,6 +26,8 @@ Python — из `.venv` своей папки (`service/.venv`, `agent/.venv`). 
 
 MCP-серверы проекта (`.mcp.json`): **nuxt-ui** — компоненты, пропсы и примеры Nuxt UI; **context7** — актуальная документация библиотек (Nuxt, FastAPI, SQLModel, Pydantic, tinytuya…). Перед использованием API библиотеки сверяться с ними, а не с памятью.
 
+Скилы проекта (`.claude/settings.json`, плагины ставятся при первом запуске Claude Code в `brewapp/`): **ui-ux-pro-max** (nextlevelbuilder) — стили, палитры, шрифтовые пары и UX-правила, в том числе для Nuxt UI; **example-skills** (anthropics/skills) — frontend-design, webapp-testing (проверка интерфейса через Playwright), theme-factory, canvas-design, skill-creator и др.; **academy-guide**. Для дизайна и вёрстки — сначала они. Скрипты ui-ux-pro-max, которые ходят в сеть (генерация логотипов и картинок через Gemini и др.), запускать только по просьбе пользователя.
+
 ## Правила кода
 
 - **Сервис.** Новый эндпоинт — в `router.py` своего раздела. Кто спрашивает — `Viewer` / `CurrentUser` / `Admin`; общие объекты — зависимости из `deps.py` (`app.state`), глобального состояния нет. Отказ — ошибка из `errors.py` в модуле данных, роутер не ловит исключения ради HTTP-статуса. Права — только в `access.py`; интерфейс лишь прячет кнопки.
