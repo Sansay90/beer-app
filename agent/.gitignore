@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.env
+
+# ключи Tuya: API-секрет облака и local_key пивоварни
+tinytuya.json
+devices.json
+tuya-raw.json
+snapshot.json
+
+# память агента (state.json) и выгрузки разведки протокола (tools/probe.py)
+data/
+logs/

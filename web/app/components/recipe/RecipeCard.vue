@@ -2,6 +2,7 @@
 // Карточка рецепта в списке: бокал в цвет пива, начало описания, цифры одной строкой, внизу — миниатюры фото пива.
 // Высота у всех карточек одна: описание всегда в две строки, цифры и низ — фиксированной высоты.
 // Ссылка на рецепт — название, растянутое на всю карточку; миниатюры — кнопки поверх неё: фото открываются тут же.
+// Чужой рецепт — с автором внизу, свой опубликованный — со значком глобуса.
 import type { Photo, RecipeSummary } from '~/types'
 
 const props = defineProps<{ recipe: RecipeSummary; inDevice?: boolean }>()
@@ -46,6 +47,7 @@ async function openPhoto(i: number) {
 const footer = computed(() => {
   const r = props.recipe
   const program = r.steps ? fmtMinutes(r.minutes) : 'без программы'
+  if (!r.mine) return `${program} · автор ${r.author}`          // варки — свои, по чужому рецепту их не видно
   if (!r.brews) return `${program} · ещё не варили`
   const last = new Date(r.lastBrewedAt! * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
   return `${program} · варили ${r.brews} ${plural(r.brews, 'раз', 'раза', 'раз')}, ${last}`
@@ -65,7 +67,10 @@ const footer = computed(() => {
           <NuxtLink :to="`/recipes/${recipe.id}`" class="block truncate font-semibold text-highlighted outline-none after:absolute after:inset-0 after:rounded-xl">
             {{ recipe.name }}
           </NuxtLink>
-          <div class="truncate text-sm text-muted">{{ styleLabel(recipe.style) }}</div>
+          <div class="flex items-center gap-1 text-sm text-muted">
+            <UIcon v-if="recipe.mine && recipe.visibility === 'public'" name="i-lucide-globe" class="size-3.5 shrink-0" aria-label="Опубликован" />
+            <span class="truncate">{{ styleLabel(recipe.style) }}</span>
+          </div>
         </div>
         <UBadge v-if="inDevice" color="success" variant="subtle" size="sm" label="в пивоварне" class="shrink-0" />
       </div>

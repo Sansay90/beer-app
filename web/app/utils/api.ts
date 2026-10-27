@@ -1,4 +1,4 @@
-/** Ошибка посредника с текстом для человека (поле detail ответа FastAPI). */
+/** Ошибка сервиса с текстом для человека (поле detail ответа FastAPI). */
 export class ApiError extends Error {}
 
 interface FetchResult<T> {
@@ -10,7 +10,7 @@ interface FetchResult<T> {
 /** Результат openapi-fetch → данные или ApiError с понятным текстом. */
 export function unwrap<T>(result: FetchResult<T>): T {
   if (result.error !== undefined || !result.response.ok) {
-    throw new ApiError(errorDetail(result.error) ?? `Посредник ответил ошибкой ${result.response.status}`)
+    throw new ApiError(errorDetail(result.error) ?? `Сервис ответил ошибкой ${result.response.status}`)
   }
   return result.data as T
 }

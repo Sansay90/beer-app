@@ -7,5 +7,6 @@ import { ru } from '@nuxt/ui/locale'
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <AuthDrawer />
   </UApp>
 </template>

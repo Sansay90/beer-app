@@ -6,7 +6,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "api:schema": "cd ../server && .venv\\Scripts\\python.exe -m bridge.export_openapi",
+    "api:schema": "cd ../service && .venv\\Scripts\\python.exe -m app.export_openapi",
     "api:types": "npm run api:schema && openapi-typescript openapi.json -o app/types/bridge.d.ts",
     "typecheck": "nuxt typecheck"
   },

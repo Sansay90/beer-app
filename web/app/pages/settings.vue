@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Equipment, SettingsUpdate } from '~/types'
 
+definePageMeta({ auth: 'user', teaser: 'settings', title: 'Настройки' })
+
 const brewery = useBreweryStore()
-const { $bridgeUrl } = useNuxtApp()
 const { enabled: soundOn, toggle: toggleSound, play } = useSound()
 const { exec, pending } = useCommand()
 const push = usePush()
@@ -49,11 +50,20 @@ const EQUIPMENT_FIELDS: { key: keyof Equipment; label: string; unit: string; ste
   { key: 'evaporation', label: 'Испарение', unit: 'л/ч', step: 0.1, description: 'За час кипячения без крышки.' },
 ]
 
+const auth = useAuthStore()
+const toast = useToast()
+const resendCmd = useCommand()
+async function resendVerify() {
+  if (await resendCmd.exec(async () => { await auth.resendVerify(); return true })) {
+    toast.add({ title: 'Письмо отправлено', description: `Ссылка — на ${auth.user?.email}.`, color: 'success', icon: 'i-lucide-mail-check' })
+  }
+}
+
 const connection = computed(() => [
   {
-    label: 'Посредник',
+    label: 'Сервис',
     badge: brewery.connected
-      ? { color: 'success' as const, icon: 'i-lucide-server', label: `на связи · ${$bridgeUrl}` }
+      ? { color: 'success' as const, icon: 'i-lucide-server', label: 'на связи' }
       : { color: 'error' as const, icon: 'i-lucide-circle-x', label: 'нет связи' },
   },
   {
@@ -77,6 +87,37 @@ const connection = computed(() => [
 
     <template #body>
       <div class="mx-auto w-full max-w-3xl space-y-6">
+        <UCard>
+          <template #header>
+            <div class="font-semibold text-highlighted">Аккаунт</div>
+          </template>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div class="min-w-0 flex-1">
+              <div class="truncate font-medium text-highlighted">{{ auth.user?.email }}</div>
+              <div class="mt-1">
+                <UBadge
+                  v-if="auth.user?.emailVerified"
+                  color="success"
+                  variant="subtle"
+                  icon="i-lucide-mail-check"
+                  label="почта подтверждена"
+                />
+                <UBadge v-else color="warning" variant="subtle" icon="i-lucide-mail-warning" label="почта не подтверждена" />
+              </div>
+            </div>
+            <UButton
+              v-if="!auth.user?.emailVerified"
+              label="Прислать письмо ещё раз"
+              icon="i-lucide-send"
+              color="neutral"
+              variant="subtle"
+              :loading="resendCmd.pending.value"
+              @click="resendVerify"
+            />
+            <UButton label="Выйти" icon="i-lucide-log-out" color="neutral" variant="ghost" @click="auth.logout()" />
+          </div>
+        </UCard>
+
         <UCard>
           <template #header>
             <div class="font-semibold text-highlighted">Подключение</div>

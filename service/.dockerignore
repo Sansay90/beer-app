@@ -1,0 +1,7 @@
+# в образ идут только requirements.txt, миграции и пакет app
+.venv
+__pycache__
+*.pyc
+.env
+data
+*.md

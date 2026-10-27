@@ -1,5 +1,5 @@
 // Рецепт: форма редактора ↔ API, проверка по ограничениям пивоварни (/api/limits), программа и напоминания.
-// Программа и закладки выводятся из рецепта так же, как на посреднике (server/bridge/program.py).
+// Программа и закладки выводятся из рецепта так же, как в сервисе (service/app/program.py).
 import type { Addition, AdditionKind, Equipment, Limits, Recipe, WaterAgent } from '~/types'
 import type {
   FermentableRow, FermentationRow, HopRow, MashRow, MiscRow, RecipeDraft, WaterAdditionRow, WaterDraft, YeastRow,
@@ -64,7 +64,7 @@ export function toDraft(r: Recipe): RecipeDraft {
     name: r.name,
     style: r.style ?? null,
     batch: { volume: r.batch?.volume ?? null, efficiency: r.batch?.efficiency ?? null },
-    // посредник не присылает пустые поля (exclude_none) — дефолты новой строки сюда не подмешиваем
+    // сервис не присылает пустые поля (exclude_none) — дефолты новой строки сюда не подмешиваем
     fermentables: (r.fermentables ?? []).map(f => ({
       name: f.name ?? '', kind: f.kind ?? 'grain', amount: f.amount ?? null, ebc: f.ebc ?? null,
       use: f.use ?? 'mash', minutes: f.minutes ?? null,
@@ -201,9 +201,9 @@ export function whenInBoil(minutes: number, boilMinutes: number | undefined) {
 /** Ошибки рецепта человеческим языком; пустой список — можно сохранять. */
 export function validateRecipe(d: RecipeDraft, l: Limits): string[] {
   const out: string[] = []
-  // потолок мощности неизвестен (модель ещё не видели) — проверит посредник при загрузке в пивоварню
+  // потолок мощности неизвестен (модель ещё не видели) — проверит агент при загрузке в пивоварню
   const maxWatts = l.maxWatts ?? Infinity
-  const wattsOk = (w: number) => w >= l.minWatts && w <= maxWatts && w % 100 === 0
+  const wattsOk = (w: number) => w >= l.minWatts && w <= maxWatts && w % (l.wattsStep ?? 100) === 0
   const wattsRange = l.maxWatts ? `${l.minWatts}…${l.maxWatts} W` : `от ${l.minWatts} W, кратно 100`
   if (!d.name.trim()) out.push('Нужно название рецепта')
 
@@ -267,7 +267,8 @@ export function plural(n: number, one: string, few: string, many: string) {
 /** Варианты мощности для выпадающего списка: от потолка модели вниз с шагом 100 W. */
 export function wattOptions(l: Limits | null) {
   const out: { label: string; value: number }[] = []
-  for (let w = l?.maxWatts ?? 2500; w >= (l?.minWatts ?? 100); w -= 100) out.push({ label: `${w} W`, value: w })
+  const step = l?.wattsStep ?? 100
+  for (let w = l?.maxWatts ?? 2500; w >= (l?.minWatts ?? 100); w -= step) out.push({ label: `${w} W`, value: w })
   return out
 }
 

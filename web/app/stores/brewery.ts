@@ -11,7 +11,7 @@ export const useBreweryStore = defineStore('brewery', () => {
   // ── состояние ──────────────────────────────────────────────────────────────
   const snapshot = ref<Snapshot | null>(null)
   const receivedAt = ref(0)              // момент снимка по часам клиента
-  const connected = ref(false)           // связь с посредником
+  const connected = ref(false)           // связь с сервисом
   const events = ref<BrewEvent[]>([])    // новые — первыми
   const history = ref<HistoryPoint[]>([])
   const limits = ref<Limits | null>(null)
@@ -83,7 +83,7 @@ export const useBreweryStore = defineStore('brewery', () => {
     limits.value = unwrap(await $api.GET('/api/limits'))
   }
 
-  /** Догнать посредника после (пере)подключения: то, что могло случиться без нас. */
+  /** Догнать сервис после (пере)подключения: то, что могло случиться без нас. */
   async function resync() {
     await Promise.allSettled([loadHistory(), loadEvents()])
   }

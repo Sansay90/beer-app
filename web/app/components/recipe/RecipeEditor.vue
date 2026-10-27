@@ -11,6 +11,7 @@ const equipment = useEquipmentStore()
 const prefs = usePreferencesStore()
 const { exec, pending } = useCommand()
 const confirm = useConfirm()
+const toast = useToast()
 
 const draft = ref<RecipeDraft | null>(null)
 const saved = ref('')                    // сохранённая версия — чтобы знать, есть ли правки
@@ -62,6 +63,7 @@ const totals = computed(() => {
 
 async function load() {
   draft.value = null
+  if (!limits.value) await exec(brewery.loadLimits)       // пивоварни может и не быть — тогда ограничения по умолчанию
   const l = await until(limits).toBeTruthy()
   const eq = equipment.value ?? await exec(equipment.fetch) ?? null
   if (!props.id) {
@@ -72,6 +74,10 @@ async function load() {
   }
   const recipe = await exec(() => recipes.get(props.id!))
   if (!recipe) return navigateTo('/recipes', { replace: true })
+  if (!recipe.meta.canEdit) {                              // чужой рецепт — правится своя копия
+    toast.add({ title: 'Это чужой рецепт', description: 'Правки сохранятся в вашу копию.', icon: 'i-lucide-copy' })
+    return navigateTo({ path: '/recipes/new', query: { from: props.id } }, { replace: true })
+  }
   draft.value = toDraft(recipe)
   saved.value = JSON.stringify(draft.value)
 }

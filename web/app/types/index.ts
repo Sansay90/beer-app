@@ -1,4 +1,4 @@
-// Типы API посредника — из сгенерированной схемы (npm run api:types), руками не дублируются.
+// Типы API сервиса — из сгенерированной схемы (npm run api:types), руками не дублируются.
 import type { components } from './bridge'
 
 type Schemas = components['schemas']
@@ -34,6 +34,12 @@ export type BrewSummary = Schemas['BrewSummary']
 export type BrewDetail = Schemas['BrewDetail']
 export type ManualMode = Schemas['ManualMode']
 export type SettingsUpdate = Schemas['SettingsUpdate']
+export type Me = Schemas['Me']
+export type Role = Me['role']
+export type RecipeDetail = Schemas['RecipeDetail']
+export type RecipeMeta = Schemas['RecipeMeta']
+export type Visibility = RecipeMeta['visibility']
+export type AdminUser = Schemas['AdminUser']
 
 /** Точка графика: [unix-время, °C, цель °C]. */
 export type HistoryPoint = [number, number, number | null]

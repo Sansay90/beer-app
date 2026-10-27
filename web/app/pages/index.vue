@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ auth: 'user', teaser: 'brew', title: 'Варка' })
+
 const brewery = useBreweryStore()
 </script>
 
@@ -31,8 +33,8 @@ const brewery = useBreweryStore()
         color="error"
         variant="subtle"
         icon="i-lucide-server"
-        title="Нет связи с посредником"
-        description="Запустите start.bat в папке brewapp — или вручную: .venv\Scripts\python -m bridge.server"
+        title="Нет связи с сервисом"
+        description="Переподключаемся сами. Если не выходит долго — обновите страницу."
       />
 
       <!-- на широком экране — две независимые колонки, на узком — одна, по важности -->

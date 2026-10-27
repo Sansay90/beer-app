@@ -1,5 +1,5 @@
 // Сервис-воркер brewapp: Web Push — подсказки, закладки и конец программы приходят, даже когда вкладка закрыта.
-// Адрес посредника — параметр регистрации (/sw.js?api=…): кнопки в уведомлении шлют команды прямо ему.
+// Адрес сервиса — параметр регистрации (/sw.js?api=…): кнопки в уведомлении шлют команды прямо ему, с cookie входа.
 const API = new URL(self.location.href).searchParams.get('api') || self.location.origin
 const ICON = new URL('icon-192.png', self.registration.scope).href
 
@@ -32,7 +32,7 @@ self.addEventListener('notificationclick', (event) => {
   const path = event.notification.data?.path
   event.waitUntil((async () => {
     if (event.action === 'act' && path) {
-      const done = await fetch(API + path, { method: 'POST' }).then(r => r.ok, () => false)
+      const done = await fetch(API + path, { method: 'POST', credentials: 'include' }).then(r => r.ok, () => false)
       if (done) return
     }
     // не вышло или нажали на само уведомление — открыть приложение

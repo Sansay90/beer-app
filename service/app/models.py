@@ -1,0 +1,172 @@
+"""Таблицы Postgres. Схема меняется только миграциями Alembic (migrations/), не create_all.
+
+users ─┬─ sessions                  входы: cookie-токен — хэшем
+       ├─ auth_tokens               одноразовые ссылки из писем: подтверждение почты, сброс пароля
+       ├─ agents                    агенты у пивоварен; devices.agent_id — через какой на связи
+       ├─ devices ─┬─ readings      температура во времени
+       │           ├─ events        события пивоварни
+       │           └─ brews         варки: рецепт, начало, конец, исход
+       └─ recipes ── recipe_photos  рецепт — JSONB; фото пива
+"""
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Optional
+
+from sqlalchemy import BigInteger, Column, DateTime, Index, LargeBinary
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import Field, SQLModel
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
+
+
+def ts(**kw):
+    return Field(default_factory=utcnow, sa_type=DateTime(timezone=True), **kw)
+
+
+def fk(target, *, nullable=False, ondelete="CASCADE", index=True):
+    """Внешний ключ: по умолчанию удаляется вместе с владельцем; nullable — обнуляется."""
+    return Field(default=None if nullable else ..., foreign_key=target, ondelete=ondelete,
+                 nullable=nullable, index=index)
+
+
+class User(SQLModel, table=True):
+    """Пользователь. Без почты — владелец данных, заведённых до входа: его забирает первая регистрация (auth.py)."""
+    __tablename__ = "users"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str
+    email: Optional[str] = Field(default=None, unique=True)           # строчными буквами
+    password_hash: Optional[str] = None
+    email_verified_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    role: str = Field(default="user", sa_column_kwargs={"server_default": "user"})    # user | admin (access.py)
+    created_at: datetime = ts()
+
+
+class UserSession(SQLModel, table=True):
+    """Вход пользователя: случайный токен в cookie, здесь — его SHA-256. Продлевается, пока им пользуются."""
+    __tablename__ = "sessions"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    token_hash: str = Field(unique=True)
+    user_agent: Optional[str] = None
+    created_at: datetime = ts()
+    last_seen_at: datetime = ts()
+    expires_at: datetime = Field(sa_type=DateTime(timezone=True))
+
+
+class AuthToken(SQLModel, table=True):
+    """Одноразовая ссылка из письма: kind — verify (подтвердить почту) или reset (сбросить пароль)."""
+    __tablename__ = "auth_tokens"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    kind: str
+    token_hash: str = Field(unique=True)
+    created_at: datetime = ts()
+    expires_at: datetime = Field(sa_type=DateTime(timezone=True))
+    used_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+
+
+class Recipe(SQLModel, table=True):
+    """Рецепт пользователя. data — рецепт целиком (schemas.Recipe), name дублирует data.name для сортировки.
+    visibility: private — видит только автор, public — все, и гости тоже (access.py)."""
+    __tablename__ = "recipes"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    name: str
+    data: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
+    visibility: str = Field(default="private", index=True, sa_column_kwargs={"server_default": "private"})
+    published_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    created_at: datetime = ts()
+    updated_at: datetime = ts()
+
+
+class RecipePhoto(SQLModel, table=True):
+    """Фото пива по рецепту: снимок, уже уменьшенный интерфейсом. credit — автор и лицензия, если фото чужое."""
+    __tablename__ = "recipe_photos"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    recipe_id: uuid.UUID = fk("recipes.id")
+    user_id: uuid.UUID = fk("users.id")
+    content_type: str                                 # image/jpeg | image/png | image/webp — по сигнатуре файла
+    data: bytes = Field(sa_type=LargeBinary)
+    thumb: Optional[bytes] = Field(default=None, sa_type=LargeBinary)   # превью для списков, JPEG до 480 px
+    credit: Optional[str] = None
+    created_at: datetime = ts()
+
+
+class Agent(SQLModel, table=True):
+    """Агент пользователя — программа рядом с пивоварней (agent/). Токен хранится только хэшем (agents.py)."""
+    __tablename__ = "agents"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    name: str
+    token_hash: str = Field(unique=True)
+    created_at: datetime = ts()
+    last_seen_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+
+
+class Device(SQLModel, table=True):
+    """Пивоварня пользователя. Ключи, адрес и память о программе — у агента; здесь — то, что нужно без него."""
+    __tablename__ = "devices"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    agent_id: Optional[uuid.UUID] = fk("agents.id", nullable=True, ondelete="SET NULL")
+    tuya_id: str = Field(unique=True)
+    name: str
+    model: Optional[str] = None                       # DP 109 power_model — сообщает агент
+    limits: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)      # schemas.Limits — сообщает агент
+    equipment: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)   # профиль оборудования (schemas.Equipment)
+    created_at: datetime = ts()
+
+
+class Brew(SQLModel, table=True):
+    """Варка: от запуска программы рецепта до её конца."""
+    __tablename__ = "brews"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    device_id: uuid.UUID = fk("devices.id")
+    recipe_id: Optional[uuid.UUID] = fk("recipes.id", nullable=True, ondelete="SET NULL")
+    name: str
+    recipe: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)   # рецепт, как был загружен
+    status: str = "running"                           # running | finished | stopped
+    energy_wh: float = Field(default=0.0, sa_column_kwargs={"server_default": "0"})   # оценка расхода ТЭНа
+    started_at: datetime = ts(index=True)
+    ended_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+
+
+class Event(SQLModel, table=True):
+    __tablename__ = "events"
+    __table_args__ = (Index("ix_events_device_at", "device_id", "at"),)
+    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    device_id: uuid.UUID = fk("devices.id", index=False)
+    brew_id: Optional[uuid.UUID] = fk("brews.id", nullable=True)
+    at: datetime = ts()
+    kind: str
+    text: str
+    data: Optional[dict[str, Any]] = Field(default=None, sa_type=JSONB)
+
+
+class Reading(SQLModel, table=True):
+    __tablename__ = "readings"
+    __table_args__ = (Index("ix_readings_device_at", "device_id", "at"),)
+    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    device_id: uuid.UUID = fk("devices.id", index=False)
+    brew_id: Optional[uuid.UUID] = fk("brews.id", nullable=True)
+    at: datetime = ts()
+    temp: float
+    target: Optional[float] = None
+    step: Optional[int] = None
+    status: Optional[str] = None
+
+
+class PushSubscription(SQLModel, table=True):
+    """Подписка браузера на Web Push: одна на устройство пользователя (endpoint уникален)."""
+    __tablename__ = "push_subscriptions"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    endpoint: str = Field(unique=True)
+    p256dh: str
+    auth: str
+    user_agent: Optional[str] = None
+    created_at: datetime = ts()
+    last_seen_at: datetime = ts()

@@ -1,10 +1,302 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "brewapp bridge",
-    "version": "0.2"
+    "title": "brewapp",
+    "version": "0.4"
   },
   "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Зарегистрироваться и войти",
+        "description": "Письмо со ссылкой подтверждения почты уходит сразу; входить можно и до подтверждения.",
+        "operationId": "register_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Войти",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Выйти",
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Кто вошёл",
+        "operationId": "get_me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Подтвердить почту по ссылке из письма",
+        "operationId": "verify_api_auth_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify/resend": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Прислать письмо подтверждения ещё раз",
+        "operationId": "resend_verify_api_auth_verify_resend_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/forgot": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Прислать ссылку для нового пароля",
+        "description": "Отвечает одинаково, есть такая почта или нет.",
+        "operationId": "forgot_api_auth_forgot_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset": {
+      "post": {
+        "tags": [
+          "вход"
+        ],
+        "summary": "Задать новый пароль по ссылке и войти",
+        "description": "Прежние входы на всех устройствах закрываются.",
+        "operationId": "reset_api_auth_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "состояние"
+        ],
+        "summary": "Сервис жив — для проверок Docker и мониторинга",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/state": {
       "get": {
         "tags": [
@@ -123,7 +415,7 @@
         "tags": [
           "состояние"
         ],
-        "summary": "Get Limits",
+        "summary": "Ограничения пивоварни; гостю и без пивоварни — по умолчанию",
         "operationId": "get_limits_api_limits_get",
         "responses": {
           "200": {
@@ -471,19 +763,42 @@
         "tags": [
           "рецепты"
         ],
-        "summary": "Рецепты, недавно изменённые первыми",
+        "summary": "Опубликованные рецепты и свои, недавно изменённые первыми",
+        "description": "mine — только свои.",
         "operationId": "list_recipes_api_recipes_get",
+        "parameters": [
+          {
+            "name": "mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Mine"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/RecipeSummary"
                   },
-                  "type": "array",
                   "title": "Response List Recipes Api Recipes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -497,14 +812,14 @@
         "summary": "Создать рецепт",
         "operationId": "create_recipe_api_recipes_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Recipe"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -535,7 +850,7 @@
         "tags": [
           "рецепты"
         ],
-        "summary": "Get Recipe",
+        "summary": "Рецепт: свой или опубликованный; meta — автор и что можно тому, кто спрашивает",
         "operationId": "get_recipe_api_recipes__rid__get",
         "parameters": [
           {
@@ -554,7 +869,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Recipe"
+                  "$ref": "#/components/schemas/RecipeDetail"
                 }
               }
             }
@@ -662,12 +977,66 @@
         }
       }
     },
+    "/api/recipes/{rid}/visibility": {
+      "put": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Опубликовать или снять с публикации",
+        "description": "Автор — в обе стороны, публиковать — с подтверждённой почтой; администратор — снять чужой рецепт.",
+        "operationId": "set_visibility_api_recipes__rid__visibility_put",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisibilityIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recipes/{rid}/upload": {
       "post": {
         "tags": [
           "рецепты"
         ],
         "summary": "Загрузить рецепт в пивоварню",
+        "description": "Свой или опубликованный: варить можно и по чужому рецепту.",
         "operationId": "upload_api_recipes__rid__upload_post",
         "parameters": [
           {
@@ -1100,6 +1469,83 @@
         }
       }
     },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "администрирование"
+        ],
+        "summary": "Пользователи",
+        "operationId": "admin_users_api_admin_users_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminUser"
+                  },
+                  "type": "array",
+                  "title": "Response Admin Users Api Admin Users Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{uid}/role": {
+      "put": {
+        "tags": [
+          "администрирование"
+        ],
+        "summary": "Сменить роль",
+        "operationId": "admin_set_role_api_admin_users__uid__role_put",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/push/key": {
       "get": {
         "tags": [
@@ -1317,6 +1763,54 @@
         ],
         "title": "AdditionSlot",
         "description": "Таймер пивоварни и всё, что закладывают по нему: на одну минуту — один писк."
+      },
+      "AdminUser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "title": "Emailverified"
+          },
+          "createdAt": {
+            "type": "number",
+            "title": "Createdat"
+          },
+          "recipes": {
+            "type": "integer",
+            "title": "Recipes",
+            "description": "рецептов всего, личных и опубликованных"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "role",
+          "emailVerified",
+          "createdAt",
+          "recipes"
+        ],
+        "title": "AdminUser"
       },
       "Batch": {
         "properties": {
@@ -1607,6 +2101,26 @@
         ],
         "title": "BrewSummary"
       },
+      "Credentials": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Credentials"
+      },
       "DeviceRecipe": {
         "properties": {
           "name": {
@@ -1754,6 +2268,20 @@
           "boil"
         ],
         "title": "DeviceStep"
+      },
+      "EmailIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EmailIn"
       },
       "Energy": {
         "properties": {
@@ -2030,6 +2558,12 @@
             ],
             "title": "Maxwatts",
             "description": "потолок модели; None — модель неизвестна"
+          },
+          "wattsStep": {
+            "type": "integer",
+            "title": "Wattsstep",
+            "description": "мощность задаётся кратно этому шагу, W",
+            "default": 100
           }
         },
         "type": "object",
@@ -2042,7 +2576,7 @@
           "minWatts"
         ],
         "title": "Limits",
-        "description": "Ограничения контроллера (PROTOCOL.md) — интерфейс проверяет рецепт по ним же."
+        "description": "Ограничения пивоварни — сообщает агент (agent/PROTOCOL.md); интерфейс проверяет рецепт по ним же."
       },
       "ManualMode": {
         "properties": {
@@ -2100,6 +2634,43 @@
           "watts"
         ],
         "title": "MashStep"
+      },
+      "Me": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "title": "Emailverified"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name",
+          "emailVerified",
+          "role"
+        ],
+        "title": "Me"
       },
       "Misc": {
         "properties": {
@@ -2409,6 +2980,156 @@
         ],
         "title": "Recipe"
       },
+      "RecipeDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StyleRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "batch": {
+            "$ref": "#/components/schemas/Batch"
+          },
+          "targets": {
+            "$ref": "#/components/schemas/Targets"
+          },
+          "fermentables": {
+            "items": {
+              "$ref": "#/components/schemas/Fermentable"
+            },
+            "type": "array",
+            "title": "Fermentables",
+            "default": []
+          },
+          "hops": {
+            "items": {
+              "$ref": "#/components/schemas/Hop"
+            },
+            "type": "array",
+            "title": "Hops",
+            "default": []
+          },
+          "miscs": {
+            "items": {
+              "$ref": "#/components/schemas/Misc"
+            },
+            "type": "array",
+            "title": "Miscs",
+            "default": []
+          },
+          "yeasts": {
+            "items": {
+              "$ref": "#/components/schemas/Yeast"
+            },
+            "type": "array",
+            "title": "Yeasts",
+            "default": []
+          },
+          "water": {
+            "$ref": "#/components/schemas/Water"
+          },
+          "mash": {
+            "items": {
+              "$ref": "#/components/schemas/MashStep"
+            },
+            "type": "array",
+            "title": "Mash",
+            "default": []
+          },
+          "boil": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Boil"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fermentation": {
+            "items": {
+              "$ref": "#/components/schemas/FermentationStep"
+            },
+            "type": "array",
+            "title": "Fermentation",
+            "default": []
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RecipeMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "meta"
+        ],
+        "title": "RecipeDetail"
+      },
+      "RecipeMeta": {
+        "properties": {
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "mine": {
+            "type": "boolean",
+            "title": "Mine"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ],
+            "title": "Visibility"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "canEdit": {
+            "type": "boolean",
+            "title": "Canedit",
+            "description": "править, удалять, публиковать, добавлять фото — рецепт свой"
+          },
+          "canModerate": {
+            "type": "boolean",
+            "title": "Canmoderate",
+            "description": "снять с публикации, удалить, убрать фото — администратор, рецепт чужой"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author",
+          "mine",
+          "visibility",
+          "canEdit",
+          "canModerate"
+        ],
+        "title": "RecipeMeta",
+        "description": "Что о рецепте знать интерфейсу: автор, видимость и что можно тому, кто спрашивает (access.py)."
+      },
       "RecipeSummary": {
         "properties": {
           "id": {
@@ -2488,6 +3209,38 @@
             "title": "Photos",
             "description": "id фото пива, старые первыми — миниатюры на карточке",
             "default": []
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "description": "имя автора",
+            "default": ""
+          },
+          "mine": {
+            "type": "boolean",
+            "title": "Mine",
+            "description": "рецепт того, кто спрашивает",
+            "default": false
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ],
+            "title": "Visibility",
+            "default": "private"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
           }
         },
         "type": "object",
@@ -2501,6 +3254,43 @@
           "updatedAt"
         ],
         "title": "RecipeSummary"
+      },
+      "ResetIn": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "ResetIn"
+      },
+      "RoleIn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "RoleIn"
       },
       "SavedRecipe": {
         "properties": {
@@ -2852,7 +3642,7 @@
           "at": {
             "type": "number",
             "title": "At",
-            "description": "момент оценки, unix-время посредника"
+            "description": "момент оценки, unix-время агента"
           }
         },
         "type": "object",
@@ -2861,6 +3651,21 @@
           "at"
         ],
         "title": "Timer"
+      },
+      "TokenIn": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Token",
+            "description": "токен из ссылки в письме"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "TokenIn"
       },
       "ValidationError": {
         "properties": {
@@ -2901,6 +3706,23 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VisibilityIn": {
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ],
+            "title": "Visibility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visibility"
+        ],
+        "title": "VisibilityIn"
       },
       "Water": {
         "properties": {

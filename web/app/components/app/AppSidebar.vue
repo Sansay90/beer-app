@@ -1,16 +1,28 @@
 <script setup lang="ts">
 const brewery = useBreweryStore()
+const auth = useAuthStore()
 const { enabled: soundOn, toggle: toggleSound } = useSound()
+
+const userItems = computed(() => [
+  [{ type: 'label' as const, label: auth.user?.email }],
+  [
+    { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings' },
+    { label: 'Выйти', icon: 'i-lucide-log-out', onSelect: () => auth.logout() },
+  ],
+])
 const colorMode = useColorMode()
 
-const nav = [
+// разделы видны всем — гостя закрытый раздел зовёт зарегистрироваться (AuthGate); пользователи — администратору
+const nav = computed(() => [
   { label: 'Варка', icon: 'i-lucide-flame', to: '/' },
   { label: 'Рецепты', icon: 'i-lucide-book-open', to: '/recipes' },
   { label: 'Настройки', icon: 'i-lucide-settings', to: '/settings' },
-]
+  ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users' }] : []),
+])
+const drawer = useAuthDrawer()
 
 const link = computed(() => {
-  if (!brewery.connected) return { label: 'Нет связи с посредником', tone: 'text-error', icon: 'i-lucide-server' }
+  if (!brewery.connected) return { label: 'Нет связи с сервисом', tone: 'text-error', icon: 'i-lucide-server' }
   if (!brewery.online) return { label: 'Пивоварня не в сети', tone: 'text-warning', icon: 'i-lucide-wifi-off' }
   return { label: 'Пивоварня на связи', tone: 'text-success', icon: 'i-lucide-wifi' }
 })
@@ -58,7 +70,32 @@ const themeItems = computed(() => [[
 
     <template #footer="{ collapsed }">
       <div class="flex w-full flex-col gap-1">
-        <UTooltip :text="link.label" :disabled="!collapsed">
+        <UDropdownMenu v-if="auth.user" :items="userItems" :content="{ side: collapsed ? 'right' : 'top', align: 'start' }">
+          <UButton
+            icon="i-lucide-circle-user"
+            :label="collapsed ? undefined : auth.user.email"
+            color="neutral"
+            variant="ghost"
+            :block="!collapsed"
+            :square="collapsed"
+            :class="collapsed ? 'mx-auto' : 'justify-start'"
+            :ui="{ label: 'truncate' }"
+            aria-label="Аккаунт"
+          />
+        </UDropdownMenu>
+        <UButton
+          v-else
+          icon="i-lucide-log-in"
+          :label="collapsed ? undefined : 'Войти'"
+          @click="drawer.show('login')"
+          color="primary"
+          variant="soft"
+          :block="!collapsed"
+          :square="collapsed"
+          :class="collapsed ? 'mx-auto' : 'justify-start'"
+          aria-label="Войти"
+        />
+        <UTooltip v-if="auth.user" :text="link.label" :disabled="!collapsed">
           <div class="flex items-center gap-2 px-2.5 py-1.5 text-sm" :class="collapsed && 'justify-center'">
             <UIcon :name="link.icon" class="size-5 shrink-0" :class="link.tone" />
             <span v-if="!collapsed" class="truncate text-muted">{{ link.label }}</span>

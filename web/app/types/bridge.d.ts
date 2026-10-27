@@ -4,6 +4,168 @@
  */
 
 export interface paths {
+    "/api/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Зарегистрироваться и войти
+         * @description Письмо со ссылкой подтверждения почты уходит сразу; входить можно и до подтверждения.
+         */
+        post: operations["register_api_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Войти */
+        post: operations["login_api_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Выйти */
+        post: operations["logout_api_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Кто вошёл */
+        get: operations["get_me_api_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить почту по ссылке из письма */
+        post: operations["verify_api_auth_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/verify/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Прислать письмо подтверждения ещё раз */
+        post: operations["resend_verify_api_auth_verify_resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Прислать ссылку для нового пароля
+         * @description Отвечает одинаково, есть такая почта или нет.
+         */
+        post: operations["forgot_api_auth_forgot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Задать новый пароль по ссылке и войти
+         * @description Прежние входы на всех устройствах закрываются.
+         */
+        post: operations["reset_api_auth_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сервис жив — для проверок Docker и мониторинга */
+        get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/state": {
         parameters: {
             query?: never;
@@ -62,7 +224,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Limits */
+        /** Ограничения пивоварни; гостю и без пивоварни — по умолчанию */
         get: operations["get_limits_api_limits_get"];
         put?: never;
         post?: never;
@@ -249,7 +411,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Рецепты, недавно изменённые первыми */
+        /**
+         * Опубликованные рецепты и свои, недавно изменённые первыми
+         * @description mine — только свои.
+         */
         get: operations["list_recipes_api_recipes_get"];
         put?: never;
         /** Создать рецепт */
@@ -267,13 +432,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Recipe */
+        /** Рецепт: свой или опубликованный; meta — автор и что можно тому, кто спрашивает */
         get: operations["get_recipe_api_recipes__rid__get"];
         /** Сохранить рецепт */
         put: operations["update_recipe_api_recipes__rid__put"];
         post?: never;
         /** Delete Recipe */
         delete: operations["delete_recipe_api_recipes__rid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recipes/{rid}/visibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Опубликовать или снять с публикации
+         * @description Автор — в обе стороны, публиковать — с подтверждённой почтой; администратор — снять чужой рецепт.
+         */
+        put: operations["set_visibility_api_recipes__rid__visibility_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -288,7 +473,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Загрузить рецепт в пивоварню */
+        /**
+         * Загрузить рецепт в пивоварню
+         * @description Свой или опубликованный: варить можно и по чужому рецепту.
+         */
         post: operations["upload_api_recipes__rid__upload_post"];
         delete?: never;
         options?: never;
@@ -407,6 +595,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Пользователи */
+        get: operations["admin_users_api_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{uid}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Сменить роль */
+        put: operations["admin_set_role_api_admin_users__uid__role_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/push/key": {
         parameters: {
             query?: never;
@@ -510,6 +732,29 @@ export interface components {
             items: components["schemas"]["Addition"][];
             /** Label */
             label: string;
+        };
+        /** AdminUser */
+        AdminUser: {
+            /** Id */
+            id: string;
+            /** Email */
+            email: string;
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "admin";
+            /** Emailverified */
+            emailVerified: boolean;
+            /** Createdat */
+            createdAt: number;
+            /**
+             * Recipes
+             * @description рецептов всего, личных и опубликованных
+             */
+            recipes: number;
         };
         /** Batch */
         Batch: {
@@ -619,6 +864,13 @@ export interface components {
              */
             energyWh: number;
         };
+        /** Credentials */
+        Credentials: {
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+        };
         /** DeviceRecipe */
         DeviceRecipe: {
             /**
@@ -661,6 +913,11 @@ export interface components {
             boil: boolean;
             /** Name */
             name?: string | null;
+        };
+        /** EmailIn */
+        EmailIn: {
+            /** Email */
+            email: string;
         };
         /**
          * Energy
@@ -783,7 +1040,7 @@ export interface components {
         };
         /**
          * Limits
-         * @description Ограничения контроллера (PROTOCOL.md) — интерфейс проверяет рецепт по ним же.
+         * @description Ограничения пивоварни — сообщает агент (agent/PROTOCOL.md); интерфейс проверяет рецепт по ним же.
          */
         Limits: {
             /** Maxsteps */
@@ -806,6 +1063,12 @@ export interface components {
              * @description потолок модели; None — модель неизвестна
              */
             maxWatts?: number | null;
+            /**
+             * Wattsstep
+             * @description мощность задаётся кратно этому шагу, W
+             * @default 100
+             */
+            wattsStep: number;
         };
         /** ManualMode */
         ManualMode: {
@@ -826,6 +1089,22 @@ export interface components {
             minutes: number;
             /** Watts */
             watts: number;
+        };
+        /** Me */
+        Me: {
+            /** Id */
+            id: string;
+            /** Email */
+            email: string;
+            /** Name */
+            name: string;
+            /** Emailverified */
+            emailVerified: boolean;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "admin";
         };
         /** Misc */
         Misc: {
@@ -975,6 +1254,79 @@ export interface components {
              */
             notes: string;
         };
+        /** RecipeDetail */
+        RecipeDetail: {
+            /** Name */
+            name: string;
+            style?: components["schemas"]["StyleRef"] | null;
+            batch?: components["schemas"]["Batch"];
+            targets?: components["schemas"]["Targets"];
+            /**
+             * Fermentables
+             * @default []
+             */
+            fermentables: components["schemas"]["Fermentable"][];
+            /**
+             * Hops
+             * @default []
+             */
+            hops: components["schemas"]["Hop"][];
+            /**
+             * Miscs
+             * @default []
+             */
+            miscs: components["schemas"]["Misc"][];
+            /**
+             * Yeasts
+             * @default []
+             */
+            yeasts: components["schemas"]["Yeast"][];
+            water?: components["schemas"]["Water"];
+            /**
+             * Mash
+             * @default []
+             */
+            mash: components["schemas"]["MashStep"][];
+            boil?: components["schemas"]["Boil"] | null;
+            /**
+             * Fermentation
+             * @default []
+             */
+            fermentation: components["schemas"]["FermentationStep"][];
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            meta: components["schemas"]["RecipeMeta"];
+        };
+        /**
+         * RecipeMeta
+         * @description Что о рецепте знать интерфейсу: автор, видимость и что можно тому, кто спрашивает (access.py).
+         */
+        RecipeMeta: {
+            /** Author */
+            author: string;
+            /** Mine */
+            mine: boolean;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "public";
+            /** Publishedat */
+            publishedAt?: number | null;
+            /**
+             * Canedit
+             * @description править, удалять, публиковать, добавлять фото — рецепт свой
+             */
+            canEdit: boolean;
+            /**
+             * Canmoderate
+             * @description снять с публикации, удалить, убрать фото — администратор, рецепт чужой
+             */
+            canModerate: boolean;
+        };
         /** RecipeSummary */
         RecipeSummary: {
             /** Id */
@@ -1019,6 +1371,41 @@ export interface components {
              * @default []
              */
             photos: string[];
+            /**
+             * Author
+             * @description имя автора
+             * @default
+             */
+            author: string;
+            /**
+             * Mine
+             * @description рецепт того, кто спрашивает
+             * @default false
+             */
+            mine: boolean;
+            /**
+             * Visibility
+             * @default private
+             * @enum {string}
+             */
+            visibility: "private" | "public";
+            /** Publishedat */
+            publishedAt?: number | null;
+        };
+        /** ResetIn */
+        ResetIn: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
+        /** RoleIn */
+        RoleIn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "admin";
         };
         /** SavedRecipe */
         SavedRecipe: {
@@ -1122,9 +1509,17 @@ export interface components {
             counting: boolean;
             /**
              * At
-             * @description момент оценки, unix-время посредника
+             * @description момент оценки, unix-время агента
              */
             at: number;
+        };
+        /** TokenIn */
+        TokenIn: {
+            /**
+             * Token
+             * @description токен из ссылки в письме
+             */
+            token: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1138,6 +1533,14 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VisibilityIn */
+        VisibilityIn: {
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "public";
         };
         /**
          * Water
@@ -1255,6 +1658,251 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    register_api_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Credentials"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Credentials"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+        };
+    };
+    get_me_api_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    verify_api_auth_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_verify_api_auth_verify_resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+        };
+    };
+    forgot_api_auth_forgot_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_api_auth_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+        };
+    };
     get_state_api_state_get: {
         parameters: {
             query?: never;
@@ -1628,7 +2276,9 @@ export interface operations {
     };
     list_recipes_api_recipes_get: {
         parameters: {
-            query?: never;
+            query?: {
+                mine?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1642,6 +2292,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecipeSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1696,7 +2355,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Recipe"];
+                    "application/json": components["schemas"]["RecipeDetail"];
                 };
             };
             /** @description Validation Error */
@@ -1755,6 +2414,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_visibility_api_recipes__rid__visibility_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisibilityIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -2066,6 +2760,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Equipment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_users_api_admin_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"][];
+                };
+            };
+        };
+    };
+    admin_set_role_api_admin_users__uid__role_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */

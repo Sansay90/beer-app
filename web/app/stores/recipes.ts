@@ -1,6 +1,6 @@
-import type { Recipe, RecipeSummary } from '~/types'
+import type { Recipe, RecipeSummary, Visibility } from '~/types'
 
-/** Библиотека рецептов на посреднике, фото пива и загрузка рецепта в пивоварню. */
+/** Рецепты на сервисе — опубликованные и свои, фото пива, публикация и загрузка рецепта в пивоварню. */
 export const useRecipesStore = defineStore('recipes', () => {
   const { $api, $bridgeUrl } = useNuxtApp()
 
@@ -23,6 +23,12 @@ export const useRecipesStore = defineStore('recipes', () => {
       : unwrap(await $api.POST('/api/recipes', { body: recipe }))
     await fetchList()
     return res.id
+  }
+
+  /** Опубликовать или снять с публикации (автор; администратор — снять чужой). */
+  async function setVisibility(id: string, visibility: Visibility) {
+    unwrap(await $api.PUT('/api/recipes/{rid}/visibility', { params: { path: { rid: id } }, body: { visibility } }))
+    await fetchList()
   }
 
   async function remove(id: string) {
@@ -64,5 +70,5 @@ export const useRecipesStore = defineStore('recipes', () => {
   /** thumb — превью до 480 px для лент и карточек. */
   const photoUrl = (pid: string, thumb = false) => `${$bridgeUrl}/api/photos/${pid}${thumb ? '?thumb=true' : ''}`
 
-  return { list, loaded, fetchList, get, save, remove, upload, brews, photos, addPhoto, removePhoto, photoUrl }
+  return { list, loaded, fetchList, get, save, setVisibility, remove, upload, brews, photos, addPhoto, removePhoto, photoUrl }
 })

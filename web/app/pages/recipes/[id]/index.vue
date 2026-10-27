@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { BrewSummary, Recipe } from '~/types'
+import type { BrewSummary, RecipeDetail, Visibility } from '~/types'
 
+// Рецепт: свой или опубликованный. Что можно — решает сервис (meta.canEdit, meta.canModerate), здесь только кнопки.
 const route = useRoute()
+const auth = useAuthStore()
 const recipes = useRecipesStore()
 const brewery = useBreweryStore()
 const equipment = useEquipmentStore()
@@ -9,18 +11,20 @@ const { exec, pending } = useCommand()
 const confirm = useConfirm()
 
 const id = computed(() => route.params.id as string)
-const recipe = ref<Recipe | null>(null)
+const recipe = ref<RecipeDetail | null>(null)
+const meta = computed(() => recipe.value?.meta)
 const brews = ref<BrewSummary[]>([])
 
 async function load() {
   recipe.value = null
+  brews.value = []
   const r = await exec(() => recipes.get(id.value))
   if (!r) return navigateTo('/recipes', { replace: true })
   recipe.value = r
-  if (!equipment.value) await exec(equipment.fetch)
-  brews.value = (await exec(() => recipes.brews(id.value))) ?? []
+  if (auth.user && !equipment.value) await exec(equipment.fetch)
+  if (r.meta.canEdit) brews.value = (await exec(() => recipes.brews(id.value))) ?? []     // варки — только свои
 }
-watch(id, load, { immediate: true })
+watch([id, () => auth.user?.id], load, { immediate: true })
 
 const style = computed(() => styleByCode(recipe.value?.style?.code))
 const styleLine = computed(() => styleLabel(recipe.value?.style))
@@ -72,10 +76,24 @@ async function upload() {
   if (ok) await exec(() => recipes.upload(id.value), 'Рецепт загружен в пивоварню')
 }
 
+async function setVisibility(visibility: Visibility) {
+  if (visibility === 'public' && !await confirm({
+    title: 'Опубликовать рецепт?',
+    description: 'Его увидят все, и гости тоже. Править сможете только вы, снять с публикации — в любой момент.',
+    confirmLabel: 'Опубликовать',
+    confirmIcon: 'i-lucide-globe',
+  })) return
+  const done = await exec(async () => { await recipes.setVisibility(id.value, visibility); return true },
+    visibility === 'public' ? 'Рецепт опубликован' : 'Рецепт снят с публикации')
+  if (done && recipe.value) recipe.value = { ...recipe.value, meta: { ...recipe.value.meta, visibility } }
+}
+
 async function remove() {
   const ok = await confirm({
     title: 'Удалить рецепт?',
-    description: `«${recipe.value?.name}» будет удалён без возможности восстановления. История варок останется.`,
+    description: meta.value?.canEdit
+      ? `«${recipe.value?.name}» будет удалён без возможности восстановления. История варок останется.`
+      : `«${recipe.value?.name}» автора ${meta.value?.author} будет удалён без возможности восстановления.`,
     confirmLabel: 'Удалить',
     confirmIcon: 'i-lucide-trash-2',
     color: 'error',
@@ -83,10 +101,20 @@ async function remove() {
   if (ok && await exec(() => recipes.remove(id.value), 'Рецепт удалён')) navigateTo('/recipes')
 }
 
-const menu = computed(() => [
-  [{ label: 'Дублировать', icon: 'i-lucide-copy', to: { path: '/recipes/new', query: { from: id.value } } }],
-  [{ label: 'Удалить', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: remove }],
-])
+const menu = computed(() => {
+  const m = meta.value
+  if (!m) return []
+  const copy = { label: m.canEdit ? 'Дублировать' : 'Сохранить себе копию', icon: 'i-lucide-copy',
+                 to: { path: '/recipes/new', query: { from: id.value } } }
+  const publish = m.visibility === 'public'
+    ? { label: 'Снять с публикации', icon: 'i-lucide-eye-off', onSelect: () => setVisibility('private') }
+    : { label: 'Опубликовать', icon: 'i-lucide-globe', onSelect: () => setVisibility('public') }
+  return [
+    [copy],
+    ...(m.canEdit || m.canModerate ? [[publish]] : []),
+    ...(m.canEdit || m.canModerate ? [[{ label: 'Удалить', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: remove }]] : []),
+  ]
+})
 </script>
 
 <template>
@@ -98,8 +126,8 @@ const menu = computed(() => [
         </template>
         <template v-if="recipe" #right>
           <UBadge v-if="inDevice" color="success" variant="subtle" icon="i-lucide-check" label="в пивоварне" class="hidden sm:inline-flex" />
-          <UButton icon="i-lucide-pencil" label="Изменить" color="neutral" variant="outline" :to="`/recipes/${id}/edit`" />
-          <UTooltip :text="uploadHint">
+          <UButton v-if="meta?.canEdit" icon="i-lucide-pencil" label="Изменить" color="neutral" variant="outline" :to="`/recipes/${id}/edit`" />
+          <UTooltip v-if="auth.user" :text="uploadHint">
             <UButton
               icon="i-lucide-upload"
               label="В пивоварню"
@@ -129,10 +157,22 @@ const menu = computed(() => [
               <div class="min-w-0">
                 <h1 class="truncate text-2xl font-semibold text-highlighted">{{ recipe.name }}</h1>
                 <div class="truncate text-muted">{{ styleLine }}</div>
+                <div v-if="meta && !meta.mine" class="mt-1 truncate text-sm text-muted">
+                  автор <span class="font-medium text-highlighted">{{ meta.author }}</span>
+                </div>
+                <UBadge
+                  v-else-if="meta"
+                  class="mt-2"
+                  color="neutral"
+                  variant="subtle"
+                  size="sm"
+                  :icon="meta.visibility === 'public' ? 'i-lucide-globe' : 'i-lucide-lock'"
+                  :label="meta.visibility === 'public' ? 'опубликован' : 'виден только вам'"
+                />
               </div>
             </div>
             <RecipeDescription v-if="recipe.notes" :text="recipe.notes" class="mt-5 max-w-3xl" />
-            <RecipePhotos :recipe-id="id" class="mt-5" />
+            <RecipePhotos :recipe-id="id" :editable="meta?.canEdit" :moderate="meta?.canModerate" class="mt-5" />
           </UCard>
 
           <RecipeWaterSummary v-if="recipe.water && (recipe.water.ratio || recipe.water.additions?.length)" :water="recipe.water" :volumes="volumes" />
@@ -253,7 +293,7 @@ const menu = computed(() => [
             </dl>
           </UCard>
 
-          <UCard :ui="{ body: 'p-5 sm:p-5' }">
+          <UCard v-if="meta?.canEdit" :ui="{ body: 'p-5 sm:p-5' }">
             <div class="mb-3 text-xs font-medium uppercase tracking-wider text-dimmed">Варки</div>
             <ul v-if="brews.length" class="space-y-2">
               <li v-for="b in brews" :key="b.id" class="flex items-center gap-3 text-sm">

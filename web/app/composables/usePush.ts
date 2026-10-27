@@ -1,4 +1,4 @@
-// Web Push: подписка этого браузера на уведомления посредника — подсказки, закладки, конец программы.
+// Web Push: подписка этого браузера на уведомления сервиса — подсказки, закладки, конец программы.
 // Сервис-воркер — public/sw.js, регистрирует плагин push.client.ts.
 export type PushState = 'unsupported' | 'denied' | 'off' | 'on'
 
@@ -25,7 +25,7 @@ export const usePush = createSharedComposable(() => {
     return { reg, sub: await reg.pushManager.getSubscription() }
   }
 
-  /** Подписать браузер и сообщить посреднику; ключ сервера сменился — подписаться заново. */
+  /** Подписать браузер и сообщить сервису; ключ сервера сменился — подписаться заново. */
   async function subscribe() {
     const { reg, sub } = await current()
     const key = keyBytes(unwrap(await $api.GET('/api/push/key')).publicKey)
@@ -41,7 +41,7 @@ export const usePush = createSharedComposable(() => {
     }))
   }
 
-  /** При запуске приложения: подписка уже есть — освежить её на посреднике. */
+  /** При запуске приложения: подписка уже есть — освежить её на сервисе. */
   async function sync() {
     if (!supported) return
     if (Notification.permission === 'denied') {
