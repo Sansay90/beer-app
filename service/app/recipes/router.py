@@ -30,11 +30,12 @@ UserRecipes = Annotated[RecipeStore, Depends(user_recipes)]
 
 
 @router.get("/recipes", response_model=list[RecipeSummary],
-            summary="Опубликованные рецепты и свои, недавно изменённые первыми", description="mine — только свои.")
-def list_recipes(recipes: ViewerRecipes, mine: bool = False):
-    if mine and recipes.viewer is None:
+            summary="Опубликованные рецепты и свои, недавно изменённые первыми",
+            description="mine — только свои, favorites — только избранные.")
+def list_recipes(recipes: ViewerRecipes, mine: bool = False, favorites: bool = False):
+    if (mine or favorites) and recipes.viewer is None:
         raise HTTPException(401, "войдите")
-    return recipes.list(mine)
+    return recipes.list(mine, favorites)
 
 
 @router.get("/recipes/{rid}", response_model=RecipeDetail,
@@ -75,6 +76,19 @@ async def delete_recipe(rid: str, recipes: UserRecipes, brewery: UserBrewery):
                         "администратор — снять чужой рецепт.")
 def set_visibility(rid: str, body: VisibilityIn, recipes: UserRecipes):
     recipes.set_visibility(rid, body.visibility)
+    return Ok()
+
+
+@router.put("/recipes/{rid}/favorite", response_model=Ok, summary="В избранное",
+            description="Любой видимый рецепт, свой тоже; уже в избранном — ничего не меняется.")
+def add_favorite(rid: str, recipes: UserRecipes):
+    recipes.set_favorite(rid, True)
+    return Ok()
+
+
+@router.delete("/recipes/{rid}/favorite", response_model=Ok, summary="Из избранного")
+def remove_favorite(rid: str, recipes: UserRecipes):
+    recipes.set_favorite(rid, False)
     return Ok()
 
 

@@ -166,6 +166,7 @@ class RecipeSummary(BaseModel):
     mine: bool = Field(False, description="рецепт того, кто спрашивает")
     visibility: Visibility = "private"
     publishedAt: float | None = None
+    favorite: bool = Field(False, description="в избранном у того, кто спрашивает")
 
 
 class RecipeMeta(BaseModel):
@@ -174,6 +175,7 @@ class RecipeMeta(BaseModel):
     mine: bool
     visibility: Visibility
     publishedAt: float | None = None
+    favorite: bool = Field(False, description="в избранном у того, кто спрашивает")
     canEdit: bool = Field(description="править, удалять, публиковать, добавлять фото — рецепт свой")
     canModerate: bool = Field(description="снять с публикации, удалить, убрать фото — администратор, рецепт чужой")
 

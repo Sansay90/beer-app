@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Действия с рецептом в шапке: правка, загрузка в пивоварню, копия, публикация, удаление.
+// Действия с рецептом в шапке: избранное, правка, загрузка в пивоварню, копия, публикация, удаление.
 // Что можно — решает сервис (meta.canEdit, meta.canModerate), здесь только кнопки.
 import type { RecipeDetail, Visibility } from '~/types'
 
@@ -10,6 +10,7 @@ const auth = useAuthStore()
 const brewery = useBreweryStore()
 const { exec, pending } = useCommand()
 const confirm = useConfirm()
+const favorite = useFavorite()
 
 const meta = computed(() => props.recipe.meta)
 const inDevice = computed(() => brewery.snapshot?.deviceRecipe?.id === props.recipeId)
@@ -81,6 +82,15 @@ const menu = computed(() => {
 
 <template>
   <UBadge v-if="inDevice" color="success" variant="subtle" icon="i-lucide-check" label="в пивоварне" class="hidden sm:inline-flex" />
+  <UButton
+    :icon="meta.favorite ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
+    :label="meta.favorite ? 'В избранном' : 'В избранное'"
+    :color="meta.favorite ? 'primary' : 'neutral'"
+    :variant="meta.favorite ? 'soft' : 'outline'"
+    :aria-pressed="meta.favorite"
+    :ui="{ label: 'hidden sm:inline' }"
+    @click="favorite.toggle(recipeId, !meta.favorite)"
+  />
   <UButton v-if="meta.canEdit" icon="i-lucide-pencil" label="Изменить" color="neutral" variant="outline" :to="`/recipes/${recipeId}/edit`" />
   <UTooltip v-if="auth.user" :text="uploadHint">
     <UButton

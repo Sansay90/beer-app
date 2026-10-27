@@ -7,6 +7,8 @@ import type { RecipeSummary } from '~/types'
 
 const props = defineProps<{ recipe: RecipeSummary; inDevice?: boolean }>()
 const prefs = usePreferencesStore()
+const auth = useAuthStore()
+const favorite = useFavorite()
 const photoUrl = usePhotoUrl()
 
 const t = computed(() => props.recipe.targets)
@@ -81,6 +83,20 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
           </div>
         </div>
         <UBadge v-if="inDevice" color="success" variant="subtle" size="sm" label="в пивоварне" class="shrink-0" />
+        <!-- кнопка поверх ссылки-карточки (z-10): отметить, не открывая рецепт -->
+        <UButton
+          v-if="auth.user"
+          :icon="recipe.favorite ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
+          :color="recipe.favorite ? 'primary' : 'neutral'"
+          variant="ghost"
+          size="sm"
+          square
+          class="relative z-10 -me-1.5 -mt-1 shrink-0"
+          :class="!recipe.favorite && 'text-dimmed'"
+          :aria-label="recipe.favorite ? 'Убрать из избранного' : 'В избранное'"
+          :aria-pressed="recipe.favorite"
+          @click="favorite.toggle(recipe.id, !recipe.favorite)"
+        />
       </div>
 
       <p class="mt-2 line-clamp-2 h-10 font-serif text-sm text-toned">{{ recipe.about }}</p>

@@ -21,6 +21,7 @@ users ─┬─ sessions                  входы
        │           ├─ events        события пивоварни
        │           └─ brews         варки
        ├─ recipes ── recipe_photos  рецепт — JSONB; фото пива
+       ├─ favorites ── recipes      избранное: рецепты, сохранённые без копии
        └─ push_subscriptions        браузеры, подписанные на уведомления
 ```
 
@@ -33,6 +34,7 @@ users ─┬─ sessions                  входы
 | `devices` | `tuya_id` (уникален — пивоварня принадлежит одному пользователю), `agent_id` — через какой агент на связи, `model`, `limits` (JSONB, сообщает агент), `equipment` (JSONB: эффективность, испарение) |
 | `recipes` | `data` (JSONB — рецепт целиком), `name` (для сортировки), `visibility` (`private` / `public`), `published_at`, `updated_at` |
 | `recipe_photos` | `data` (снимок), `thumb` (JPEG до 480 px), `content_type`, `credit` |
+| `favorites` | `user_id` + `recipe_id` (ключ), `created_at` — ссылка, а не копия; рецепт сняли с публикации — из избранного пропадает вместе с доступом, удалили — запись удаляется |
 | `brews` | `status` (`running` → `finished` / `stopped`), `recipe_id` (свой рецепт или пусто), `recipe` (снимок программы, как она была в пивоварне), `started_at`, `ended_at`, `energy_wh` |
 | `readings` | `at`, `temp`, `target`, `step`, `status`, `brew_id` — не чаще раза в 2 с |
 | `events` | `at`, `kind`, `text`, `data` (JSONB: подсказка, шаг, закладка), `brew_id` |

@@ -380,7 +380,7 @@
           "рецепты"
         ],
         "summary": "Опубликованные рецепты и свои, недавно изменённые первыми",
-        "description": "mine — только свои.",
+        "description": "mine — только свои, favorites — только избранные.",
         "operationId": "list_recipes_api_recipes_get",
         "parameters": [
           {
@@ -391,6 +391,16 @@
               "type": "boolean",
               "default": false,
               "title": "Mine"
+            }
+          },
+          {
+            "name": "favorites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Favorites"
             }
           }
         ],
@@ -622,6 +632,89 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recipes/{rid}/favorite": {
+      "put": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "В избранное",
+        "description": "Любой видимый рецепт, свой тоже; уже в избранном — ничего не меняется.",
+        "operationId": "add_favorite_api_recipes__rid__favorite_put",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "рецепты"
+        ],
+        "summary": "Из избранного",
+        "operationId": "remove_favorite_api_recipes__rid__favorite_delete",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3120,6 +3213,12 @@
             ],
             "title": "Publishedat"
           },
+          "favorite": {
+            "type": "boolean",
+            "title": "Favorite",
+            "description": "в избранном у того, кто спрашивает",
+            "default": false
+          },
           "canEdit": {
             "type": "boolean",
             "title": "Canedit",
@@ -3253,6 +3352,12 @@
               }
             ],
             "title": "Publishedat"
+          },
+          "favorite": {
+            "type": "boolean",
+            "title": "Favorite",
+            "description": "в избранном у того, кто спрашивает",
+            "default": false
           }
         },
         "type": "object",

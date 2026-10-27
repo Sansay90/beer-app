@@ -6,7 +6,8 @@ users ─┬─ sessions                  входы: cookie-токен — хэ
        ├─ devices ─┬─ readings      температура во времени
        │           ├─ events        события пивоварни
        │           └─ brews         варки: рецепт, начало, конец, исход
-       └─ recipes ── recipe_photos  рецепт — JSONB; фото пива
+       ├─ recipes ── recipe_photos  рецепт — JSONB; фото пива
+       └─ favorites ── recipes      избранное: чужие и свои рецепты, сохранённые без копии
 """
 import uuid
 from datetime import UTC, datetime
@@ -97,6 +98,15 @@ class Recipe(SQLModel, table=True):
     published_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     created_at: datetime = ts()
     updated_at: datetime = ts()
+
+
+class Favorite(SQLModel, table=True):
+    """Рецепт в избранном у пользователя — ссылка, а не копия: автор правит рецепт, в избранном — свежая версия.
+    Рецепт сняли с публикации — из избранного он пропадает вместе с доступом (access.py), запись остаётся."""
+    __tablename__ = "favorites"
+    user_id: uuid.UUID = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
+    recipe_id: uuid.UUID = Field(foreign_key="recipes.id", ondelete="CASCADE", primary_key=True, index=True)
+    created_at: datetime = ts()
 
 
 class RecipePhoto(SQLModel, table=True):

@@ -12,13 +12,14 @@ const { data: list, status, error } = useApi('/api/recipes', { key: 'recipes', w
 const loaded = computed(() => status.value === 'success')
 useErrorToast(error)
 
-// «Мои» — только свои, в том числе неопубликованные; выбор — в адресе (?scope=mine): на него ссылается меню
+// раздел — из адреса, его выбирают в меню: ?scope=mine — только свои (и неопубликованные), ?scope=favorites — избранные.
+// Гостю — всегда все: своих и избранных у него нет
 const route = useRoute()
-const scope = computed<'all' | 'mine'>({
-  get: () => (route.query.scope === 'mine' ? 'mine' : 'all'),
-  set: v => navigateTo({ query: { ...route.query, scope: v === 'mine' ? 'mine' : undefined } }, { replace: true }),
+const scope = computed<'all' | 'mine' | 'favorites'>(() => {
+  const s = route.query.scope
+  return auth.user && (s === 'mine' || s === 'favorites') ? s : 'all'
 })
-const SCOPES = [{ label: 'Все', value: 'all' }, { label: 'Мои', value: 'mine' }]
+const title = computed(() => ({ all: 'Рецепты', mine: 'Мои рецепты', favorites: 'Избранное' })[scope.value])
 
 const query = ref('')
 const styleCode = ref<string>('all')
@@ -42,6 +43,7 @@ const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
   const found = list.value.filter((r) => {
     if (scope.value === 'mine' && !r.mine) return false
+    if (scope.value === 'favorites' && !r.favorite) return false
     const key = r.style ? r.style.code ?? 'custom' : null
     if (styleCode.value !== 'all' && key !== styleCode.value) return false
     return !q || r.name.toLowerCase().includes(q) || r.style?.name.toLowerCase().includes(q) || r.style?.code?.toLowerCase() === q
@@ -55,7 +57,7 @@ const shown = computed(() => {
 <template>
   <UDashboardPanel id="recipes">
     <template #header>
-      <UDashboardNavbar title="Рецепты">
+      <UDashboardNavbar :title="title">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -88,7 +90,6 @@ const shown = computed(() => {
 
       <div v-else class="mx-auto w-full max-w-7xl space-y-5">
         <div class="flex flex-wrap items-center gap-2">
-          <UTabs v-if="auth.user" v-model="scope" :items="SCOPES" :content="false" size="sm" class="w-auto" />
           <UInput v-model="query" icon="i-lucide-search" placeholder="Название или стиль" class="min-w-56 flex-1 sm:max-w-80" />
           <USelect v-model="styleCode" :items="styleItems" class="min-w-44" />
           <span class="flex-1" />
@@ -109,6 +110,14 @@ const shown = computed(() => {
           title="Своих рецептов пока нет"
           description="Новый рецепт виден только вам, пока вы его не опубликуете."
           :actions="[{ label: 'Новый рецепт', icon: 'i-lucide-plus', to: '/recipes/new' }]"
+          variant="naked"
+        />
+        <UEmpty
+          v-else-if="loaded && scope === 'favorites' && !list.some(r => r.favorite)"
+          icon="i-lucide-bookmark"
+          title="В избранном пока пусто"
+          description="Отмечайте рецепты закладкой — они появятся здесь."
+          :actions="[{ label: 'Все рецепты', icon: 'i-lucide-book-open', to: '/recipes' }]"
           variant="naked"
         />
         <UEmpty v-else-if="loaded" icon="i-lucide-search-x" title="Ничего не нашлось" description="Измените запрос или фильтр по стилю." variant="naked" />

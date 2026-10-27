@@ -18,20 +18,23 @@ const userItems = computed(() => [
 const colorMode = useColorMode()
 
 // разделы видны всем — гостя закрытый раздел зовёт зарегистрироваться (AuthGate); пользователи — администратору.
-// У вошедшего «Рецепты» раскрыты: все и свои (?scope=mine) — новые подразделы (избранное, подборки) встают сюда же
+// У вошедшего «Рецепты» раскрыты: все, свои и избранные (?scope=…) — новые подразделы (подборки) встают сюда же
 const route = useRoute()
 const recipes = computed(() => {
   if (!auth.user) return { label: 'Рецепты', icon: 'i-lucide-book-open', to: '/recipes', onSelect: close }
-  const mine = route.path === '/recipes' && route.query.scope === 'mine'
+  const scope = route.path === '/recipes' ? route.query.scope ?? 'all' : null
+  const sub = (label: string, value: string) => ({
+    label,
+    to: value === 'all' ? '/recipes' : `/recipes?scope=${value}`,
+    active: scope === value,
+    onSelect: close,
+  })
   return {
     label: 'Рецепты',
     icon: 'i-lucide-book-open',
     defaultOpen: true,
     active: route.path.startsWith('/recipes'),
-    children: [
-      { label: 'Все рецепты', to: '/recipes', active: route.path === '/recipes' && !mine, onSelect: close },
-      { label: 'Мои рецепты', to: '/recipes?scope=mine', active: mine, onSelect: close },
-    ],
+    children: [sub('Все рецепты', 'all'), sub('Мои рецепты', 'mine'), sub('Избранное', 'favorites')],
   }
 })
 const nav = computed(() => [

@@ -2,12 +2,13 @@
 import re
 
 from sqlalchemy import func, or_
-from sqlmodel import select
+from sqlalchemy.dialects.postgresql import insert
+from sqlmodel import delete, select
 
 from ..access import PRIVATE, PUBLIC, VISIBILITIES, can_edit, can_moderate, can_publish, can_view
 from ..db import session
 from ..errors import Conflict, Forbidden, Invalid, NotFound
-from ..models import Brew, Recipe, RecipePhoto, User, parse_id, unix, utcnow
+from ..models import Brew, Favorite, Recipe, RecipePhoto, User, parse_id, unix, utcnow
 from .program import program_steps
 
 
@@ -25,20 +26,24 @@ class RecipeStore:
         self.viewer = viewer
         self.uid = viewer.id if viewer is not None else None
 
-    def list(self, mine=False):
-        """Опубликованные рецепты всех и свои, недавно изменённые первыми; mine — только свои."""
+    def list(self, mine=False, favorites=False):
+        """Опубликованные рецепты всех и свои, недавно изменённые первыми; mine — только свои,
+        favorites — только избранные (из тех, что видно: снятый с публикации чужой рецепт пропадает)."""
         visible = Recipe.visibility == PUBLIC
         if self.uid is not None:
             visible = or_(visible, Recipe.user_id == self.uid)
         with session() as s:
             q = select(Recipe, User.name).join(User, User.id == Recipe.user_id)
             q = q.where(Recipe.user_id == self.uid) if mine else q.where(visible)
+            if favorites:
+                q = q.join(Favorite, (Favorite.recipe_id == Recipe.id) & (Favorite.user_id == self.uid))
             rows = s.exec(q.order_by(Recipe.updated_at.desc())).all()
-            brewed = {}
-            if self.uid is not None:                      # варки — свои, чужие никому не видны
+            brewed, starred = {}, set()
+            if self.uid is not None:                      # варки и избранное — свои, чужие никому не видны
                 brewed = {rid: (n, last) for rid, n, last in s.exec(
                     select(Brew.recipe_id, func.count(), func.max(Brew.started_at))
                     .where(Brew.user_id == self.uid, Brew.recipe_id.is_not(None)).group_by(Brew.recipe_id)).all()}
+                starred = set(s.exec(select(Favorite.recipe_id).where(Favorite.user_id == self.uid)).all())
             photos = {}
             ids = [r.id for r, _ in rows]
             if ids:
@@ -55,7 +60,7 @@ class RecipeStore:
                         "brews": n, "lastBrewedAt": unix(last), "updatedAt": unix(r.updated_at),
                         "about": excerpt(r.data.get("notes")), "photos": photos.get(r.id, []),
                         "author": author, "mine": r.user_id == self.uid, "visibility": r.visibility,
-                        "publishedAt": unix(r.published_at)})
+                        "publishedAt": unix(r.published_at), "favorite": r.id in starred})
         return out
 
     def get(self, rid):
@@ -67,10 +72,24 @@ class RecipeStore:
         with session() as s:
             r = self._view(s, rid)
             author = s.get(User, r.user_id)
+            favorite = self.uid is not None and s.get(Favorite, (self.uid, r.id)) is not None
             meta = {"author": author.name if author else "", "mine": r.user_id == self.uid,
-                    "visibility": r.visibility, "publishedAt": unix(r.published_at),
+                    "visibility": r.visibility, "publishedAt": unix(r.published_at), "favorite": favorite,
                     "canEdit": can_edit(self.viewer, r), "canModerate": can_moderate(self.viewer, r)}
             return {**r.data, "meta": meta}
+
+    def set_favorite(self, rid, on):
+        """В избранное или из него — любой видимый рецепт, свой тоже. Повторное действие ничего не меняет."""
+        if self.uid is None:
+            raise Forbidden("войдите, чтобы сохранять рецепты в избранное")
+        with session() as s:
+            r = self._view(s, rid)
+            if on:
+                s.exec(insert(Favorite).values(user_id=self.uid, recipe_id=r.id, created_at=utcnow())
+                       .on_conflict_do_nothing())
+            else:
+                s.exec(delete(Favorite).where(Favorite.user_id == self.uid, Favorite.recipe_id == r.id))
+            s.commit()
 
     def save(self, rid, recipe):
         """rid = None — новый рецепт (личный, пока автор его не опубликует). Возвращает id."""
