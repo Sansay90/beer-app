@@ -57,7 +57,8 @@ services:
     # поэтому BREWERY_IP в нём обязателен
     env_file: ../agent/.env
     environment:
-      SERVICE_URL: ws://service:8000/api/agent
+      # к сервису рядом; к серверу в интернете — AGENT_SERVICE_URL=wss://<домен>/api/agent в .env
+      SERVICE_URL: ${AGENT_SERVICE_URL:-ws://service:8000/api/agent}
       TZ: ${TZ:-Europe/Moscow}
     volumes:
       # ключи пивоварни и память агента — те же, что у агента, запущенного из .venv

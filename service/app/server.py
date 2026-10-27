@@ -692,6 +692,9 @@ class AppFiles(StaticFiles):
         response = await super().get_response(path, scope)
         if response.status_code == 404:
             return await super().get_response("200.html", scope)
+        if response.status_code in (307, 308) and path and not path.endswith("/"):
+            # у страницы сборка завела папку (recipes/index.html) — отдать её сразу, без лишнего «/» в адресе
+            return await super().get_response(f"{path}/index.html", scope)
         return response
 
 
