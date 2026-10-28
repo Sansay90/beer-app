@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Шапка рецепта: бокал, название, стиль, автор (у чужого), описание, фото пива; внизу — отклик: нравится,
-// не нравится, обсуждение, сколько раз сварили. Признаки — видимость, избранное,
+// Шапка рецепта: бокал, название, стиль, описание, фото пива; внизу — отклик: нравится, не нравится, обсуждение,
+// сколько раз сварили, — и справа автор (у чужого). Признаки — видимость, избранное,
 // «в пивоварне» — в верхней строке страницы (view/Actions.vue).
 import type { RecipeDetail } from '~/types'
 import { NuxtLink } from '#components'
@@ -28,16 +28,6 @@ const brewsLabel = computed(() => {
       <div class="min-w-0">
         <h1 class="truncate text-3xl font-semibold text-highlighted">{{ recipe.name }}</h1>
         <div class="truncate text-muted">{{ styleLabel(recipe.style) }}</div>
-        <component
-          :is="meta.author.name ? NuxtLink : 'div'"
-          v-if="!meta.mine"
-          :to="meta.author.name ? brewerPath(meta.author.name) : undefined"
-          class="mt-1.5 flex w-fit max-w-full items-center gap-2 text-muted"
-          :class="meta.author.name && 'hover:text-highlighted'"
-        >
-          <UserAvatar :user="meta.author" class="size-7" />
-          <span class="truncate">автор <span class="font-medium text-highlighted">{{ brewerName(meta.author) }}</span></span>
-        </component>
       </div>
     </div>
     <RecipeDescription v-if="recipe.notes" :text="recipe.notes" class="mt-5 max-w-3xl" />
@@ -71,6 +61,16 @@ const brewsLabel = computed(() => {
       <span class="flex items-center gap-1.5 px-2 text-base text-muted">
         <UIcon name="i-lucide-beer" class="size-5" />{{ brewsLabel }}
       </span>
+      <component
+        :is="meta.author.name ? NuxtLink : 'div'"
+        v-if="!meta.mine"
+        :to="meta.author.name ? brewerPath(meta.author.name) : undefined"
+        class="ms-auto flex min-w-0 items-center gap-2 text-muted"
+        :class="meta.author.name && 'hover:text-highlighted'"
+      >
+        <UserAvatar :user="meta.author" class="size-7" />
+        <span class="truncate">автор <span class="font-medium text-highlighted">{{ brewerName(meta.author) }}</span></span>
+      </component>
     </div>
   </UCard>
 </template>

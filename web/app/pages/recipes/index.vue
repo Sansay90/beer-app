@@ -96,7 +96,7 @@ const shown = computed(() => {
           <USelect v-model="sort" :items="SORTS" icon="i-lucide-arrow-up-down" variant="ghost" class="min-w-40" />
         </div>
 
-        <div v-if="shown.length" class="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div v-if="shown.length" class="grid auto-rows-fr gap-4 md:grid-cols-2 2xl:grid-cols-3">
           <RecipeCard
             v-for="r in shown"
             :key="r.id"

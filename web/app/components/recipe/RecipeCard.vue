@@ -1,9 +1,10 @@
 <script setup lang="ts">
-// Карточка рецепта в списке: бокал в цвет пива, начало описания, цифры одной строкой, отклик (нравится, не нравится,
-// комментарии, сколько раз сварили все), внизу — миниатюры фото пива.
+// Карточка рецепта в списке: бокал в цвет пива, начало описания, цифры одной строкой, под ними — автор;
+// внизу — отклик (нравится, не нравится, комментарии, сколько раз сварили все) и миниатюры фото пива:
+// в широкой карточке — до трёх внахлёст, в узкой — одна со значком «+N», чтобы не теснить отклик.
 // Высота у всех карточек одна: описание всегда в две строки, цифры и низ — фиксированной высоты.
 // Ссылка на рецепт — название, растянутое на всю карточку; миниатюры — кнопки поверх неё: фото открываются тут же.
-// Чужой рецепт — с автором внизу, свой опубликованный — со значком глобуса.
+// Свой опубликованный — со значком глобуса.
 import type { RecipeSummary } from '~/types'
 
 const props = defineProps<{ recipe: RecipeSummary; inDevice?: boolean }>()
@@ -60,26 +61,16 @@ async function openPhoto(i: number) {
   if (error.value) return showError(error.value)
   if (viewer.value.length) viewing.value = Math.min(i, viewer.value.length - 1)
 }
-
-// дата последней варки — отдельно, в NuxtTime: в часовом поясе посетителя и без расхождения с рендером на сервере
-const footer = computed(() => {
-  const r = props.recipe
-  const program = r.steps ? fmtMinutes(r.minutes) : 'без программы'
-  if (!r.mine) return program                     // варки — свои, по чужому рецепту их не видно; автор — ссылкой рядом
-  if (!r.brews) return `${program} · ещё не варили`
-  return `${program} · варили ${r.brews} ${plural(r.brews, 'раз', 'раза', 'раз')},`
-})
-const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && props.recipe.lastBrewedAt ? props.recipe.lastBrewedAt * 1000 : null))
 </script>
 
 <template>
   <div
-    class="group relative flex gap-4 rounded-xl bg-default p-4 ring ring-default transition hover:ring-accented has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-primary"
+    class="group relative flex min-w-0 gap-4 rounded-xl bg-default p-4 ring ring-default transition hover:ring-accented has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-primary"
     :style="glow"
   >
     <RecipeGlass :ebc="t.ebc" :style-code="recipe.style?.code" class="h-24 transition-transform duration-300 group-hover:-translate-y-1 group-hover:-rotate-3" />
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="@container flex min-w-0 flex-1 flex-col">
       <div class="flex items-start gap-2">
         <div class="min-w-0 flex-1">
           <NuxtLink :to="`/recipes/${recipe.id}`" class="block truncate font-display text-lg leading-snug font-semibold text-highlighted outline-none after:absolute after:inset-0 after:rounded-xl">
@@ -107,9 +98,9 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
         />
       </div>
 
-      <p class="mt-2 line-clamp-2 h-10 font-serif text-sm text-toned">{{ recipe.about }}</p>
+      <p class="mt-1.5 line-clamp-2 h-10 font-serif text-sm text-toned">{{ recipe.about }}</p>
 
-      <div class="num mt-3 flex h-6 flex-nowrap items-baseline gap-x-3 overflow-hidden text-sm">
+      <div class="num mt-2 flex h-6 flex-nowrap items-baseline gap-x-3 overflow-hidden text-sm">
         <span v-for="s in stats" :key="s.unit" class="whitespace-nowrap">
           <span class="text-base font-semibold text-highlighted">{{ s.value }}</span>
           <span class="ms-1 text-muted">{{ s.unit }}</span>
@@ -117,32 +108,21 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
         <span v-if="!stats.length" class="text-dimmed">Только программа пивоварни</span>
       </div>
 
-      <!-- отклик пивоваров: нравится, не нравится, комментарии, сколько раз сварили все -->
-      <div class="mt-2 flex items-center gap-4 text-sm text-muted tabular-nums">
-        <span v-for="c in counts" :key="c.label" class="flex items-center gap-1" :title="c.label">
-          <UIcon :name="c.icon" class="size-4 shrink-0" />{{ c.value }}<span class="sr-only">{{ c.label }}</span>
-        </span>
-      </div>
+      <p class="truncate text-xs text-muted">
+        Автор:
+        <!-- поверх ссылки-карточки (z-10): ведёт на страницу автора -->
+        <NuxtLink v-if="recipe.author.name" :to="brewerPath(recipe.author.name)" class="relative z-10 text-toned hover:text-highlighted hover:underline">{{ recipe.author.name }}</NuxtLink>
+        <span v-else class="text-toned">{{ UNKNOWN_BREWER }}</span>
+      </p>
 
-      <div class="mt-auto flex items-end justify-between gap-3 pt-2 text-xs text-dimmed tabular-nums">
-        <div class="min-w-0 pb-1">
-          <span class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate">{{ footer }}<template v-if="lastBrewed"> <NuxtTime :datetime="lastBrewed" locale="ru-RU" day="numeric" month="short" /></template></span>
-            <template v-if="!recipe.mine">
-              <span aria-hidden="true">·</span>
-              <!-- поверх ссылки-карточки (z-10): ведёт на страницу автора -->
-              <NuxtLink v-if="recipe.author.name" :to="brewerPath(recipe.author.name)" class="relative z-10 flex min-w-0 items-center gap-1 hover:text-highlighted">
-                <UserAvatar :user="recipe.author" class="size-5" />
-                <span class="truncate">{{ recipe.author.name }}</span>
-              </NuxtLink>
-              <span v-else class="flex min-w-0 items-center gap-1">
-                <UserAvatar :user="recipe.author" class="size-5" />
-                <span class="truncate">{{ UNKNOWN_BREWER }}</span>
-              </span>
-            </template>
+      <div class="mt-auto flex items-end justify-between gap-3 pt-1.5">
+        <!-- отклик пивоваров: нравится, не нравится, комментарии, сколько раз сварили все -->
+        <div class="flex items-center gap-3 pb-1 text-sm text-muted tabular-nums @max-xs:gap-2">
+          <span v-for="c in counts" :key="c.label" class="flex items-center gap-1" :title="c.label">
+            <UIcon :name="c.icon" class="size-4 shrink-0" />{{ c.value }}<span class="sr-only">{{ c.label }}</span>
           </span>
         </div>
-        <div v-if="thumbs.length" class="relative z-10 flex shrink-0 -space-x-2.5">
+        <div v-if="thumbs.length" class="relative z-10 hidden shrink-0 -space-x-2.5 @sm:flex">
           <button
             v-for="(pid, i) in thumbs"
             :key="pid"
@@ -163,6 +143,18 @@ const lastBrewed = computed(() => (props.recipe.mine && props.recipe.brews && pr
             +{{ more }}
           </button>
         </div>
+        <button
+          v-if="thumbs.length"
+          type="button"
+          class="relative z-10 size-10 shrink-0 rounded-md ring-2 ring-(--ui-bg) transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary @sm:hidden"
+          :aria-label="`Фото пива: ${recipe.photos.length}`"
+          @click="openPhoto(0)"
+        >
+          <img :src="photoUrl(thumbs[0]!, true)" alt="" loading="lazy" class="size-full rounded-md object-cover">
+          <span v-if="recipe.photos.length > 1" class="absolute -end-2 -top-2 rounded-full bg-elevated px-1.5 text-xs leading-5 text-highlighted ring-2 ring-(--ui-bg)">
+            +{{ recipe.photos.length - 1 }}
+          </span>
+        </button>
       </div>
     </div>
 

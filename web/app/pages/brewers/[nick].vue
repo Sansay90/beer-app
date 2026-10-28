@@ -61,7 +61,7 @@ useSeoMeta({
           </div>
         </div>
 
-        <div v-if="recipes.length" class="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div v-if="recipes.length" class="grid auto-rows-fr gap-4 md:grid-cols-2 2xl:grid-cols-3">
           <RecipeCard v-for="r in recipes" :key="r.id" :recipe="r" :in-device="r.id === brewery.snapshot?.deviceRecipe?.id" />
         </div>
         <UEmpty
