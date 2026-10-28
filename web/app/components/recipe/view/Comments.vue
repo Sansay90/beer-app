@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Обсуждение рецепта: написать — вошедшему (гостю — «Войти»); ветки — комментарий и ответы под ним, старые первыми.
-// Ответ на ответ встаёт в ту же ветку — так решает и сервис.
+// Ответ на ответ встаёт в ту же ветку — так решает и сервис. Пришли из уведомления (#c-<id>) — комментарий
+// прокручивается на виду и подсвечен.
 import type { Comment } from '~/types'
 
 const props = defineProps<{ recipeId: string }>()
@@ -14,6 +15,21 @@ const threads = computed(() => comments.value
   .filter(c => !c.parentId)
   .map(c => ({ comment: c, replies: comments.value.filter(r => r.parentId === c.id) })))
 const count = computed(() => comments.value.filter(c => !c.deleted).length)
+
+// якорь — только в браузере: на сервер адрес приходит без #, подсветка не должна расходиться с его разметкой
+const route = useRoute()
+const target = ref<string | null>(null)
+onMounted(() => {
+  watch([() => route.hash, () => comments.value.length], async ([hash]) => {
+    target.value = hash.startsWith('#c-') ? hash.slice(3) : null
+    if (!target.value) return
+    await nextTick()
+    document.getElementById(`c-${target.value}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, { immediate: true })
+})
+// подсветка — подложкой под комментарием: раскладка не сдвигается
+const HIGHLIGHT = 'before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:bg-primary/10 before:ring-1 before:ring-primary/40'
+const mark = (id: string) => ({ id: `c-${id}`, class: ['relative isolate', target.value === id && HIGHLIGHT] })
 
 const text = ref('')
 const sending = ref(false)
@@ -98,6 +114,7 @@ async function del(c: Comment) {
     <div v-if="threads.length" class="mt-6 divide-y divide-default">
       <div v-for="t in threads" :key="t.comment.id" class="py-5 first:pt-0 last:pb-0">
         <RecipeViewComment
+          v-bind="mark(t.comment.id)"
           :comment="t.comment"
           @reply="reply(t.comment.id)"
           @vote="v => vote(t.comment, v)"
@@ -108,6 +125,7 @@ async function del(c: Comment) {
           <RecipeViewComment
             v-for="r in t.replies"
             :key="r.id"
+            v-bind="mark(r.id)"
             :comment="r"
             @reply="reply(t.comment.id)"
             @vote="v => vote(r, v)"

@@ -22,6 +22,7 @@ from .brewery.router import router as brewery_router
 from .brewery.streams import Streams
 from .config import Settings
 from .mail import Mailer
+from .notifications.router import router as notifications_router
 from .push.pusher import Pusher
 from .push.router import router as push_router
 from .recipes.router import router as recipes_router
@@ -61,7 +62,8 @@ def api_router():
     def health():
         return Ok()
 
-    for router in (auth_router, admin_router, brewers_router, recipes_router, brewery_router, push_router):
+    for router in (auth_router, admin_router, brewers_router, recipes_router, brewery_router, push_router,
+                   notifications_router):
         api.include_router(router)
     return api
 

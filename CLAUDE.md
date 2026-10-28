@@ -8,7 +8,7 @@
 
 - Документация — [docs/](docs/README.md): что умеет ([features](docs/features.md), [scenarios](docs/scenarios.md)), доступы ([access](docs/access.md)), устройство ([architecture](docs/architecture.md), [api](docs/api.md), [data](docs/data.md), [decisions](docs/decisions.md)), работа ([development](docs/development.md), [operations](docs/operations.md)), планы ([roadmap](docs/roadmap.md)).
 - Документация меняется вместе с кодом, в том же изменении: поведение функции — `features.md` и `scenarios.md`, права — `access.md`, API и формат данных — `api.md` и `data.md`, решение «почему так» — `decisions.md`.
-- `service/` — FastAPI + Postgres (пакет `app`, разделы `auth/`, `recipes/`, `brewery/`, `push/`); `agent/` — агент у пивоварни (tinytuya, websockets); `web/` — Nuxt 4 + Nuxt UI (гибридный рендеринг: каталог и рецепт — на сервере, личное — в браузере); `shared/` — общие примеры расчётов; `deploy/` — сервер.
+- `service/` — FastAPI + Postgres (пакет `app`, разделы `auth/`, `recipes/`, `brewery/`, `push/`, `notifications/`); `agent/` — агент у пивоварни (tinytuya, websockets); `web/` — Nuxt 4 + Nuxt UI (гибридный рендеринг: каталог и рецепт — на сервере, личное — в браузере); `shared/` — общие примеры расчётов; `deploy/` — сервер.
 
 ## Команды
 

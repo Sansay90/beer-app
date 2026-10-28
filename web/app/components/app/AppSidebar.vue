@@ -38,9 +38,18 @@ const status = computed(() => {
   if (brewery.phase.running) return { label: 'идёт варка', color: 'primary' as const }
   return { label: 'на связи', color: 'success' as const }
 })
+// уведомления — вошедшему, с числом непрочитанных: при входе, переходах, возвращении на вкладку и раз в минуту
+const notices = useNotifications()
+const visibility = useDocumentVisibility()
+if (import.meta.client) watch([() => auth.user?.id, () => route.path, visibility], () => notices.refresh(), { immediate: true })
+useIntervalFn(() => { if (visibility.value === 'visible') notices.refresh() }, 60_000)
+const unread = computed(() => notices.unread.value
+  && { label: notices.unread.value > 99 ? '99+' : String(notices.unread.value), color: 'primary' as const, variant: 'solid' as const })
+
 const nav = computed(() => [
   { label: 'Варка', icon: 'i-lucide-flame', to: '/', badge: status.value && { ...status.value, variant: 'subtle' as const }, onSelect: close },
   recipes.value,
+  ...(auth.user ? [{ label: 'Уведомления', icon: 'i-lucide-bell', to: '/notifications', badge: unread.value || undefined, onSelect: close }] : []),
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users', onSelect: close }] : []),
 ])
 const drawer = useAuthDrawer()

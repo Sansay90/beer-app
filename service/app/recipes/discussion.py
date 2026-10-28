@@ -3,6 +3,7 @@
 Видно тем, кому виден рецепт (access.py); писать и голосовать — вошедшим; править комментарий — его автору,
 удалять — ему и администратору. Голос — 1 (нравится) или −1 (не нравится), один на человека; 0 — снять.
 За свой рецепт и свой комментарий не голосуют. Ответ на ответ встаёт в ту же ветку — уровень один.
+О новом комментарии сообщают автору рецепта и тому, кому ответили (notifications/feed.py).
 """
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
@@ -13,6 +14,7 @@ from ..auth.profile import author
 from ..db import session
 from ..errors import Forbidden, Invalid, NotFound
 from ..models import Comment, CommentVote, Recipe, RecipeVote, User, parse_id, unix, utcnow
+from ..notifications.feed import Notices
 
 TEXT_MAX = 2000
 VOTES = (-1, 0, 1)
@@ -61,11 +63,13 @@ def comment_counts(s, recipe_ids):
 
 
 class Discussion:
-    """Обсуждение глазами viewer (пользователь или None — гость). NotFound — рецепта или комментария не видно."""
+    """Обсуждение глазами viewer (пользователь или None — гость). NotFound — рецепта или комментария не видно.
+    notices — кому сообщить о новом комментарии; без него уведомлений нет."""
 
-    def __init__(self, viewer=None):
+    def __init__(self, viewer=None, notices=None):
         self.viewer = viewer
         self.uid = viewer.id if viewer is not None else None
+        self.notices = notices or Notices()
 
     # ── комментарии ───────────────────────────────────────────────────────────
     def comments(self, rid):
@@ -87,16 +91,19 @@ class Discussion:
             raise Forbidden("войдите, чтобы написать комментарий")
         with session() as s:
             r = self._recipe(s, rid)
-            parent = None
+            parent = replied_to = None
             if parent_id:
-                parent = self._comment(s, parent_id)
+                parent = replied_to = self._comment(s, parent_id)
                 if parent.recipe_id != r.id:
                     raise Invalid("ответ — только на комментарий этого рецепта")
                 if parent.parent_id is not None:                  # ответ на ответ — в ту же ветку
                     parent = s.get(Comment, parent.parent_id)
             c = Comment(recipe_id=r.id, user_id=self.uid, parent_id=parent.id if parent else None, text=text)
             s.add(c)
+            s.flush()                                             # комментарий — раньше уведомлений о нём
+            push = self.notices.comment(s, c, r, replied_to)
             s.commit()
+            push()
             u = s.get(User, self.uid)
             return self._view(c, author(u.id, u.name, u.avatar_version, u.avatar is not None), (0, 0), 0)
 
@@ -124,6 +131,7 @@ class Discussion:
             if replies:
                 c.text, c.deleted_at = "", utcnow()
                 s.add(c)
+                self.notices.forget(s, c.id)
             else:
                 s.delete(c)
                 parent = s.get(Comment, c.parent_id) if c.parent_id else None

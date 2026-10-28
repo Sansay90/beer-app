@@ -6,7 +6,8 @@ from starlette.concurrency import run_in_threadpool
 
 from ..auth.dependencies import CurrentUser, Viewer
 from ..brewery.control import UserBrewery
-from ..deps import LimitsDep
+from ..deps import LimitsDep, PusherDep
+from ..notifications.feed import Notices
 from ..schemas import Ok
 from . import photos as photo
 from .calc import targets
@@ -43,12 +44,12 @@ ViewerRecipes = Annotated[RecipeStore, Depends(viewer_recipes)]
 UserRecipes = Annotated[RecipeStore, Depends(user_recipes)]
 
 
-def viewer_discussion(viewer: Viewer) -> Discussion:
-    return Discussion(viewer)
+def viewer_discussion(viewer: Viewer, pusher: PusherDep) -> Discussion:
+    return Discussion(viewer, Notices(pusher))
 
 
-def user_discussion(user: CurrentUser) -> Discussion:
-    return Discussion(user)
+def user_discussion(user: CurrentUser, pusher: PusherDep) -> Discussion:
+    return Discussion(user, Notices(pusher))
 
 
 ViewerDiscussion = Annotated[Discussion, Depends(viewer_discussion)]

@@ -9,7 +9,8 @@ users ─┬─ sessions                  входы: cookie-токен — хэ
        ├─ recipes ─┬─ recipe_photos      рецепт — JSONB; фото пива
        │           ├─ recipe_votes       лайки и дизлайки рецепта
        │           └─ comments ── comment_votes   обсуждение: комментарии и ответы, голоса за них
-       └─ favorites ── recipes      избранное: чужие и свои рецепты, сохранённые без копии
+       ├─ favorites ── recipes      избранное: чужие и свои рецепты, сохранённые без копии
+       └─ notifications ── comments уведомления на сайте: комментарий к моему рецепту, ответ мне
 """
 import uuid
 from datetime import UTC, datetime
@@ -66,6 +67,7 @@ class User(SQLModel, table=True):
     password_hash: str | None = None
     email_verified_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     role: str = Field(default="user", sa_column_kwargs={"server_default": "user"})    # user | admin (access.py)
+    push_comments: bool = Field(default=True, sa_column_kwargs={"server_default": "true"})  # push о комментариях
     created_at: datetime = ts()
 
 
@@ -146,6 +148,21 @@ class CommentVote(SQLModel, table=True):
     comment_id: uuid.UUID = Field(foreign_key="comments.id", ondelete="CASCADE", primary_key=True, index=True)
     value: int
     created_at: datetime = ts()
+
+
+class Notification(SQLModel, table=True):
+    """Уведомление на сайте (notifications/feed.py): kind — comment (к моему рецепту) или reply (ответ мне).
+    Уходит вместе с комментарием, рецептом или тем, кто написал."""
+    __tablename__ = "notifications"
+    __table_args__ = (Index("ix_notifications_user_created", "user_id", "created_at"),)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id", index=False)                # кому; индекс — вместе со временем
+    kind: str
+    actor_id: uuid.UUID = fk("users.id")                            # кто написал
+    recipe_id: uuid.UUID = fk("recipes.id")
+    comment_id: uuid.UUID = fk("comments.id")
+    created_at: datetime = ts()
+    read_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
 
 class RecipePhoto(SQLModel, table=True):

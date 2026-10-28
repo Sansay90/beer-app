@@ -38,6 +38,10 @@ HTTP API сервиса для интерфейса и WebSocket для аген
 
 `GET /api/recipes/{id}/comments` — комментарии, старые первыми (ответ — с `parentId`); видно тем, кому виден рецепт. `POST` там же `{text, parentId?}` — написать (вошедшему; чаще 5 в минуту или 60 в час — 429). `PATCH /api/comments/{id}` `{text}` — изменить свой, `DELETE` — удалить свой (администратору — любой). Голос: `PUT /api/recipes/{id}/vote` и `PUT /api/comments/{id}/vote` `{"value": 1 | -1 | 0}` → `{likes, dislikes, vote}`; за своё — 403. У рецептов в списке и в `meta` — `likes`, `dislikes`, `comments`, `brewsTotal` (сколько раз варили все), в `meta` ещё `vote` — свой голос.
 
+## Уведомления
+
+`GET /api/notifications` — последние 50, новые первыми: `kind` (`comment` — к вашему рецепту, `reply` — ответ вам), кто написал (`actor`), рецепт `{id, name}`, `commentId` (якорь `#c-{commentId}` на странице рецепта) и начало текста; только о рецептах, которые вам видны. `GET /api/notifications/unread` → `{count}`. `POST /api/notifications/read` `{ids?}` — отметить прочитанными (без `ids` — все; чужие молча пропускаются). `GET/PUT /api/notifications/settings` `{pushComments}` — системные уведомления о комментариях на все устройства пользователя. Системное уведомление о комментарии несёт `url` — сервис-воркер открывает его по нажатию.
+
 ## Команды пивоварне
 
 `POST /api/power`, `/manual`, `/start`, `/pause`, `/pump`, `/flow`, `/settings`, `/alert/confirm`, `/additions/{minutes}/ack`, `/recipe/start`, `/recipes/{id}/upload` — сервис передаёт команду агенту пивоварни пользователя и ждёт ответа до 35 с. Ответ — `{"ok": true}` или ошибка из таблицы выше. Команды не копятся: агента нет на связи — сразу 503.

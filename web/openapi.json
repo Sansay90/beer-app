@@ -2259,6 +2259,154 @@
           }
         }
       }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Уведомления",
+        "description": "Новые первыми, последние 50: комментарии к вашим рецептам и ответы на ваши комментарии.",
+        "operationId": "list_notifications_api_notifications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Notifications Api Notifications Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/unread": {
+      "get": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Сколько непрочитанных",
+        "operationId": "unread_api_notifications_unread_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unread"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/read": {
+      "post": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Отметить прочитанными",
+        "operationId": "read_api_notifications_read_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/settings": {
+      "get": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Настройки уведомлений",
+        "operationId": "get_settings_api_notifications_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "уведомления"
+        ],
+        "summary": "Изменить настройки уведомлений",
+        "operationId": "put_settings_api_notifications_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoticeSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeSettings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3587,6 +3735,92 @@
         ],
         "title": "NameIn"
       },
+      "NoticeRecipe": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NoticeRecipe"
+      },
+      "NoticeSettings": {
+        "properties": {
+          "pushComments": {
+            "type": "boolean",
+            "title": "Pushcomments",
+            "description": "push на устройства о комментариях и ответах"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pushComments"
+        ],
+        "title": "NoticeSettings"
+      },
+      "NotificationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "comment",
+              "reply"
+            ],
+            "title": "Kind",
+            "description": "comment — к вашему рецепту, reply — ответ вам"
+          },
+          "createdAt": {
+            "type": "number",
+            "title": "Createdat"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/Author",
+            "description": "кто написал"
+          },
+          "recipe": {
+            "$ref": "#/components/schemas/NoticeRecipe"
+          },
+          "commentId": {
+            "type": "string",
+            "title": "Commentid",
+            "description": "комментарий на странице рецепта — якорь #c-{commentId}"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "начало комментария"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "createdAt",
+          "read",
+          "actor",
+          "recipe",
+          "commentId",
+          "text"
+        ],
+        "title": "NotificationOut"
+      },
       "Ok": {
         "properties": {
           "ok": {
@@ -3729,6 +3963,27 @@
           "devices"
         ],
         "title": "PushTest"
+      },
+      "ReadIn": {
+        "properties": {
+          "ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ids",
+            "description": "какие отметить прочитанными; не указаны — все"
+          }
+        },
+        "type": "object",
+        "title": "ReadIn"
       },
       "Recipe": {
         "properties": {
@@ -4618,6 +4873,19 @@
           "token"
         ],
         "title": "TokenIn"
+      },
+      "Unread": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "Unread"
       },
       "ValidationError": {
         "properties": {

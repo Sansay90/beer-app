@@ -1,5 +1,6 @@
-// Сервис-воркер brewapp: Web Push — подсказки, закладки и конец программы приходят, даже когда вкладка закрыта.
-// Адрес сервиса — параметр регистрации (/sw.js?api=…): кнопки в уведомлении шлют команды прямо ему, с cookie входа.
+// Сервис-воркер brewapp: Web Push — подсказки, закладки, конец программы, комментарии и ответы приходят, даже когда
+// вкладка закрыта. Адрес сервиса — параметр регистрации (/sw.js?api=…): кнопки в уведомлении шлют команды прямо ему,
+// с cookie входа. url уведомления — куда вести по нажатию (комментарий на странице рецепта).
 const API = new URL(self.location.href).searchParams.get('api') || self.location.origin
 const ICON = new URL('icon-192.png', self.registration.scope).href
 
@@ -23,7 +24,7 @@ self.addEventListener('push', (event) => {
     // подсказки и закладки висят, пока не нажмут
     requireInteraction: !!note.urgent,
     actions: note.action ? [{ action: 'act', title: note.action.title }] : [],
-    data: { path: note.action?.path ?? null },
+    data: { path: note.action?.path ?? null, url: note.url ?? null },
   }))
 })
 
@@ -35,10 +36,14 @@ self.addEventListener('notificationclick', (event) => {
       const done = await fetch(API + path, { method: 'POST', credentials: 'include' }).then(r => r.ok, () => false)
       if (done) return
     }
-    // не вышло или нажали на само уведомление — открыть приложение
+    // не вышло или нажали на само уведомление — открыть приложение, а у уведомления с адресом — сразу там
+    const url = event.notification.data?.url ? new URL(event.notification.data.url, self.registration.scope).href : null
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     const open = windows.find(w => w.url.startsWith(self.registration.scope))
-    if (open) return open.focus()
-    return self.clients.openWindow(self.registration.scope)
+    if (!open) return self.clients.openWindow(url ?? self.registration.scope)
+    if (!url) return open.focus()
+    // перейти можно только во вкладке под управлением воркера — иначе новая вкладка
+    const moved = await open.navigate(url).catch(() => null)
+    return moved ? moved.focus() : self.clients.openWindow(url)
   })())
 })

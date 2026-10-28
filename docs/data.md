@@ -24,12 +24,13 @@ users ─┬─ sessions                  входы
        ├─ favorites ── recipes      избранное: рецепты, сохранённые без копии
        ├─ recipe_votes ── recipes   лайки и дизлайки рецептов
        ├─ comments ── recipes       обсуждение; comment_votes — голоса за комментарии
+       ├─ notifications ── comments уведомления на сайте: комментарий к моему рецепту, ответ мне
        └─ push_subscriptions        браузеры, подписанные на уведомления
 ```
 
 | Таблица | Главное |
 |---|---|
-| `users` | `email` (строчными, уникальна; пусто — владелец данных до входа), `password_hash` (scrypt), `email_verified_at`, `role` (`user` / `admin`), `name` — ник (необязателен, его видят все), `name_key` — ник для сравнения (строчными, «ё» как «е», уникален), `avatar` (JPEG 256×256), `avatar_version` — в адресе аватара, чтобы новый не брался из кеша |
+| `users` | `email` (строчными, уникальна; пусто — владелец данных до входа), `password_hash` (scrypt), `email_verified_at`, `role` (`user` / `admin`), `name` — ник (необязателен, его видят все), `name_key` — ник для сравнения (строчными, «ё» как «е», уникален), `avatar` (JPEG 256×256), `avatar_version` — в адресе аватара, чтобы новый не брался из кеша, `push_comments` — системные уведомления о комментариях (по умолчанию да) |
 | `sessions` | `token_hash` (SHA-256 токена из cookie), `expires_at` — 30 дней с последнего захода, `user_agent` |
 | `auth_tokens` | `kind` (`verify` / `reset`), `token_hash`, `expires_at`, `used_at` — одноразовые |
 | `agents` | `token_hash`, `name`, `last_seen_at` |
@@ -39,6 +40,7 @@ users ─┬─ sessions                  входы
 | `recipe_votes` | `user_id` + `recipe_id` (ключ), `value` (1 / −1) |
 | `comments` | `recipe_id`, `user_id`, `parent_id` (ответ: один уровень), `text`, `edited_at`, `deleted_at` (удалённый с ответами — пустой) |
 | `comment_votes` | `user_id` + `comment_id` (ключ), `value` (1 / −1) |
+| `notifications` | `user_id` — кому, `kind` (`comment` / `reply`), `actor_id` — кто написал, `recipe_id`, `comment_id`, `created_at`, `read_at`; уходит вместе с комментарием (и при мягком удалении), рецептом или автором |
 | `favorites` | `user_id` + `recipe_id` (ключ), `created_at` — ссылка, а не копия; рецепт сняли с публикации — из избранного пропадает вместе с доступом, удалили — запись удаляется |
 | `brews` | `status` (`running` → `finished` / `stopped`), `recipe_id` (свой или опубликованный рецепт, иначе пусто — по нему «сколько раз варили»), `recipe` (снимок программы, как она была в пивоварне), `started_at`, `ended_at`, `energy_wh` |
 | `readings` | `at`, `temp`, `target`, `step`, `status`, `brew_id` — не чаще раза в 2 с |

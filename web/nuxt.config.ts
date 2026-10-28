@@ -45,6 +45,7 @@ export default defineNuxtConfig({
     '/': { ssr: false },
     '/settings': { ssr: false },
     '/settings/**': { ssr: false },
+    '/notifications': { ssr: false },
     '/admin/**': { ssr: false },
     '/recipes/new': { ssr: false },
     '/recipes/*/edit': { ssr: false },
