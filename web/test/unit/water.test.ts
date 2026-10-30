@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { WaterAddition } from '~/types'
 import { additionEffect, chlorideSulfate, WATER_AGENTS, waterAmount, waterProfiles, waterVolumes } from '~/utils/water'
-import { malt } from './fixtures'
+import { dots, malt } from './fixtures'
 
 describe('ионы солей', () => {
   // атомные массы → мг иона на 1 г соли, независимо от таблицы WATER_AGENTS
@@ -95,8 +95,8 @@ describe('профиль воды', () => {
   })
 
   it('что даёт добавка своей воде', () => {
-    expect(additionEffect({ additions }, volumes, 0)).toBe('Ca +78 · SO₄ +186 мг/л')
-    expect(additionEffect({ additions }, volumes, 2)).toBe('Na +52 · Cl +81 мг/л')
+    expect(additionEffect({ additions }, volumes, 0)).toBe(dots('Ca +78 · SO₄ +186 мг/л'))
+    expect(additionEffect({ additions }, volumes, 2)).toBe(dots('Na +52 · Cl +81 мг/л'))
     expect(additionEffect({ additions }, volumes, 3)).toBeNull()                      // кислота
     expect(additionEffect({ additions }, { mash: null, sparge: 15 }, 0)).toBeNull()
     expect(additionEffect({ additions }, volumes, 9)).toBeNull()

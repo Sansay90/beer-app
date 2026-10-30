@@ -17,7 +17,7 @@ const estimated = computed(() => props.items.some(s => (s.until ?? 'days') !== '
       <li v-for="(s, i) in items" :key="i" class="flex items-center gap-3 py-2">
         <span class="num grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{{ i + 1 }}</span>
         <span class="min-w-0 flex-1 truncate text-highlighted">{{ s.name || `Этап ${i + 1}` }}</span>
-        <span class="num text-sm text-muted">{{ fmtNumber(s.temp, 1) }} °C · {{ stageCondition(s, prefs.gravityUnit) }}</span>
+        <span class="num text-sm text-muted">{{ fmtNumber(s.temp, 1) }} °C{{ SEP }}{{ stageCondition(s, prefs.gravityUnit) }}</span>
       </li>
     </ul>
     <div v-if="dryHops.length" class="mt-4 space-y-2 rounded-lg bg-elevated/50 p-4">

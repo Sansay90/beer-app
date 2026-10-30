@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { batchStatus, dryHopWhen, fermentAdvice, fermentCalm, stageCondition, brewFacts, entryInput, entryKindItems, entryValue, dryHopDays, fermentPlan, fromStored, gravityStable, toStored } from '../../app/utils/brewlog'
+import { dots } from './fixtures'
 
 describe('журнал варки', () => {
   it('плотность вводится в °P, хранится в SG и обратно', () => {
@@ -25,8 +26,8 @@ describe('журнал варки', () => {
   })
 
   it('итог варки одной строкой', () => {
-    expect(brewFacts({ og: 1.052, fg: 1.012, abv: 5.25, volume: 23.5 }, 'sg')).toBe('1,052 → 1,012 · 5,3 % · 23,5 л')
-    expect(brewFacts({ og: 1.052, fg: null, abv: null, volume: 23 }, 'sg')).toBe('OG 1,052 · 23 л')
+    expect(brewFacts({ og: 1.052, fg: 1.012, abv: 5.25, volume: 23.5 }, 'sg')).toBe(dots('1,052 → 1,012 · 5,3 % · 23,5 л'))
+    expect(brewFacts({ og: 1.052, fg: null, abv: null, volume: 23 }, 'sg')).toBe(dots('OG 1,052 · 23 л'))
     expect(brewFacts({ og: null, fg: null, abv: null, volume: null }, 'sg')).toBe('')
   })
 
@@ -64,7 +65,7 @@ describe('брожение', () => {
     expect(batchStatus({ phase: 'brewday', status: 'running', manual: false, fermentStart: null }, DAY)).toMatchObject({ label: 'варка идёт' })
     expect(batchStatus({ phase: 'brewday', status: 'stopped', manual: false, fermentStart: null }, DAY)).toMatchObject({ label: 'варочный день' })
     expect(batchStatus({ phase: 'brewday', status: 'running', manual: true, fermentStart: null }, DAY)).toMatchObject({ label: 'варочный день' })
-    expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: 0 }, 2.5 * DAY)).toMatchObject({ label: 'брожение · день 3' })
+    expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: 0 }, 2.5 * DAY)).toMatchObject({ label: dots('брожение · день 3') })
     expect(batchStatus({ phase: 'packaged', status: 'finished', manual: true, fermentStart: 0 }, 9 * DAY)).toMatchObject({ label: 'разлито' })
     expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: 0 }, 90 * DAY)).toBeNull()
     expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: null }, DAY)).toBeNull()
@@ -119,7 +120,7 @@ describe('сухое охмеление рецепта', () => {
       { name: 'Simcoe', amount: 50, use: 'dry_hop', day: 3, gravity: 1.024 },
     ])
     expect(groups.map(g => g.items[0])).toEqual(['Simcoe 50 г', 'Mosaic 50 г', 'Citra 50 г'])
-    expect(dryHopWhen(groups[0]!, 'sg')).toBe('при 1,024 · ~3-й день')
+    expect(dryHopWhen(groups[0]!, 'sg')).toBe(dots('при 1,024 · ~3-й день'))
     expect(dryHopWhen(groups[2]!, 'sg')).toBe('5-й день брожения')
   })
 })
@@ -147,8 +148,8 @@ describe('брожение по плотности', () => {
     expect(p.stages[0]).toMatchObject({ state: 'now', to: 7 * DAY, target: 1.024 })
     expect(p.stages.map(s => s.from / DAY)).toEqual([0, 7, 10, 14])
     expect(p.estimated).toBe(true)
-    expect(stageCondition(plan.fermentation[0]!, 'sg')).toBe('до 1,024 · ~5 дн.')
-    expect(stageCondition(plan.fermentation[2]!, 'sg')).toBe('до FG · ~4 дн.')
+    expect(stageCondition(plan.fermentation[0]!, 'sg')).toBe(dots('до 1,024 · ~5 дн.'))
+    expect(stageCondition(plan.fermentation[2]!, 'sg')).toBe(dots('до FG · ~4 дн.'))
     expect(stageCondition(plan.fermentation[3]!, 'sg')).toBe('2 дн.')
   })
 

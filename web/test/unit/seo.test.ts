@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { clip, DESCRIPTION_MAX, recipeDescription } from '~/utils/seo'
+import { dots } from './fixtures'
 
 describe('тексты для превью', () => {
   it('короткое — как есть, длинное — по слову и с многоточием', () => {
@@ -13,7 +14,7 @@ describe('тексты для превью', () => {
   it('описание рецепта: стиль, цифры и первый абзац', () => {
     const r = { style: { code: '5B', name: 'Kölsch' }, notes: 'Светлый, сухой,\nс тонким фруктовым тоном.\n\nВторой абзац не нужен.' }
     expect(recipeDescription(r, { og: 1.0484, ibu: 24.6, abv: 4.83 }))
-      .toBe('5B · Kölsch · 12,0 °P · 25 IBU · 4,8 % ABV. Светлый, сухой, с тонким фруктовым тоном.')
+      .toBe(dots('5B · Kölsch · 12,0 °P · 25 IBU · 4,8 % ABV. Светлый, сухой, с тонким фруктовым тоном.'))
   })
 
   it('без стиля, цифр и описания — что есть', () => {

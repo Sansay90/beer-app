@@ -94,7 +94,7 @@ const measureLabel = (m: EntryKind) => {
 
   <template v-if="ferment.stages.length || ferment.dryHops.length">
     <div class="mt-4 mb-1 flex items-center gap-3 text-xs font-medium tracking-wider text-dimmed uppercase">
-      Брожение<template v-if="brewing"> · с задачи дрожжей</template><span class="h-px flex-1 bg-border" />
+      Брожение<template v-if="brewing">{{ SEP }}с задачи дрожжей</template><span class="h-px flex-1 bg-border" />
     </div>
     <ol class="relative">
       <li v-for="r in rows" :key="`${r.kind}${r.i}`" :class="[ROW, r.state === 'now' && NOW]">
@@ -107,8 +107,8 @@ const measureLabel = (m: EntryKind) => {
         <div v-if="r.kind === 'stage'" class="min-w-0">
           <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <span class="text-lg font-semibold" :class="r.state === 'next' ? 'text-muted' : 'text-highlighted'">{{ r.st.name }}</span>
-            <span class="num text-base text-muted">{{ fmtNumber(r.st.temp, 1) }} °C · {{ stageCondition({ until: r.st.until, gravity: r.st.target, days: r.st.days }, prefs.gravityUnit) }}</span>
-            <span v-if="!brewing" class="num text-sm text-dimmed">{{ fmtDay(r.st.from) }} – {{ r.st.until !== 'days' && r.st.state !== 'done' ? '~' : '' }}{{ fmtDay(r.st.to) }}<template v-if="r.st.manual"> · начат по факту</template></span>
+            <span class="num text-base text-muted">{{ fmtNumber(r.st.temp, 1) }} °C{{ SEP }}{{ stageCondition({ until: r.st.until, gravity: r.st.target, days: r.st.days }, prefs.gravityUnit) }}</span>
+            <span v-if="!brewing" class="num text-sm text-dimmed">{{ fmtDay(r.st.from) }} – {{ r.st.until !== 'days' && r.st.state !== 'done' ? '~' : '' }}{{ fmtDay(r.st.to) }}<template v-if="r.st.manual">{{ SEP }}начат по факту</template></span>
           </div>
           <!-- следующий этап можно начать раньше плана; первый начинается с задачи дрожжей -->
           <UButton
@@ -127,7 +127,7 @@ const measureLabel = (m: EntryKind) => {
             <span class="text-lg font-semibold" :class="r.state === 'next' ? 'text-muted' : 'text-highlighted'">Сухое охмеление</span>
             <span class="text-base text-muted">{{ r.d.items.join(', ') }}</span>
             <span class="num text-sm text-dimmed">
-              {{ dryHopWhen(r.d, prefs.gravityUnit) }}<template v-if="r.doneAt != null"> · {{ fmtDay(r.doneAt) }}</template><template v-else-if="r.d.at != null && !r.d.estimated && !brewing"> · {{ fmtDay(r.d.at) }}</template>
+              {{ dryHopWhen(r.d, prefs.gravityUnit) }}<template v-if="r.doneAt != null">{{ SEP }}{{ fmtDay(r.doneAt) }}</template><template v-else-if="r.d.at != null && !r.d.estimated && !brewing">{{ SEP }}{{ fmtDay(r.d.at) }}</template>
             </span>
           </div>
           <UButton

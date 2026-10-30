@@ -10,7 +10,7 @@ const GRID = 'sm:grid sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_21rem_2rem]'
 const total = computed(() => rows.value.reduce((a, h) => a + (h.amount ?? 0), 0))
 const summary = computed(() => {
   if (!total.value) return undefined
-  const perLitre = props.volume ? ` · ${(total.value / props.volume).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} г/л` : ''
+  const perLitre = props.volume ? `${SEP}${(total.value / props.volume).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} г/л` : ''
   return `${total.value.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} г${perLitre}`
 })
 

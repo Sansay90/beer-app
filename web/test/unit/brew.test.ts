@@ -4,7 +4,7 @@ import {
   additionViews, heatingEta, heatingRate, nextAction, phaseOf, programRemaining, programTotal, remainingSeconds, statusOf,
   stepProgress, stepViews,
 } from '~/utils/brew'
-import { snapshot } from './fixtures'
+import { dots, snapshot } from './fixtures'
 
 // Программа в пивоварне: две паузы и кипячение 60 мин с закладками на 60, 30, 10 и 0 мин.
 const STEPS: DeviceStep[] = [
@@ -209,14 +209,14 @@ describe('nextAction', () => {
     const idle = snapshot({ deviceRecipe: { name: 'Пилс', steps: STEPS } })
     expect(next(idle, { endedAt: 1000, now: 1000 + 60 })).toMatchObject({ kind: 'ended', title: 'Программа завершена' })
     expect(next(idle, { endedAt: 1000, now: 1000 + 31 * 60 })).toMatchObject({
-      kind: 'ready', title: '«Пилс»', description: '3 шага · 2 ч 15 мин без учёта нагрева', actions: ['startRecipe'],
+      kind: 'ready', title: '«Пилс»', description: dots('3 шага · 2 ч 15 мин без учёта нагрева'), actions: ['startRecipe'],
     })
   })
 
   it('рецепта в пивоварне нет или он не из приложения', () => {
     expect(next(snapshot())).toMatchObject({ kind: 'noRecipe', actions: ['chooseRecipe'] })
     expect(next(snapshot({ deviceRecipe: { steps: STEPS.slice(0, 1) } }))).toMatchObject({
-      title: 'Рецепт из Smart Life', description: '1 шаг · 15 мин без учёта нагрева',
+      title: 'Рецепт из Smart Life', description: dots('1 шаг · 15 мин без учёта нагрева'),
     })
   })
 })

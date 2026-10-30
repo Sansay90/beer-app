@@ -37,8 +37,8 @@ const date = (p: Photo) => new Date(p.createdAt * 1000).toLocaleDateString('ru-R
       <div v-if="shown" class="flex items-center gap-3 px-4 py-3 text-sm">
         <div class="min-w-0">
           <div class="truncate">
-            <span v-if="title" class="font-medium text-highlighted">{{ title }} · </span>
-            <span class="num text-muted">{{ (index ?? 0) + 1 }} из {{ photos.length }} · {{ date(shown) }}</span>
+            <span v-if="title" class="font-medium text-highlighted">{{ title }}{{ SEP }}</span>
+            <span class="num text-muted">{{ (index ?? 0) + 1 }} из {{ photos.length }}{{ SEP }}{{ date(shown) }}</span>
           </div>
           <div v-if="shown.credit" class="truncate text-xs text-dimmed" :title="shown.credit">Фото: {{ shown.credit }}</div>
         </div>

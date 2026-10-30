@@ -2,7 +2,7 @@
 // Стор пивоварни собирает из них геттеры; компоненты только отображают.
 import type { Addition, DeviceStep, HistoryPoint, Snapshot } from '~/types'
 import { slotIcon } from '~/utils/additions'
-import { fmtMinutes, fmtTemp, plural } from '~/utils/format'
+import { fmtMinutes, fmtTemp, plural, SEP } from '~/utils/format'
 
 export type Tone = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
@@ -233,7 +233,7 @@ export function nextAction({ s, phase, remaining, eta, steps, additions, total, 
   return {
     kind: 'ready',
     title: s.deviceRecipe.name ? `«${s.deviceRecipe.name}»` : 'Рецепт из Smart Life',
-    description: `${count} ${plural(count, 'шаг', 'шага', 'шагов')} · ${fmtMinutes(Math.round(total / 60))} без учёта нагрева`,
+    description: `${count} ${plural(count, 'шаг', 'шага', 'шагов')}${SEP}${fmtMinutes(Math.round(total / 60))} без учёта нагрева`,
     icon: 'i-lucide-circle-play',
     tone: 'primary',
     actions: ['startRecipe'],

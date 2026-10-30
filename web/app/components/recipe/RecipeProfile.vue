@@ -112,7 +112,7 @@ const tip = computed(() => {
         <UIcon :name="item.icon" class="size-4 shrink-0" :class="item.tint" />
         <span class="font-medium text-highlighted">{{ item.name }}</span>
         <span v-if="item.amount" class="num ml-auto pl-3 text-muted">{{ item.amount }}</span>
-        <span v-if="item.note" class="num text-muted">· {{ item.note }}</span>
+        <span v-if="item.note" class="num text-muted">·&ensp;{{ item.note }}</span>
       </div>
     </ChartTip>
   </div>

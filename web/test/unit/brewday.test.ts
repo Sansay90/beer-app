@@ -4,7 +4,7 @@ import type { BrewDayStep, BrewEntry, Recipe } from '~/types'
 import type { Phase } from '~/utils/brew'
 import { phaseOf } from '~/utils/brew'
 import { additionWhen, brewDay, breweryStep, lastMeasures, stepDetails, stepLine, stepRemaining } from '~/utils/brewday'
-import { snapshot } from './fixtures'
+import { dots, snapshot } from './fixtures'
 
 const STEPS: BrewDayStep[] = [
   { index: 0, key: 'prepare-0', kind: 'prepare', name: 'Подготовка', measures: [], additions: [], at: 1000 },
@@ -101,7 +101,7 @@ describe('что приготовить', () => {
 
 describe('подписи шагов', () => {
   it('температура и время шага, закладки по минутам кипячения', () => {
-    expect(stepLine(STEPS[3]!)).toBe('66,0 °C · 1 ч')
+    expect(stepLine(STEPS[3]!)).toBe(dots('66,0 °C · 1 ч'))
     expect(stepLine(STEPS[5]!)).toBe('')
     expect([60, 10, 0].map(m => additionWhen(m, 60))).toEqual(['старт', 'за 10 мин', 'конец'])
   })

@@ -92,7 +92,7 @@ const tip = computed(() => active.value && { ...active.value, ...tipPlace(active
 const gravityLabel = (g: number) => (prefs.gravityUnit === 'plato' ? num(g, 1) : num(g, 3))
 const showPt = (p: Pt) => { active.value = { x: p.x, y: p.y, title: when(p.t), lines: [p.text] } }
 const showHop = (h: { x: number; y: number; items: string[]; day: number | null }) => {
-  active.value = { x: h.x, y: h.y, title: `Сухое охмеление${h.day != null ? ` · ${h.day}-й день` : ''}`, lines: h.items }
+  active.value = { x: h.x, y: h.y, title: `Сухое охмеление${h.day != null ? `${SEP}${h.day}-й день` : ''}`, lines: h.items }
 }
 </script>
 

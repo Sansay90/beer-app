@@ -16,7 +16,7 @@ const summary = computed(() => [
   props.water.ratio && `${props.water.ratio.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} л/кг`,
   props.volumes.mash != null && `затор ${fmtL(props.volumes.mash)}`,
   props.volumes.sparge != null && `промывка ${fmtL(props.volumes.sparge)}`,
-].filter(Boolean).join(' · '))
+].filter(Boolean).join(SEP))
 const fmtL = (l: number) => `${l.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} л`
 const ratio = (p: Ions | null) => {
   const r = chlorideSulfate(p)
@@ -33,7 +33,7 @@ const ratio = (p: Ions | null) => {
             {{ a.agent === 'other' ? a.name || 'Другое' : WATER_AGENTS[a.agent].label }}
             <span v-if="WATER_AGENTS[a.agent].formula" class="text-sm text-muted">{{ WATER_AGENTS[a.agent].formula }}</span>
           </div>
-          <div class="text-xs text-muted">{{ TARGET[a.target ?? 'mash'] }}<template v-if="additionEffect(water, volumes, i)"> · {{ additionEffect(water, volumes, i) }}</template></div>
+          <div class="text-xs text-muted">{{ TARGET[a.target ?? 'mash'] }}<template v-if="additionEffect(water, volumes, i)">{{ SEP }}{{ additionEffect(water, volumes, i) }}</template></div>
         </div>
         <span class="num text-right text-highlighted">{{ waterAmount(a.agent, a.amount) ?? '' }}</span>
       </li>

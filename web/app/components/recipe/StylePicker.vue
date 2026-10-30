@@ -12,7 +12,7 @@ const groups = computed<SelectMenuItem[][]>(() => {
   const byCategory = new Map<string, SelectMenuItem[]>()
   for (const s of STYLES) {
     const list = byCategory.get(s.category) ?? []
-    list.push({ label: `${s.code} · ${s.name}`, value: s.code })
+    list.push({ label: `${s.code}${SEP}${s.name}`, value: s.code })
     byCategory.set(s.category, list)
   }
   return [...byCategory].map(([category, items]) => [{ type: 'label' as const, label: category }, ...items])

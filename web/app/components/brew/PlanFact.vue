@@ -44,7 +44,7 @@ const tiles = computed(() => {
       <div class="text-sm text-muted">{{ t.label }}</div>
       <div class="num mt-1 text-2xl font-semibold text-highlighted">{{ t.fact }}</div>
       <div v-if="t.plan" class="num mt-1 text-sm text-dimmed">
-        по рецепту {{ t.plan }}<template v-if="t.delta"> · <span class="text-toned">{{ t.delta }}</span></template>
+        по рецепту {{ t.plan }}<template v-if="t.delta">{{ SEP }}<span class="text-toned">{{ t.delta }}</span></template>
       </div>
     </div>
   </div>

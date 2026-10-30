@@ -41,7 +41,7 @@ const date = (t: number) => new Date(t * 1000).toLocaleDateString('ru-RU', { day
                     <UBadge v-if="stage(b)" :label="stage(b)!.label" :color="stage(b)!.color" variant="subtle" size="sm" />
                   </div>
                   <div class="num text-sm text-muted">
-                    {{ date(b.startedAt) }} · {{ equipmentLabel(b) }}<template v-if="b.entries"> · {{ b.entries }} {{ plural(b.entries, 'запись', 'записи', 'записей') }}</template>
+                    {{ date(b.startedAt) }}{{ SEP }}{{ equipmentLabel(b) }}<template v-if="b.entries">{{ SEP }}{{ b.entries }} {{ plural(b.entries, 'запись', 'записи', 'записей') }}</template>
                   </div>
                   <div v-if="brewFacts(b, prefs.gravityUnit)" class="num mt-0.5 text-sm text-toned sm:hidden">{{ brewFacts(b, prefs.gravityUnit) }}</div>
                 </div>

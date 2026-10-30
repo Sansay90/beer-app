@@ -7,7 +7,7 @@
 import type { BrewDayStep, BrewDetail, BrewEntry, Recipe, Snapshot } from '~/types'
 import type { Phase } from '~/utils/brew'
 import { unitLabel } from '~/utils/additions'
-import { fmtMinutes, fmtNumber, fmtTemp } from '~/utils/format'
+import { fmtMinutes, fmtNumber, fmtTemp, SEP } from '~/utils/format'
 import { WATER_AGENTS, waterAmount, waterVolumes } from '~/utils/water'
 
 export type StepState = 'done' | 'now' | 'next'
@@ -57,7 +57,7 @@ export function stepDetails(step: Pick<BrewDayStep, 'kind'>, r: Recipe | null | 
   const grains = (r.fermentables ?? []).filter(f => (f.use ?? 'mash') === 'mash' && f.amount)
   if (grains.length) {
     const total = grains.reduce((a, f) => a + f.amount!, 0)
-    out.push(`Засыпь ${fmtNumber(total, 2, ' кг')}: ${grains.map(f => `${f.name || 'солод'} ${fmtNumber(f.amount, 3, ' кг')}`).join(' · ')}`)
+    out.push(`Засыпь ${fmtNumber(total, 2, ' кг')}: ${grains.map(f => `${f.name || 'солод'} ${fmtNumber(f.amount, 3, ' кг')}`).join(SEP)}`)
   }
   const yeasts = (r.yeasts ?? []).filter(y => y.name)
   if (yeasts.length) {
@@ -91,7 +91,7 @@ export function stepRemaining(step: Pick<DayStep, 'ends'>, now: number) {
 
 /** «66,0 °C · 1 ч» — температура и время шага. */
 export function stepLine(step: Pick<BrewDayStep, 'temp' | 'minutes'>) {
-  return [step.temp != null && `${fmtTemp(step.temp)} °C`, step.minutes && fmtMinutes(step.minutes)].filter(Boolean).join(' · ')
+  return [step.temp != null && `${fmtTemp(step.temp)} °C`, step.minutes && fmtMinutes(step.minutes)].filter(Boolean).join(SEP)
 }
 
 /** Когда закладка на кипячении: «старт», «конец», «за 10 мин». */

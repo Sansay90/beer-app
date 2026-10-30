@@ -3,7 +3,7 @@
 import type { BrewEntry, BrewEvent, BrewPlan, BrewSummary } from '~/types'
 import type { GravityUnit } from '~/utils/beer'
 import { fmtGravity, gravityIn, sgFromPlato } from '~/utils/beer'
-import { fmtNumber } from '~/utils/format'
+import { fmtNumber, SEP } from '~/utils/format'
 
 export type EntryKind = BrewEntry['kind']
 type Unit = 'sg' | 'ph' | 'l' | 'c'
@@ -89,7 +89,7 @@ export function brewFacts(b: Pick<BrewSummary, 'og' | 'fg' | 'abv' | 'volume'>, 
   else if (b.fg != null) parts.push(`FG ${fmtGravity(b.fg, gravity)}`)
   if (b.abv != null) parts.push(`${b.abv.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} %`)
   if (b.volume != null) parts.push(`${b.volume.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} л`)
-  return parts.join(' · ')
+  return parts.join(SEP)
 }
 
 /** События пивоварни: значок и тон — на экране варки и в журнале. */
@@ -158,7 +158,7 @@ export function stageCondition(s: { until?: StageUntil | null; gravity?: number 
   const days = fmtNumber(s.days, 1)
   if (until === 'days') return `${days} дн.`
   const goal = until === 'fg' ? 'до FG' : `до ${fmtGravity(s.gravity, unit)}`
-  return s.days ? `${goal} · ~${days} дн.` : goal
+  return s.days ? `${goal}${SEP}~${days} дн.` : goal
 }
 
 /** {номер этапа: когда начат по факту} — по записям «переход к этапу» и «холодное осветление» (начинает первый
@@ -293,7 +293,7 @@ export function batchStatus(b: Pick<BrewSummary, 'phase' | 'status' | 'manual' |
   if (b.fermentStart == null) return null
   const day = Math.floor((now - b.fermentStart) / DAY) + 1
   if (day < 1 || day > STALE) return null
-  return { label: `брожение · день ${day}`, color: 'primary' as const }
+  return { label: `брожение${SEP}день ${day}`, color: 'primary' as const }
 }
 
 /** Сухое охмеление рецепта: [{day, gravity, items: ['Citra 75 г', …]}] — по плотности (день — примерный) или по
@@ -321,7 +321,7 @@ export function dryHopDays(hops: { name?: string | null; amount?: number | null;
 /** Когда сухое охмеление: «при 4,4 °P · ~4-й день», «4-й день брожения», «день не указан». */
 export function dryHopWhen(d: { day: number | null; gravity?: number | null; target?: number | null }, unit: GravityUnit) {
   const g = d.target ?? d.gravity ?? null
-  if (g != null) return `при ${fmtGravity(g, unit)}${d.day != null ? ` · ~${d.day}-й день` : ''}`
+  if (g != null) return `при ${fmtGravity(g, unit)}${d.day != null ? `${SEP}~${d.day}-й день` : ''}`
   return d.day != null ? `${d.day}-й день брожения` : 'день не указан'
 }
 

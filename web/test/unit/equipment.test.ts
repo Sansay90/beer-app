@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Equipment, EquipmentKindInfo } from '~/types'
 import { equipmentBody, equipmentDefaults, equipmentFacts, equipmentIcon, equipmentValues } from '~/utils/equipment'
+import { dots } from './fixtures'
 
 const POT: EquipmentKindInfo = {
   id: 'manual', label: 'Кастрюля или котёл', hint: '', system: true,
@@ -29,9 +30,9 @@ describe('оборудование', () => {
   it('система — свои поля, прочее — props', () => {
     const pot = item({ volume: 15, efficiency: 70, evaporation: 2.5, kettle: 20 })
     expect(equipmentValues(pot, POT)).toEqual({ volume: 15, efficiency: 70, evaporation: 2.5, kettle: 20 })
-    expect(equipmentFacts(pot, POT)).toBe('15 л · 70 % · 2,5 л/ч · котёл 20 л')
+    expect(equipmentFacts(pot, POT)).toBe(dots('15 л · 70 % · 2,5 л/ч · котёл 20 л'))
     const tank = item({ kind: 'fermenter', system: false, props: { volume: 32, pressure: 1, cooling: 'jacket' } })
-    expect(equipmentFacts(tank, TANK)).toBe('32 л · до 1 бар · рубашка')
+    expect(equipmentFacts(tank, TANK)).toBe(dots('32 л · до 1 бар · рубашка'))
     expect(equipmentFacts(item({ kind: 'refractometer', system: false, props: { atc: true } }), ATC)).toBe('ATC')
     expect(equipmentFacts(item({ kind: 'refractometer', system: false }), ATC)).toBe('')
     expect(equipmentValues(item({ kind: 'refractometer', system: false }), ATC)).toEqual({ atc: false })   // как у переключателя

@@ -1,3 +1,7 @@
+/** Разделитель частей строки: «12 °C · до 6,0 °P · ~5 дн.». Пробелы вокруг точки — полукруглые, шире обычных:
+ *  с обычными части сливаются (внутри частей те же пробелы). */
+export const SEP = '\u2002·\u2002'
+
 /** Число по-русски, с единицей: fmtNumber(5.25, 2, ' кг') → «5,25 кг»; нет значения — «—». */
 export function fmtNumber(v: number | null | undefined, digits = 0, unit = '') {
   return v == null ? '—' : `${v.toLocaleString('ru-RU', { maximumFractionDigits: digits })}${unit}`

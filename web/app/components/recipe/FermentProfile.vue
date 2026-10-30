@@ -62,7 +62,7 @@ const tip = computed(() => {
   if (!slot) return null
   return {
     ...tipPlace(slot.cx, slot.cy, W, H),
-    when: `Сухое охмеление · ${dryHopWhen(slot, prefs.gravityUnit)}`,
+    when: `Сухое охмеление${SEP}${dryHopWhen(slot, prefs.gravityUnit)}`,
     items: slot.items,
   }
 })

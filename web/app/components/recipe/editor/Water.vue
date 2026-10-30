@@ -11,7 +11,7 @@ const water = defineModel<WaterDraft>({ required: true })
 const props = defineProps<{ volumes: WaterVolumes; evaporation?: number; boilMinutes: number }>()
 
 const AGENTS = (Object.entries(WATER_AGENTS) as [WaterAgent, WaterAgentMeta][])
-  .map(([value, a]) => ({ value, label: a.formula ? `${a.label} · ${a.formula}` : a.label, description: a.note }))
+  .map(([value, a]) => ({ value, label: a.formula ? `${a.label}${SEP}${a.formula}` : a.label, description: a.note }))
 const TARGETS = [{ label: 'Затор', value: 'mash' }, { label: 'Промывка', value: 'sparge' }]
 const GRID = 'sm:grid sm:grid-cols-[15rem_minmax(0,1fr)_6.5rem_8rem_2rem]'
 
@@ -20,7 +20,7 @@ const addItems: DropdownMenuItem[] = AGENTS.map(a => ({ label: a.label, onSelect
 const summary = computed(() => {
   const { mash, sparge } = props.volumes
   if (mash == null) return undefined
-  return sparge == null ? `затор ${fmtL(mash)}` : `затор ${fmtL(mash)} · промывка ${fmtL(sparge)}`
+  return sparge == null ? `затор ${fmtL(mash)}` : `затор ${fmtL(mash)}${SEP}промывка ${fmtL(sparge)}`
 })
 const fmtL = (l: number) => `${l.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} л`
 const fmtNum = (v: number) => v.toLocaleString('ru-RU', { maximumFractionDigits: 1 })

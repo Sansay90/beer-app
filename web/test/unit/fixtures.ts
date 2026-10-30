@@ -1,6 +1,7 @@
 // Заготовки для тестов: форма рецепта, ограничения пивоварни и снимок сервиса с разумными значениями.
 import type { Limits, Snapshot } from '~/types'
 import type { FermentableRow, HopRow, RecipeDraft } from '~/types/recipe'
+import { SEP } from '~/utils/format'
 import { blankWater, newFermentable, newHop } from '~/utils/recipe'
 
 /** Ограничения по умолчанию, как у сервиса без пивоварни, но с известным потолком мощности. */
@@ -54,3 +55,6 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     ...over,
   }
 }
+
+/** Ожидаемая строка с разделителем: в тексте теста — « · », в интерфейсе — SEP (точка с широкими пробелами). */
+export const dots = (text: string) => text.replaceAll(' · ', SEP)

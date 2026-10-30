@@ -1,5 +1,6 @@
 // Стили BJCP 2021 и их рамки (data/bjcp-2021.json, генерирует scripts/bjcp.py).
 import data from '~/data/bjcp-2021.json'
+import { SEP } from '~/utils/format'
 
 type Span = [number, number] | null
 
@@ -30,6 +31,6 @@ export function rangePosition(value: number | null | undefined, span: Span) {
 /** «5B · Kölsch», «Авторский: хмельной лагер», «Авторский рецепт»; стиль не задан — «Стиль не выбран». */
 export function styleLabel(style: { code?: string | null; name: string } | null | undefined) {
   if (!style) return 'Стиль не выбран'
-  if (style.code) return `${style.code} · ${style.name}`
+  if (style.code) return `${style.code}${SEP}${style.name}`
   return style.name.trim() ? `Авторский: ${style.name.trim()}` : 'Авторский рецепт'
 }

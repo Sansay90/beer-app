@@ -43,11 +43,10 @@ const date = (t: number) => new Date(t * 1000).toLocaleDateString('ru-RU', { day
               <UIcon :name="u.role === 'admin' ? 'i-lucide-shield' : 'i-lucide-circle-user'" class="size-6 shrink-0 text-muted" />
               <div class="min-w-0 flex-1">
                 <div class="truncate font-medium text-highlighted">
-                  {{ u.email }}<span v-if="u.id === auth.user?.id" class="font-normal text-muted"> · вы</span>
+                  {{ u.email }}<span v-if="u.id === auth.user?.id" class="font-normal text-muted">{{ SEP }}вы</span>
                 </div>
                 <div class="num text-sm text-muted">
-                  с {{ date(u.createdAt) }} · {{ u.recipes }} {{ plural(u.recipes, 'рецепт', 'рецепта', 'рецептов') }} ·
-                  {{ u.emailVerified ? 'почта подтверждена' : 'почта не подтверждена' }}
+                  с {{ date(u.createdAt) }}{{ SEP }}{{ u.recipes }} {{ plural(u.recipes, 'рецепт', 'рецепта', 'рецептов') }}{{ SEP }}{{ u.emailVerified ? 'почта подтверждена' : 'почта не подтверждена' }}
                 </div>
               </div>
               <USelect :model-value="u.role" :items="ROLES" class="w-44" aria-label="Роль" @update:model-value="v => setRole(u, v as Role)" />

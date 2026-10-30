@@ -31,7 +31,7 @@ const connection = computed(() => [
       <dt class="text-sm text-muted">Модель</dt>
       <dd class="text-sm">
         <span class="font-medium text-highlighted">{{ device?.model ? `B${device.model}` : '—' }}</span>
-        <span class="text-muted"> · заводская настройка, только просмотр</span>
+        <span class="text-muted">{{ SEP }}заводская настройка, только просмотр</span>
       </dd>
       <dt class="text-sm text-muted">Потолок мощности</dt>
       <dd class="num text-sm font-medium text-highlighted">{{ fmtWatts(device?.maxWatts) }}</dd>

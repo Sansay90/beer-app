@@ -2,7 +2,7 @@
 // (service/app/brewery/kinds.py, useEquipmentKinds): у варочной системы параметры — свои поля оборудования (объём,
 // эффективность, испарение, котёл), у прочего — props.
 import type { Equipment, EquipmentField, EquipmentKindInfo } from '~/types'
-import { fmtNumber } from '~/utils/format'
+import { fmtNumber, SEP } from '~/utils/format'
 
 const ICONS: Record<string, string> = {
   manual: 'i-lucide-cooking-pot', allinone: 'i-lucide-cylinder', easybrew: 'i-lucide-plug', mash_tun: 'i-lucide-box',
@@ -59,5 +59,5 @@ function factOf(f: EquipmentField, v: EquipmentValue) {
 /** Кратко о параметрах: «15 л · 70 % · 2,5 л/ч · котёл 20 л», «32 л · до 1 бар · рубашка». */
 export function equipmentFacts(e: Equipment, kind: EquipmentKindInfo | undefined) {
   const values = equipmentValues(e, kind)
-  return (kind?.fields ?? []).map(f => factOf(f, values[f.key] ?? null)).filter(Boolean).join(' · ')
+  return (kind?.fields ?? []).map(f => factOf(f, values[f.key] ?? null)).filter(Boolean).join(SEP)
 }

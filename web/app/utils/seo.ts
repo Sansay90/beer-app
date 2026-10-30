@@ -2,7 +2,7 @@
 import type { StyleRef } from '~/types'
 import { fmtGravity } from '~/utils/beer'
 import type { RecipeCalc } from '~/utils/calc'
-import { fmtNumber } from '~/utils/format'
+import { fmtNumber, SEP } from '~/utils/format'
 import { styleLabel } from '~/utils/styles'
 
 /** Длина описания: дальше поисковики и мессенджеры всё равно обрежут. */
@@ -22,7 +22,7 @@ export function recipeDescription(r: { style?: StyleRef | null; notes?: string }
     c?.og != null && fmtGravity(c.og, 'plato'),
     c?.ibu != null && `${fmtNumber(c.ibu)} IBU`,
     c?.abv != null && `${fmtNumber(c.abv, 1)} % ABV`,
-  ].filter(Boolean).join(' · ')
+  ].filter(Boolean).join(SEP)
   const about = r.notes?.split(/\n\s*\n/)[0]?.replace(/\s+/g, ' ').trim()
   return clip([facts, about].filter(Boolean).join('. '))
 }

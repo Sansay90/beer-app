@@ -24,7 +24,7 @@ const groups = computed(() => boilGroups(props.recipe))
             <template v-else>{{ i + 1 }}</template>
           </span>
           <span class="min-w-0 flex-1 truncate text-highlighted">{{ s.name }}</span>
-          <span class="num text-sm text-muted">{{ s.boil ? 'кипение' : `${fmtNumber(s.temp, 1)} °C` }} · {{ s.minutes }} мин · {{ s.watts }} W</span>
+          <span class="num text-sm text-muted">{{ s.boil ? 'кипение' : `${fmtNumber(s.temp, 1)} °C` }}{{ SEP }}{{ s.minutes }} мин{{ SEP }}{{ s.watts }} W</span>
         </li>
       </ul>
       <div v-if="groups.length" class="mt-4 space-y-2 rounded-lg bg-elevated/50 p-4">
@@ -36,7 +36,7 @@ const groups = computed(() => boilGroups(props.recipe))
               <UIcon :name="additionKind(item).icon" class="size-4" :class="additionKind(item).tint" />
               <span class="text-highlighted">{{ additionName(item) }}</span>
               <span v-if="additionAmount(item)" class="num text-muted">{{ additionAmount(item) }}</span>
-              <span v-if="additionNote(item)" class="num text-xs text-muted">· {{ additionNote(item) }}</span>
+              <span v-if="additionNote(item)" class="num text-xs text-muted">·&ensp;{{ additionNote(item) }}</span>
             </span>
           </div>
         </div>

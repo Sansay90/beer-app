@@ -95,7 +95,7 @@ const menu = computed(() => [[
                 <UBadge v-if="item.main" label="основная" color="primary" variant="subtle" />
                 <UBadge v-if="item.kind === 'easybrew'" :label="item.connected ? 'подключена' : 'не подключена'" :color="item.connected ? 'success' : 'neutral'" variant="subtle" />
               </div>
-              <div class="mt-1 text-base text-muted">{{ kind.label }} · {{ categoryLabel.get(item.category) }}</div>
+              <div class="mt-1 text-base text-muted">{{ kind.label }}{{ SEP }}{{ categoryLabel.get(item.category) }}</div>
               <div class="mt-0.5 text-sm text-dimmed">{{ kind.hint }}</div>
             </div>
           </div>

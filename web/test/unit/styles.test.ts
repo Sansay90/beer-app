@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { rangePosition, styleByCode, styleLabel, STYLES } from '~/utils/styles'
+import { dots } from './fixtures'
 
 describe('стили BJCP', () => {
   it('справочник загружен, стиль ищется по коду', () => {
@@ -19,7 +20,7 @@ describe('стили BJCP', () => {
   })
 
   it('подпись стиля', () => {
-    expect(styleLabel({ code: '5B', name: 'Kölsch' })).toBe('5B · Kölsch')
+    expect(styleLabel({ code: '5B', name: 'Kölsch' })).toBe(dots('5B · Kölsch'))
     expect(styleLabel({ code: null, name: ' хмельной лагер ' })).toBe('Авторский: хмельной лагер')
     expect(styleLabel({ name: '' })).toBe('Авторский рецепт')
     expect(styleLabel(null)).toBe('Стиль не выбран')

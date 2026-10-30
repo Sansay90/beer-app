@@ -5,7 +5,7 @@ import {
   blankRecipe, boilGroups, boilItems, deviceTimers, fermentationStep, mashStep, newMisc, options, programMinutes, programOf, programSummary,
   share, toDraft, toRecipe, totalKg, validateRecipe, wattOptions, whenInBoil, whenLabel, HOP_USES,
 } from '~/utils/recipe'
-import { draft, hop, LIMITS, malt } from './fixtures'
+import { dots, draft, hop, LIMITS, malt } from './fixtures'
 
 describe('новый рецепт', () => {
   it('объём и эффективность — из основного оборудования, мощность — потолок модели', () => {
@@ -151,16 +151,16 @@ describe('программа пивоварни и закладки', () => {
     expect(whenInBoil(0, 60)).toBe('в конце кипячения')
     expect(whenInBoil(60, 60)).toBe('в начале кипячения')
     expect(whenInBoil(15, 60)).toBe('за 15 мин до конца')
-    expect(whenLabel(HOP_USES, 'boil', 60)).toBe('Кипячение · 60 мин')
-    expect(whenLabel(HOP_USES, 'whirlpool', 20)).toBe('Вирпул · 20 мин')
-    expect(whenLabel(HOP_USES, 'dry_hop', null, 3)).toBe('Сухое охмеление · 3-й день')
+    expect(whenLabel(HOP_USES, 'boil', 60)).toBe(dots('Кипячение · 60 мин'))
+    expect(whenLabel(HOP_USES, 'whirlpool', 20)).toBe(dots('Вирпул · 20 мин'))
+    expect(whenLabel(HOP_USES, 'dry_hop', null, 3)).toBe(dots('Сухое охмеление · 3-й день'))
     expect(whenLabel(HOP_USES, 'mash')).toBe('Затор')
     expect(whenLabel(HOP_USES, 'unknown')).toBe('unknown')
   })
 
   it('сводка программы', () => {
-    expect(programSummary(recipe())).toBe('3 шага · 2 ч 15 мин')
-    expect(programSummary({ ...recipe(), mash: [], boil: { minutes: 60, watts: 2000 } })).toBe('1 шаг · 1 ч')
+    expect(programSummary(recipe())).toBe(dots('3 шага · 2 ч 15 мин'))
+    expect(programSummary({ ...recipe(), mash: [], boil: { minutes: 60, watts: 2000 } })).toBe(dots('1 шаг · 1 ч'))
     expect(programSummary({ ...recipe(), mash: [], boil: null })).toBe('без программы')
   })
 })

@@ -27,7 +27,7 @@ const loading = computed(() => (status.value === 'pending' && !list.value.length
 // вид — если название его не повторяет («pH-метр» — не «pH-метр · pH-метр»), и кратко параметры
 const line = (e: Equipment) => {
   const k = kindOf(e.kind)
-  return [k?.label !== e.name && k?.label, equipmentFacts(e, k)].filter(Boolean).join(' · ')
+  return [k?.label !== e.name && k?.label, equipmentFacts(e, k)].filter(Boolean).join(SEP)
 }
 </script>
 

@@ -11,7 +11,7 @@ defineProps<{ items: Yeast[] }>()
         <div class="min-w-0">
           <div class="truncate text-highlighted">{{ y.name }}</div>
           <div class="text-xs text-muted">
-            {{ YEAST_FORMS[y.form ?? 'dry'] }}<template v-if="y.attenuation != null"> · сбраживание {{ fmtNumber(y.attenuation) }} %</template>
+            {{ YEAST_FORMS[y.form ?? 'dry'] }}<template v-if="y.attenuation != null">{{ SEP }}сбраживание {{ fmtNumber(y.attenuation) }} %</template>
           </div>
         </div>
         <span class="num text-right text-highlighted">{{ y.amount != null ? `${fmtNumber(y.amount, 1)} ${unitLabel(y.unit)}` : '' }}</span>

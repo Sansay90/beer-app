@@ -6,7 +6,7 @@ import type {
 } from '~/types/recipe'
 import { ADDITION_KINDS } from '~/utils/additions'
 import { calcRecipe, DEFAULT_EFFICIENCY } from '~/utils/calc'
-import { fmtMinutes, fmtNumber, plural } from '~/utils/format'
+import { fmtMinutes, fmtNumber, plural, SEP } from '~/utils/format'
 
 // ── подписи ──────────────────────────────────────────────────────────────────
 export const FERMENTABLE_KINDS = { grain: 'Солод', adjunct: 'Несоложёное', sugar: 'Сахар', extract: 'Экстракт' } as const
@@ -279,7 +279,7 @@ export function share(amount: number | null | undefined, total: number) {
 /** Длительность программы и шаги — для подписей. */
 export function programSummary(r: ProgramSource) {
   const steps = programOf(r)
-  return steps.length ? `${steps.length} ${plural(steps.length, 'шаг', 'шага', 'шагов')} · ${fmtMinutes(programMinutes(r))}` : 'без программы'
+  return steps.length ? `${steps.length} ${plural(steps.length, 'шаг', 'шага', 'шагов')}${SEP}${fmtMinutes(programMinutes(r))}` : 'без программы'
 }
 
 /** Варианты мощности для выпадающего списка: от потолка модели вниз с её шагом мощности. */
@@ -293,7 +293,7 @@ export function wattOptions(l: Limits | null) {
 /** «Кипячение · 60 мин», «Вирпул · 20 мин», «Сухое охмеление · 3-й день», «Затор». */
 export function whenLabel(labels: Record<string, string>, use: string, minutes?: number | null, day?: number | null) {
   const base = labels[use] ?? use
-  if ((use === 'boil' || use === 'whirlpool') && minutes != null) return `${base} · ${minutes} мин`
-  if (use === 'dry_hop' && day != null) return `${base} · ${day}-й день`
+  if ((use === 'boil' || use === 'whirlpool') && minutes != null) return `${base}${SEP}${minutes} мин`
+  if (use === 'dry_hop' && day != null) return `${base}${SEP}${day}-й день`
   return base
 }

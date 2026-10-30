@@ -1,6 +1,7 @@
 // Вода рецепта: объёмы заторной и промывочной воды, соли и кислоты, профиль ионов.
 // Ионы на 1 г соли в 1 л (мг/л) — из молярных масс; мел в заторе считается как 2 HCO₃⁻ на CaCO₃.
 import type { Batch, Boil, Fermentable, WaterAddition, WaterAgent, WaterProfile } from '~/types'
+import { SEP } from '~/utils/format'
 
 export const IONS = ['ca', 'mg', 'na', 'cl', 'so4', 'hco3'] as const
 export type Ion = typeof IONS[number]
@@ -66,7 +67,7 @@ export function additionEffect(w: Source, v: Litres, i: number) {
   if (!a || !litres || !a.amount) return null
   const parts = IONS.filter(ion => WATER_AGENTS[a.agent].ions[ion])
     .map(ion => `${ION_LABELS[ion]} +${Math.round((a.amount! * WATER_AGENTS[a.agent].ions[ion]!) / litres)}`)
-  return parts.length ? `${parts.join(' · ')} мг/л` : null
+  return parts.length ? `${parts.join(SEP)} мг/л` : null
 }
 
 /** Хлорид к сульфату: > 1 — солодовый сдвиг, < 1 — хмелевой; null — сульфата нет. */

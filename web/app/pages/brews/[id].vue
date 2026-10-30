@@ -88,7 +88,7 @@ const batchLabel = computed(() => {
   if (!s) return ''
   const kg = totalKg(s.fermentables ?? [])
   const g = hopGrams(s)
-  return [batchLine(s), kg > 0 && `засыпь ${fmtNumber(kg, 2, ' кг')}`, g > 0 && `хмель ${fmtNumber(g, 0, ' г')}`].filter(Boolean).join(' · ')
+  return [batchLine(s), kg > 0 && `засыпь ${fmtNumber(kg, 2, ' кг')}`, g > 0 && `хмель ${fmtNumber(g, 0, ' г')}`].filter(Boolean).join(SEP)
 })
 const volumes = computed(() => (snapshot.value ? waterVolumes(snapshot.value, snapshot.value.batch?.evaporation ?? eq.value?.evaporation) : null))
 
@@ -167,7 +167,7 @@ const menu = computed(() => [[
         <!-- рецепт партии — свёрнут: сколько чего взвесить, один раз -->
         <UCollapsible v-if="snapshot" v-model:open="recipeOpen">
           <UButton
-            :label="`Рецепт партии · ${batchLabel}`"
+            :label="`Рецепт партии${SEP}${batchLabel}`"
             icon="i-lucide-scroll-text"
             :trailing-icon="recipeOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
             color="neutral"

@@ -38,7 +38,7 @@ const { exec, pending } = useCommand()
             <UIcon :name="additionKind(item).icon" class="size-4 shrink-0" :class="additionKind(item).tint" />
             <span class="truncate font-medium text-highlighted">{{ additionName(item) }}</span>
             <span v-if="additionAmount(item)" class="num shrink-0 text-sm text-muted">{{ additionAmount(item) }}</span>
-            <span v-if="additionNote(item)" class="num shrink-0 text-xs text-muted">· {{ additionNote(item) }}</span>
+            <span v-if="additionNote(item)" class="num shrink-0 text-xs text-muted">·&ensp;{{ additionNote(item) }}</span>
           </li>
         </ul>
         <div v-else class="min-w-0 flex-1">

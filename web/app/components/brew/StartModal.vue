@@ -33,8 +33,8 @@ const equipmentId = ref<string | undefined>()
 const adding = ref(false)
 const equipmentItems = computed(() => equipment.value.map(e => ({
   value: e.id,
-  label: e.main ? `${e.name} · основная` : e.name,
-  description: `${e.volume != null ? fmtNumber(e.volume, 1, ' л') : 'объём не задан'} · ${fmtNumber(e.efficiency, 0, ' %')}`,
+  label: e.main ? `${e.name}${SEP}основная` : e.name,
+  description: `${e.volume != null ? fmtNumber(e.volume, 1, ' л') : 'объём не задан'}${SEP}${fmtNumber(e.efficiency, 0, ' %')}`,
 })))
 const chosen = computed(() => equipment.value.find(e => e.id === equipmentId.value) ?? null)
 async function added(e: { id: string }) {
@@ -68,7 +68,7 @@ const rows = computed(() => {
     totalKg(r.fermentables ?? []) > 0 && row('Засыпь', fmtNumber(totalKg(r.fermentables ?? []), 2, ' кг'), fmtNumber(totalKg(s.fermentables ?? []), 2, ' кг')),
     hopGrams(r) > 0 && row('Хмель', fmtNumber(hopGrams(r), 0, ' г'), fmtNumber(hopGrams(s), 0, ' г')),
     packs(r) && row('Дрожжи', packs(r), packs(s)),
-    v.mash != null && v.sparge != null && row('Вода', '', `затор ${fmtNumber(v.mash, 1, ' л')} · промывка ${fmtNumber(v.sparge, 1, ' л')}`),
+    v.mash != null && v.sparge != null && row('Вода', '', `затор ${fmtNumber(v.mash, 1, ' л')}${SEP}промывка ${fmtNumber(v.sparge, 1, ' л')}`),
   ].filter(Boolean) as { label: string; from: string | null; to: string }[]
 })
 const figures = computed(() => {
@@ -79,7 +79,7 @@ const figures = computed(() => {
     t.ibu != null && `${Math.round(t.ibu)} IBU`,
     t.ebc != null && `${Math.round(t.ebc)} EBC`,
     t.abv != null && fmtAbv(t.abv),
-  ].filter(Boolean).join(' · ')
+  ].filter(Boolean).join(SEP)
 })
 
 async function create() {

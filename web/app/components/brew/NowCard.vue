@@ -6,7 +6,7 @@ const stepLabel = computed(() => {
   if (!s) return ''
   if (s.mode === 'manual' && (phase.running || phase.paused)) return 'Ручной режим'
   const cur = steps[phase.step - 1]
-  return phase.inRecipe && cur ? `Шаг ${cur.index} из ${steps.length} · ${cur.name}` : ''
+  return phase.inRecipe && cur ? `Шаг ${cur.index} из ${steps.length}${SEP}${cur.name}` : ''
 })
 
 const stats = computed(() => {
@@ -33,7 +33,7 @@ const stats = computed(() => {
   const e = brewery.snapshot?.energy
   const energy = !e || (!e.wh && !e.watts)
     ? { value: '—', hint: 'оценка' }
-    : { value: fmtEnergy(e.wh), hint: e.watts ? `ТЭН ~${e.watts} W · оценка` : 'оценка ±20–30 %' }
+    : { value: fmtEnergy(e.wh), hint: e.watts ? `ТЭН ~${e.watts} W${SEP}оценка` : 'оценка ±20–30 %' }
 
   return [
     { label: 'Осталось шага', ...stepLeft },
