@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Hoplab — плитка HL в виде бокала</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&display=block" rel="stylesheet">
+<style>
+  body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #F6EBD4; color: #2B1B12; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cell { padding: 24px 32px; border-bottom: 1px solid #e3d5b8; min-height: 140px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .dark { background: #1A110B; color: #F6EBD4; border-color: #2c1f15; }
+  .tag { font-size: 13px; font-weight: 600; opacity: .7; }
+  svg { display: block; overflow: visible; }
+  .icons { display: flex; flex-wrap: wrap; gap: 18px 30px; }
+  .set { display: flex; align-items: flex-end; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="cell"><div class="tag">А. Пинта: стакан расширяется кверху, пена шапкой над краем</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beerpintl" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintl)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="100" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#2B1B12">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell dark"><div class="tag">&nbsp;</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beerpintd" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintd)"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="100" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#F6EBD4">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell"><div class="tag">Б. Мерный стакан: лабораторная посуда с носиком и делениями — пиво и лаборатория в одном знаке</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beerbeakerl" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerl)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="98" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#2B1B12">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell dark"><div class="tag">&nbsp;</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beerbeakerd" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerd)"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="98" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#F6EBD4">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell"><div class="tag">В. Кружка: с ручкой и пеной через край</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beermugl" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#2B1B12" stroke-width="18" stroke-linecap="round"/><path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugl)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="154" y="96" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#2B1B12">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell dark"><div class="tag">&nbsp;</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beermugd" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugd)"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="154" y="96" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#F6EBD4">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell"><div class="tag">Г. Прямой стакан: ближе всего к нынешнему квадрату, но с пеной и чуть сужается книзу</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beertumblerl" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerl)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="90" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#2B1B12">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell dark"><div class="tag">&nbsp;</div>
+    <svg viewBox="-10 -20 500 165" width="420">
+      <defs><linearGradient id="beertumblerd" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerd)"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text>
+      <text x="138" y="90" font-family="Unbounded" font-weight="500" font-size="70" letter-spacing="-1.5" fill="#F6EBD4">hoplab</text>
+    </svg>
+  </div>
+  <div class="cell"><div class="tag">Знак отдельно: 64, 40 и 24 px — держится ли форма в мелком размере</div>
+    <div class="icons"><div class="set"><svg viewBox="-10 -20 132 166" height="64"><defs><linearGradient id="beerpintl64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintl64)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="40"><defs><linearGradient id="beerpintl40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintl40)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="24"><defs><linearGradient id="beerpintl24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintl24)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 132 166" height="64"><defs><linearGradient id="beerbeakerl64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerl64)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="40"><defs><linearGradient id="beerbeakerl40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerl40)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="24"><defs><linearGradient id="beerbeakerl24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerl24)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 148 162" height="64"><defs><linearGradient id="beermugl64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#2B1B12" stroke-width="18" stroke-linecap="round"/><path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugl64)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 148 162" height="40"><defs><linearGradient id="beermugl40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#2B1B12" stroke-width="18" stroke-linecap="round"/><path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugl40)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 148 162" height="24"><defs><linearGradient id="beermugl24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#2B1B12" stroke-width="18" stroke-linecap="round"/><path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugl24)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 132 150" height="64"><defs><linearGradient id="beertumblerl64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerl64)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 150" height="40"><defs><linearGradient id="beertumblerl40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerl40)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 150" height="24"><defs><linearGradient id="beertumblerl24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerl24)" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4" stroke="#2B1B12" stroke-width="4" stroke-linejoin="round"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div></div>
+  </div>
+  <div class="cell dark"><div class="tag">&nbsp;</div>
+    <div class="icons"><div class="set"><svg viewBox="-10 -20 132 166" height="64"><defs><linearGradient id="beerpintd64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintd64)"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="40"><defs><linearGradient id="beerpintd40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintd40)"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="24"><defs><linearGradient id="beerpintd24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M2 0 H110 L98 126 Q97 136 87 136 H25 Q15 136 14 126 Z" fill="url(#beerpintd24)"/>
+      <path d="M0 2 C0 -10 18 -14 30 -8 C40 -16 62 -16 72 -9 C84 -15 108 -12 112 2 L110 26 C100 32 92 24 82 28 C70 34 62 24 50 29 C38 34 30 25 18 29 C10 32 5 28 3 26 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="100" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="46" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 132 166" height="64"><defs><linearGradient id="beerbeakerd64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerd64)"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="40"><defs><linearGradient id="beerbeakerd40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerd40)"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 166" height="24"><defs><linearGradient id="beerbeakerd24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 V124 Q112 136 100 136 H18 Q6 136 6 124 V12 Q6 3 -4 -3 Z" fill="url(#beerbeakerd24)"/>
+      <path d="M-4 -3 Q4 0 6 4 V0 H112 V22 C104 28 96 20 86 24 C74 30 66 20 54 25 C42 30 34 21 22 25 C14 28 9 25 6 23 V12 Q6 3 -4 -3 Z" fill="#F6EBD4"/>
+      <g stroke="#2B1B12" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M94 48 H104 M86 64 H104 M94 80 H104 M86 96 H104 M94 112 H104"/></g>
+      <text x="48" y="98" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 148 162" height="64"><defs><linearGradient id="beermugd64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugd64)"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 148 162" height="40"><defs><linearGradient id="beermugd40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugd40)"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 148 162" height="24"><defs><linearGradient id="beermugd24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      <path d="M100 28 H112 Q124 28 124 40 V84 Q124 96 112 96 H100" fill="none" stroke="#D58F2D" stroke-width="10" stroke-linecap="round"/>
+      <path d="M0 0 H100 V120 Q100 132 88 132 H12 Q0 132 0 120 Z" fill="url(#beermugd24)"/>
+      <path d="M-2 4 C-4 -8 14 -14 26 -8 C36 -16 56 -16 66 -9 C76 -15 98 -12 102 4 L100 24 C92 30 84 22 74 26 C62 32 54 22 42 27 C30 32 22 23 12 27 C6 29 2 26 0 24 Z" fill="#F6EBD4"/>
+      
+      <text x="50" y="96" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="44" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div><div class="set"><svg viewBox="-10 -20 132 150" height="64"><defs><linearGradient id="beertumblerd64" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerd64)"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 150" height="40"><defs><linearGradient id="beertumblerd40" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerd40)"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg><svg viewBox="-10 -20 132 150" height="24"><defs><linearGradient id="beertumblerd24" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2B54C"/><stop offset="1" stop-color="#D4862A"/></linearGradient></defs>
+      
+      <path d="M0 0 H112 L106 110 Q105 120 95 120 H17 Q7 120 6 110 Z" fill="url(#beertumblerd24)"/>
+      <path d="M-2 2 C-2 -9 16 -13 28 -7 C38 -15 60 -15 70 -8 C82 -14 108 -11 114 2 L112 22 C102 28 94 20 84 24 C72 30 64 20 52 25 C40 30 32 21 20 25 C12 28 6 24 2 22 Z" fill="#F6EBD4"/>
+      
+      <text x="56" y="90" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="48" letter-spacing="-1" fill="#2B1B12">HL</text></svg></div></div>
+  </div>
+</div>
+</body>
+</html>

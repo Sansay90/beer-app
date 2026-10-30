@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoplab — направление Б, экран варки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Extra+Condensed:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+/* ── Токены — те же, что в b-tap-list.html ─────────────── */
+:root{
+  --oak:#221A14; --cask:#2E241C; --foam:#F4EAD6; --ash:#A8998A; --hop:#A3B35A;
+  --line:rgba(244,234,214,.14); --line-strong:rgba(244,234,214,.28);
+  --bg:var(--oak); --surface:var(--cask); --text:var(--foam); --muted:var(--ash);
+  --btn-bg:var(--foam); --btn-text:var(--oak);
+  --glass-line:rgba(244,234,214,.42); --glass-fill:rgba(244,234,214,.07); --foam-color:#F6ECD8;
+  --display:"Fira Sans Extra Condensed","Arial Narrow",sans-serif;
+  --serif:"Literata",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.5 var(--serif)}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--hop);outline-offset:2px}
+svg{display:block}
+.num{font-family:var(--display);font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.num small{font-family:var(--serif);font-weight:400;font-size:.44em;margin-left:.08em}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+@media (max-width:480px){.wrap{padding:0 16px}}
+
+/* заметки макета */
+.mock-note{max-width:1180px;margin:56px auto 16px;padding:0 20px;color:var(--muted);font-style:italic;font-size:14px;display:flex;align-items:center;gap:14px}
+.mock-note::after{content:"";flex:1;height:1px;background:var(--line)}
+.mock-note:first-of-type{margin-top:36px}
+@media (max-width:480px){.mock-note{padding:0 16px;margin-top:44px}}
+.mock-title{max-width:1180px;margin:40px auto 0;padding:0 20px}
+.mock-title h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(44px,6vw,72px);line-height:.95}
+.mock-title p{margin:10px 0 0;max-width:62ch;color:var(--muted)}
+@media (max-width:480px){.mock-title{padding:0 16px}}
+
+/* ── Общие элементы шапки ─────────────────────────────── */
+.brand{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;letter-spacing:.01em;white-space:nowrap}
+.hubs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:21px;line-height:1}
+.hubs a{position:relative;display:flex;align-items:center;height:64px;padding:0 12px;color:var(--muted)}
+.hubs a:hover{color:var(--text)}
+.hubs a[aria-current]{color:var(--text)}
+.hubs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:3px;background:var(--text)}
+.hubs a .dot{position:absolute;top:18px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--hop)}
+
+.search{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);min-width:0}
+.search svg{flex:none;opacity:.6}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;padding:0;font-size:15px}
+.search input::placeholder{color:var(--muted);font-style:italic}
+.search kbd{font-family:var(--display);font-weight:600;font-size:14px;line-height:1;padding:3px 5px 2px;border:1px solid var(--line-strong);border-radius:4px;color:var(--muted)}
+.search .keys{display:flex;gap:3px;flex:none}
+
+.live-ind{display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 12px 0 10px;border-radius:6px;border:1px solid rgba(163,179,90,.5);font-family:var(--display);font-weight:600;font-size:18px;line-height:1;white-space:nowrap}
+.live-ind i{width:9px;height:9px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 3px rgba(163,179,90,.22)}
+.live-ind b{font-weight:600;color:var(--hop)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font-family:var(--display);font-weight:700;font-size:18px;line-height:1;letter-spacing:.01em;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--btn-bg);color:var(--btn-text)}
+.btn-secondary{border-color:var(--line-strong)}
+
+.avatar{width:36px;height:36px;border-radius:50%;background:#B54C00;color:var(--foam);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:20px;flex:none}
+.account{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;position:relative}
+.account .chev{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6}
+
+.tabs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{position:relative;display:flex;align-items:center;height:46px;padding:0 12px;color:var(--muted);white-space:nowrap}
+.tabs a:hover{color:var(--text)}
+.tabs a[aria-current]{color:var(--text)}
+.tabs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--text)}
+.tabs .count{margin-left:6px;font-size:15px;color:var(--muted)}
+
+/* ── Десктопный кадр ─────────────────────────────────── */
+.frame{border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--bg)}
+.frame-desktop{overflow-x:auto}
+.frame-desktop > *{min-width:1100px}
+.dh1{display:flex;align-items:center;gap:20px;height:64px;padding:0 24px;border-bottom:1px solid var(--line)}
+.dh1 .hubs{margin-left:8px}
+.dh1 .search{flex:1;max-width:360px;margin-left:auto}
+.dh2{display:flex;align-items:center;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dh2 .tabs a{padding:0 12px}
+.dh2 .tabs a:first-child{padding-left:0}
+.dh2 .tabs a:first-child::after{left:0}
+
+/* выпадающее меню аккаунта */
+.menu{position:absolute;right:0;top:46px;width:248px;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:6px;z-index:5;box-shadow:0 18px 40px rgba(0,0,0,.45);font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.3}
+.menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.menu .who b{display:block;font-family:var(--display);font-weight:700;font-size:20px}
+.menu .who span{color:var(--muted);font-size:13px;font-style:italic}
+.menu a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:5px}
+.menu a:hover{background:rgba(244,234,214,.06)}
+.menu a .badge{font-family:var(--display);font-weight:700;font-size:15px;line-height:1;padding:3px 7px 2px;border-radius:10px;background:var(--hop);color:var(--oak)}
+.menu a .note{font-size:12px;font-style:italic;color:var(--muted)}
+.menu .sep{height:1px;background:var(--line);margin:6px 0}
+.menu a.out{color:var(--muted)}
+
+/* ── Телефонные кадры ─────────────────────────────────── */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,390px));gap:32px;justify-content:start}
+.phone{width:390px;max-width:100%;height:760px;border:1px solid var(--line-strong);border-radius:22px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.ph1{display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;flex:none}
+.ph1 .brand{font-size:26px;margin-right:auto}
+.ph1 .icon{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text)}
+.ph1 .icon:hover{background:var(--surface)}
+.ph1 .avatar{width:34px;height:34px;font-size:18px}
+.ph2{position:relative;flex:none;border-bottom:1px solid var(--line);background:var(--surface)}
+.ph2 .tabs{padding:0 16px}
+.ph2 .tabs a{height:44px;font-size:18px;padding:0 10px}
+.ph2 .tabs a:first-child{padding-left:0}
+.ph2 .tabs a:first-child::after{left:0}
+.ph2::after{content:"";position:absolute;right:0;top:0;bottom:0;width:36px;background:linear-gradient(90deg,transparent,var(--surface));pointer-events:none}
+.ph-body{flex:1;overflow:hidden;position:relative}
+.ph-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.ph-bottom{flex:none;display:grid;grid-template-columns:repeat(4,1fr);height:68px;border-top:1px solid var(--line-strong);background:var(--surface);padding:0 6px 4px}
+.ph-bottom a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;color:var(--muted);font-family:var(--display);font-weight:600;font-size:15px;line-height:1;border-radius:8px}
+.ph-bottom a[aria-current]{color:var(--text)}
+.ph-bottom a svg{width:26px;height:26px}
+.ph-bottom a .dot{position:absolute;top:9px;left:calc(50% + 10px);width:8px;height:8px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 2px var(--surface)}
+
+
+/* ── Экран варки ───────────────────────────────────────── */
+:root{--ipa:#F39C00;--ipa-soft:color-mix(in oklab,#F39C00 18%,transparent);--ipa-line:color-mix(in oklab,#F39C00 45%,transparent)}
+.ic{display:inline-flex;width:20px;height:20px;flex:none;vertical-align:middle}
+.ic svg{width:100%;height:100%}
+.body{padding:20px 24px 28px}
+.state{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px 40px;padding:22px 24px 24px;border:1px solid var(--line);border-radius:14px;background:var(--surface);align-items:start}
+.state.attention{border-color:var(--ipa-line);background:radial-gradient(120% 140% at 0% 0%,var(--ipa-soft),transparent 60%) var(--surface)}
+.st-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:14px;color:var(--muted)}
+.st-step{color:var(--text);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 10px;border-radius:15px;font-family:var(--display);font-weight:600;font-size:17px;line-height:1;color:var(--text);border:1px solid var(--line-strong)}
+.chip.live{border-color:rgba(163,179,90,.5)}
+.chip.live i{width:9px;height:9px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 3px rgba(163,179,90,.22)}
+.chip.warn{border-color:var(--ipa-line);color:var(--ipa)}
+.chip.warn i{width:9px;height:9px;border-radius:50%;background:var(--ipa);box-shadow:0 0 0 3px var(--ipa-soft)}
+.chip.boil-chip{border-color:var(--ipa-line);color:var(--ipa)}
+.chip .ic{width:18px;height:18px}
+.temp{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 20px;margin-top:10px}
+.num.big{font-size:148px;font-weight:700;letter-spacing:-.02em;line-height:.9}
+.num.big small{font-size:40px;color:var(--muted)}
+.num.mid{font-size:44px;font-weight:700}
+.target{font-size:16px;color:var(--muted);font-style:italic}
+.target b{font-style:normal;color:var(--text);font-weight:600}
+.st-right{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.st-lbl{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:20px;color:var(--muted)}
+.st-lbl .ic{color:var(--muted)}
+.st-lbl.warn-text{color:var(--ipa)}
+.st-lbl.warn-text .ic{color:var(--ipa)}
+.num.timer{font-size:96px;font-weight:700;letter-spacing:-.01em;line-height:.95}
+.bar{height:8px;border-radius:4px;background:rgba(244,234,214,.1);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--ipa)}
+.st-next{font-size:15px;color:var(--muted)}
+.st-next b{color:var(--text);font-weight:600}
+.st-next b.num{font-size:17px}
+.st-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.btn{height:44px;font-size:20px;padding:0 18px;gap:8px}
+.btn .ic{width:20px;height:20px}
+.btn-quiet{background:transparent;color:var(--muted);border-color:transparent}
+.btn-sm{height:36px;font-size:17px;padding:0 14px}
+.btn-confirm{height:72px;font-size:30px;padding:0 32px;border-radius:10px;background:var(--ipa);color:var(--oak);justify-content:center}
+.btn-confirm .ic{width:28px;height:28px}
+.due-title{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;letter-spacing:-.01em}
+.due-title b{font-weight:700;color:var(--ipa)}
+.due-title .through{font-family:var(--serif);font-weight:400;font-style:italic;font-size:22px;color:var(--muted);margin:0 4px}
+.due-title .num{font-weight:700}
+/* ожидание подтверждения */
+.state.attention:not(.boil){grid-template-columns:1fr}
+.alert-title{display:flex;align-items:center;gap:14px;font-family:var(--display);font-weight:700;font-size:64px;line-height:1;letter-spacing:-.01em;margin-top:14px}
+.alert-title .ic{width:44px;height:44px;color:var(--ipa)}
+.alert-text{margin:10px 0 18px;font-size:17px;line-height:1.45;max-width:46ch}
+.alert-text b{font-weight:600}
+.alert-foot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.alert-foot .btn-quiet{margin-left:auto}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:18px 0 20px;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line)}
+.stat{display:flex;flex-direction:column;padding:14px 16px 14px 0;border-right:1px solid var(--line)}
+.stat+.stat{padding-left:16px}
+.stat:last-child{border-right:0}
+.stat .num{font-size:44px;font-weight:700;white-space:nowrap}
+.stat .num small{font-size:16px;color:var(--muted)}
+.stat .lbl{margin-top:4px;font-size:14px;color:var(--muted);font-style:italic}
+.stat .hint{font-size:12px;color:var(--muted);opacity:.8}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;background:transparent}
+.card h3{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;font-family:var(--display);font-weight:700;font-size:26px;line-height:1}
+.card h3 span{font-family:var(--serif);font-weight:400;font-style:italic;font-size:14px;color:var(--muted)}
+.card h3 .win{margin-left:auto;display:flex;gap:2px;font-style:normal;font-family:var(--display);font-weight:600;font-size:15px}
+.card h3 .win a{padding:4px 8px;border-radius:5px;color:var(--muted)}
+.card h3 .win a[aria-current]{background:rgba(244,234,214,.1);color:var(--text)}
+/* программа */
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:0 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.steps li:last-child{border-bottom:0}
+.steps .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid var(--line-strong);font-family:var(--display);font-weight:600;font-size:15px}
+.steps .ic{width:26px;height:26px;color:var(--hop)}
+.steps .sname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1}
+.steps .sname small{display:block;font-family:var(--serif);font-weight:400;font-style:italic;font-size:13px;margin-top:3px}
+.steps .sval{font-size:30px;font-weight:700;white-space:nowrap}
+.steps .sval small{font-size:14px;color:var(--muted)}
+.steps li.current{color:var(--text)}
+.steps li.current .n{background:var(--ipa);border-color:var(--ipa);color:var(--oak)}
+.steps li.done{opacity:.6}
+.pbar{display:block;height:4px;border-radius:2px;background:rgba(244,234,214,.1);margin-top:8px;overflow:hidden}
+.pbar b{display:block;height:100%;background:var(--ipa)}
+/* закладки */
+.adds{list-style:none;margin:0;padding:0}
+.adds li{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:0 12px;align-items:center;padding:10px 10px;margin:0 -10px;border-radius:8px;border-bottom:1px solid var(--line)}
+.adds li:last-child{border-bottom:0}
+.adds .am{font-size:28px;font-weight:700;white-space:nowrap}
+.adds .am small{font-size:12px;color:var(--muted)}
+.adds .am.txt{font-family:var(--display);font-weight:600;font-size:17px;color:var(--muted)}
+.adds .an{font-size:16px;font-weight:600}
+.adds .an small{display:block;font-weight:400;font-style:italic;font-size:13px;color:var(--muted)}
+.adds .when{font-size:13px;color:var(--muted);font-style:italic;text-align:right}
+.adds .ok{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--hop)}
+.adds .ok .ic{width:16px;height:16px}
+.adds .until{font-size:28px;font-weight:700;color:var(--ipa)}
+.adds li.done{opacity:.55}
+.adds li.next{background:var(--ipa-soft)}
+.adds li.due{background:var(--ipa-soft);outline:1px solid var(--ipa-line)}
+.adds li.due .btn{background:var(--ipa);color:var(--oak)}
+/* график */
+.plot{width:100%;height:auto}
+.plot text{font-size:12px}
+.card h3 .win a{white-space:nowrap}
+.num.timer .through{font-family:var(--serif);font-weight:400;font-style:italic;font-size:22px;color:var(--muted);margin-right:10px;vertical-align:middle}
+.plot .grid line{stroke:rgba(244,234,214,.12);stroke-width:1}
+.plot .area{fill:url(#plotfill)}
+.plot .line{fill:none;stroke:var(--ipa);stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.plot .tgt{fill:none;stroke:var(--foam);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}
+.plot .mark{stroke:var(--foam);stroke-opacity:.35;stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+.plot text{font-family:var(--serif);font-size:11px;fill:var(--muted);font-style:italic}
+.plot .marktext{font-family:var(--display);font-style:normal;font-weight:600;font-size:12px;fill:var(--text)}
+/* управление */
+.ctl{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ctl:last-child{border-bottom:0}
+.ctl .cn{flex:1;font-family:var(--display);font-weight:600;font-size:20px;line-height:1}
+.ctl .cn small{display:block;font-family:var(--serif);font-weight:400;font-style:italic;font-size:13px;color:var(--muted);margin-top:3px}
+.sw{width:52px;height:30px;border-radius:15px;background:rgba(244,234,214,.14);position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--foam);opacity:.6}
+.sw.on{background:var(--hop)}
+.sw.on i{left:25px;opacity:1}
+.slider{position:relative;flex:1;height:6px;border-radius:3px;background:rgba(244,234,214,.12)}
+.slider i{display:block;height:100%;border-radius:3px;background:var(--foam)}
+.slider b{position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--foam);transform:translate(-50%,-50%)}
+.ctl .sv{width:24px;text-align:right;font-size:22px}
+.ctl.row2 .hint{font-size:13px;color:var(--muted);font-style:italic}
+.ctl.soon{opacity:.55}
+.later{font-family:var(--display);font-weight:600;font-size:14px;color:var(--muted);border:1px dashed var(--line-strong);border-radius:12px;padding:3px 10px}
+/* журнал */
+.jq{display:flex;gap:8px;flex-wrap:wrap}
+.jq .btn{height:40px;font-size:18px;padding:0 14px}
+.jl{list-style:none;margin:12px 0 0;padding:0;font-size:14px}
+.jl li{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted)}
+.jl li .num{color:var(--text);font-size:16px;width:44px;flex:none}
+.jl li b{color:var(--text);font-weight:600}
+/* события */
+.ev{list-style:none;margin:0;padding:0;font-size:14px}
+.ev li{display:flex;gap:12px;align-items:baseline;padding:6px 0;color:var(--muted)}
+.ev li .num{width:44px;flex:none;font-size:16px;color:var(--muted)}
+.ev li.hand{color:var(--text);font-weight:600}
+.ev li.ok{color:var(--text)}
+.ev li.step span:last-child::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin:0 8px 2px 0}
+.ev li.ok span:last-child::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--hop);margin:0 8px 2px 0}
+.ev li.hand span:last-child::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ipa);margin:0 8px 2px 0}
+.soon-line{margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;font-style:italic;color:var(--muted)}
+
+/* ── Телефон ───────────────────────────────────────────── */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,390px));gap:32px;justify-content:start;align-items:start}
+.phone{height:auto;overflow:visible}
+.phone .ph-body{overflow:visible;padding:14px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.phone .ph-body::after{display:none}
+.phone .ph-bottom{position:sticky;bottom:0}
+.phone .state{grid-template-columns:1fr;gap:10px;padding:16px}
+.phone .temp{margin-top:6px}
+.phone .num.big{font-size:104px}
+.phone .num.big small{font-size:30px}
+.phone .st-right{padding-top:10px;border-top:1px solid var(--line);margin-top:4px}
+.phone .num.timer{font-size:84px}
+.phone .due-title{font-size:40px}
+.phone .due-title .through{font-size:18px}
+.phone .alert-title{font-size:48px}
+.phone .alert-title .ic{width:36px;height:36px}
+.phone .btn-confirm{height:76px;font-size:30px;width:100%}
+.phone .st-actions .btn{flex:1}
+.phone .stats{grid-template-columns:repeat(2,minmax(0,1fr));margin:0;border-top:0;border-bottom:0;gap:0}
+.phone .stat{padding:10px 12px 10px 0;border-bottom:1px solid var(--line)}
+.phone .stat:nth-child(2n){border-right:0;padding-left:12px}
+.phone .stat:nth-child(n+3){border-bottom:0}
+.phone .stat .num{font-size:36px}
+.phone .card{padding:14px 14px 16px}
+.phone .card h3{font-size:24px}
+.phone .card h3 .win{font-size:14px}
+.phone .chart h3 > span:first-of-type{display:none}
+.phone .steps .sname{font-size:20px}
+.phone .ctl .cn{font-size:18px}
+.phone .jq .btn{flex:1;padding:0 8px}
+
+.mock-note{max-width:1180px;margin:56px auto 16px;padding:0 20px;color:var(--muted);font-style:italic;font-size:14px;display:flex;align-items:center;gap:14px}
+.mock-note::after{content:"";flex:1;height:1px;background:var(--line)}
+.mock-title{max-width:1180px;margin:40px auto 0;padding:0 20px}
+.mock-title h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,64px);line-height:1}
+.mock-title p{margin:10px 0 0;max-width:70ch;color:var(--muted)}
+.foot{max-width:1180px;margin:64px auto 40px;padding:18px 20px 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px;font-style:italic}
+@media (max-width:480px){.mock-note,.mock-title{padding:0 16px}.phones{margin:0 -16px;gap:24px}.phone{border-radius:0;border-left:0;border-right:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="shade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".24"/>
+      <stop offset=".22" stop-color="#fff" stop-opacity=".05"/>
+      <stop offset=".6" stop-color="#000" stop-opacity=".04"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".38"/>
+    </linearGradient>
+    <path id="foam-s" d="M-2,-2 H82 V13 C72,19 63,11 54,15 C45,19 37,11 29,15 C21,19 10,12 -2,16 Z"/>
+    <path id="foam-l" d="M-2,-2 H82 V23 C72,29 63,21 54,25 C45,29 37,21 29,25 C21,29 10,22 -2,26 Z"/>
+
+    <clipPath id="c-stout"><path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z"/></clipPath>
+    <clipPath id="c-goblet"><path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z"/></clipPath>
+    <clipPath id="c-weizen"><path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z"/></clipPath>
+    <clipPath id="c-pils"><path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z"/></clipPath>
+    <clipPath id="c-ipa"><path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z"/></clipPath>
+    <clipPath id="c-becher"><path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z"/></clipPath>
+
+    <symbol id="g-stout" viewBox="0 0 80 120">
+      <g clip-path="url(#c-stout)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-goblet" viewBox="0 0 80 120">
+      <g clip-path="url(#c-goblet)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)" transform="translate(0,2)"/>
+      </g>
+      <path d="M37,67 L43,67 L45,100 L35,100 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M20,109 C20,103 60,103 60,109 C60,114 20,114 20,109 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-weizen" viewBox="0 0 80 120">
+      <g clip-path="url(#c-weizen)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-l" fill="var(--foam-color)"/>
+      </g>
+      <path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-pils" viewBox="0 0 80 120">
+      <g clip-path="url(#c-pils)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M37,98 L43,98 L44,106 L36,106 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M23,110 C23,105 57,105 57,110 C57,115 23,115 23,110 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-ipa" viewBox="0 0 80 120">
+      <g clip-path="url(#c-ipa)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <g stroke="var(--glass-line)" stroke-width="1" opacity=".7">
+          <path d="M25,78 H55 M25,88 H55 M25,98 H55 M25,108 H55"/>
+        </g>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-becher" viewBox="0 0 80 120">
+      <g clip-path="url(#c-becher)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="plotfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F39C00" stop-opacity=".28"/><stop offset="1" stop-color="#F39C00" stop-opacity="0"/></linearGradient></defs></svg>
+
+<div class="mock-title">
+  <h1>Варка → Сейчас</h1>
+  <p>Экран у котла: сверху — что делать прямо сейчас, цифры читаются с расстояния, кнопки под мокрые руки. Три фазы одной варки American IPA (14 EBC — он же цвет акцентов). Шрифт заголовков и цифр задан одной переменной <i>--display</i>, сейчас Fira Sans Extra Condensed.</p>
+</div>
+
+<p class="mock-note">Фаза 1, десктоп: затирание, пауза 66 °C идёт</p>
+<div class="wrap"><div class="frame frame-desktop"><div>
+    <div class="dh1">
+      <a class="brand" href="#">Hoplab</a>
+      <nav class="hubs" aria-label="Разделы"><a href="#">Рецепты</a><a href="#" aria-current="page">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+      <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Рецепты, ингредиенты, разделы"><span class="keys"><kbd>Ctrl</kbd><kbd>K</kbd></span></label>
+      <a class="live-ind" href="#"><i></i>Варка идёт<b>American IPA</b></a>
+      <div class="account"><span class="avatar">В</span><span>Владимир</span><span class="chev"></span></div>
+    </div>
+    <div class="dh2"><nav class="tabs" aria-label="Варка"><a href="#" aria-current="page">Сейчас</a><a href="#">Журнал варок</a><a href="#">Календарь партий<span class="count">3</span></a></nav></div>
+  <div class="body">
+  <section class="state">
+    <div class="st-left">
+      <div class="st-top"><span class="chip live"><i></i>Выдержка</span><span class="st-step">Шаг 2 из 4, пауза 66 °C</span><span class="st-rec">American IPA, партия 30 л</span></div>
+      <div class="temp"><span class="num big">66,2<small>°C</small></span><span class="target">цель <b>66 °C</b>, держим</span></div>
+    </div>
+    <div class="st-right">
+      <div class="st-lbl"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></span>Пауза идёт, осталось</div>
+      <div class="num timer">38:20</div>
+      <div class="bar"><i style="width:36%"></i></div>
+      <div class="st-next">Дальше: <b>мэш-аут 76 °C</b>, 10 мин</div>
+      <div class="st-actions"><a class="btn btn-secondary" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span>Пауза</a><a class="btn btn-quiet" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>Звук включён</a></div>
+    </div>
+  </section><div class="stats"><div class="stat"><span class="num">38:20</span><span class="lbl">осталось шага</span><span class="hint"></span></div><div class="stat"><span class="num">—</span><span class="lbl">до цели</span><span class="hint">температура достигнута</span></div><div class="stat"><span class="num">1:48:20</span><span class="lbl">вся программа</span><span class="hint">без учёта нагрева</span></div><div class="stat"><span class="num">2,4<small>кВт·ч</small></span><span class="lbl">электричество</span><span class="hint">оценка, ТЭН 2500 Вт</span></div></div>
+    <div class="grid2">
+      <div class="col"><section class="card"><h3>Программа<span>4 шага, 2 ч 10 мин</span></h3><ol class="steps"><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Засыпь<small>подтверждение</small></span><span class="num sval">66<small>°C</small></span></li><li class="current"><span class="n">2</span><span class="sname">Пауза 66 °C<small>осахаривание</small><i class="pbar"><b style="width:36%"></b></i></span><span class="num sval">60<small>мин</small></span></li><li class=""><span class="n">3</span><span class="sname">Мэш-аут<small>10 мин</small></span><span class="num sval">76<small>°C</small></span></li><li class=""><span class="n">4</span><span class="sname">Кипячение<small>3 закладки</small></span><span class="num sval">60<small>мин</small></span></li></ol></section><section class="card chart"><h3>Температура<span>последний час</span><span class="win"><a href="#">30 мин</a><a href="#" aria-current="page">1 ч</a><a href="#">3 ч</a><a href="#">6 ч</a></span></h3>
+    <svg viewBox="0 0 600 212" class="plot">
+      <g class="grid"><line x1="0" x2="600" y1="98.0" y2="98.0"/><line x1="0" x2="600" y1="150.0" y2="150.0"/></g>
+      <path class="area" d="M0,186.0 L60,170.0 L120,150.0 L180,130.0 L240,114.0 L300,104.0 L330,99.0 L360,97.6 L400,98.0 L440,97.4 L480,97.8 L520,97.6 L560,98.0 L600,97.6 L600,190 L0,190 Z"/>
+      <path class="tgt" d="M0,98.0 L600,98.0"/>
+      <path class="line" d="M0,186.0 L60,170.0 L120,150.0 L180,130.0 L240,114.0 L300,104.0 L330,99.0 L360,97.6 L400,98.0 L440,97.4 L480,97.8 L520,97.6 L560,98.0 L600,97.6"/>
+      <line class="mark" x1="360" x2="360" y1="14" y2="190"/>
+      <text class="marktext" x="366" y="24">пауза началась 11:52</text>
+      <g class="yl"><text x="4" y="94">66 °C</text><text x="4" y="146">40 °C</text></g><g class="xl"><text x="0" y="206" text-anchor="start">11:20</text><text x="200" y="206" text-anchor="middle">11:40</text><text x="400" y="206" text-anchor="middle">12:00</text><text x="600" y="206" text-anchor="end">12:20</text></g>
+    </svg></section><section class="card"><h3>Журнал варки<span>по ходу</span></h3>
+    <div class="jq"><a class="btn btn-secondary" href="#">Плотность</a><a class="btn btn-secondary" href="#">pH</a><a class="btn btn-secondary" href="#">Заметка</a><a class="btn btn-secondary" href="#">Фото</a></div>
+    <ul class="jl"><li><span class="num">11:55</span><span>Первяк <b>14,2 °P</b>, pH <b>5,34</b></span></li><li><span class="num">11:40</span><span>Засыпь 7,1 кг, помол 0,8 мм</span></li></ul>
+    </section></div>
+      <div class="col"><section class="card"><h3>Закладки<span>на кипячении</span></h3><ul class="adds"><li class=""><span class="num am">60<small>мин</small></span><span class="an">Columbus<small>25 г, горечь</small></span><span class="when">начнутся на кипячении</span></li><li class=""><span class="num am">15<small>мин</small></span><span class="an">Centennial<small>30 г, вкус</small></span></li><li class=""><span class="am txt">вирпул</span><span class="an">Citra и Simcoe<small>40 + 30 г, 20 мин при 80 °C</small></span></li></ul></section><section class="card"><h3>Управление</h3>
+    <div class="ctl"><span class="cn">Питание<small>включена</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Насос<small>рециркуляция</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Поток<small>рециркуляции</small></span><span class="slider"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num sv">5</span></div>
+    <div class="ctl row2"><a class="btn btn-secondary" href="#">Ручной режим</a><span class="hint">нагрев только с водой</span></div>
+    <div class="ctl soon"><span class="cn">Отложенный старт<small>нагрев к заданному часу</small></span><span class="later">скоро</span></div>
+    </section><section class="card"><h3>События</h3><ul class="ev"><li class="step"><span class="num">11:52</span><span>Пауза 66 °C началась, 60 мин</span></li><li class="ok"><span class="num">11:50</span><span>Солод засыпан, подтверждено</span></li><li class="hand"><span class="num">11:31</span><span>Пивоварня ждёт: засыпьте солод</span></li><li class="step"><span class="num">11:02</span><span>Нагрев до 66 °C</span></li><li class="step"><span class="num">10:40</span><span>Рецепт «American IPA» запущен</span></li></ul><p class="soon-line">Голосовые подсказки появятся здесь же: пивоварня скажет «засыпьте солод» вслух.</p></section></div>
+    </div>
+  </div></div></div></div>
+
+<p class="mock-note">Фазы 1 и 2, телефон 390 px: пауза идёт и «Засыпьте солод» (ожидание подтверждения)</p>
+<div class="wrap"><div class="phones"><div class="phone">
+    <div class="ph1"><a class="brand" href="#">Hoplab</a><a class="icon" href="#" aria-label="Поиск"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a><span class="avatar">В</span></div>
+    <div class="ph2"><nav class="tabs"><a href="#" aria-current="page">Сейчас</a><a href="#">Журнал варок</a><a href="#">Календарь партий</a></nav></div><div class="ph-body">
+  <section class="state">
+    <div class="st-left">
+      <div class="st-top"><span class="chip live"><i></i>Выдержка</span><span class="st-step">Шаг 2 из 4, пауза 66 °C</span><span class="st-rec">American IPA, партия 30 л</span></div>
+      <div class="temp"><span class="num big">66,2<small>°C</small></span><span class="target">цель <b>66 °C</b>, держим</span></div>
+    </div>
+    <div class="st-right">
+      <div class="st-lbl"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></span>Пауза идёт, осталось</div>
+      <div class="num timer">38:20</div>
+      <div class="bar"><i style="width:36%"></i></div>
+      <div class="st-next">Дальше: <b>мэш-аут 76 °C</b>, 10 мин</div>
+      <div class="st-actions"><a class="btn btn-secondary" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span>Пауза</a><a class="btn btn-quiet" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>Звук включён</a></div>
+    </div>
+  </section><div class="stats"><div class="stat"><span class="num">38:20</span><span class="lbl">осталось шага</span><span class="hint"></span></div><div class="stat"><span class="num">—</span><span class="lbl">до цели</span><span class="hint">температура достигнута</span></div><div class="stat"><span class="num">1:48:20</span><span class="lbl">вся программа</span><span class="hint">без учёта нагрева</span></div><div class="stat"><span class="num">2,4<small>кВт·ч</small></span><span class="lbl">электричество</span><span class="hint">оценка, ТЭН 2500 Вт</span></div></div><section class="card"><h3>Программа<span>4 шага, 2 ч 10 мин</span></h3><ol class="steps"><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Засыпь<small>подтверждение</small></span><span class="num sval">66<small>°C</small></span></li><li class="current"><span class="n">2</span><span class="sname">Пауза 66 °C<small>осахаривание</small><i class="pbar"><b style="width:36%"></b></i></span><span class="num sval">60<small>мин</small></span></li><li class=""><span class="n">3</span><span class="sname">Мэш-аут<small>10 мин</small></span><span class="num sval">76<small>°C</small></span></li><li class=""><span class="n">4</span><span class="sname">Кипячение<small>3 закладки</small></span><span class="num sval">60<small>мин</small></span></li></ol></section><section class="card chart"><h3>Температура<span>последний час</span><span class="win"><a href="#">30 мин</a><a href="#" aria-current="page">1 ч</a><a href="#">3 ч</a><a href="#">6 ч</a></span></h3>
+    <svg viewBox="0 0 340 212" class="plot">
+      <g class="grid"><line x1="0" x2="340" y1="98.0" y2="98.0"/><line x1="0" x2="340" y1="150.0" y2="150.0"/></g>
+      <path class="area" d="M0,186.0 L34,170.0 L68,150.0 L102,130.0 L136,114.0 L170,104.0 L187,99.0 L204,97.6 L227,98.0 L249,97.4 L272,97.8 L295,97.6 L317,98.0 L340,97.6 L340,190 L0,190 Z"/>
+      <path class="tgt" d="M0,98.0 L340,98.0"/>
+      <path class="line" d="M0,186.0 L34,170.0 L68,150.0 L102,130.0 L136,114.0 L170,104.0 L187,99.0 L204,97.6 L227,98.0 L249,97.4 L272,97.8 L295,97.6 L317,98.0 L340,97.6"/>
+      <line class="mark" x1="204" x2="204" y1="14" y2="190"/>
+      <text class="marktext" x="210" y="24">пауза началась 11:52</text>
+      <g class="yl"><text x="4" y="94">66 °C</text><text x="4" y="146">40 °C</text></g><g class="xl"><text x="0" y="206" text-anchor="start">11:20</text><text x="113" y="206" text-anchor="middle">11:40</text><text x="227" y="206" text-anchor="middle">12:00</text><text x="340" y="206" text-anchor="end">12:20</text></g>
+    </svg></section><section class="card"><h3>Закладки<span>на кипячении</span></h3><ul class="adds"><li class=""><span class="num am">60<small>мин</small></span><span class="an">Columbus<small>25 г, горечь</small></span><span class="when">начнутся на кипячении</span></li><li class=""><span class="num am">15<small>мин</small></span><span class="an">Centennial<small>30 г, вкус</small></span></li><li class=""><span class="am txt">вирпул</span><span class="an">Citra и Simcoe<small>40 + 30 г, 20 мин при 80 °C</small></span></li></ul></section><section class="card"><h3>Журнал варки<span>по ходу</span></h3>
+    <div class="jq"><a class="btn btn-secondary" href="#">Плотность</a><a class="btn btn-secondary" href="#">pH</a><a class="btn btn-secondary" href="#">Заметка</a><a class="btn btn-secondary" href="#">Фото</a></div>
+    <ul class="jl"><li><span class="num">11:55</span><span>Первяк <b>14,2 °P</b>, pH <b>5,34</b></span></li><li><span class="num">11:40</span><span>Засыпь 7,1 кг, помол 0,8 мм</span></li></ul>
+    </section><section class="card"><h3>Управление</h3>
+    <div class="ctl"><span class="cn">Питание<small>включена</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Насос<small>рециркуляция</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Поток<small>рециркуляции</small></span><span class="slider"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num sv">5</span></div>
+    <div class="ctl row2"><a class="btn btn-secondary" href="#">Ручной режим</a><span class="hint">нагрев только с водой</span></div>
+    <div class="ctl soon"><span class="cn">Отложенный старт<small>нагрев к заданному часу</small></span><span class="later">скоро</span></div>
+    </section><section class="card"><h3>События</h3><ul class="ev"><li class="step"><span class="num">11:52</span><span>Пауза 66 °C началась, 60 мин</span></li><li class="ok"><span class="num">11:50</span><span>Солод засыпан, подтверждено</span></li><li class="hand"><span class="num">11:31</span><span>Пивоварня ждёт: засыпьте солод</span></li><li class="step"><span class="num">11:02</span><span>Нагрев до 66 °C</span></li><li class="step"><span class="num">10:40</span><span>Рецепт «American IPA» запущен</span></li></ul><p class="soon-line">Голосовые подсказки появятся здесь же: пивоварня скажет «засыпьте солод» вслух.</p></section></div>
+    <nav class="ph-bottom" aria-label="Разделы">
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3z"/><path d="M7.4 8h9.2"/></svg></span>Рецепты</a>
+      <a href="#" aria-current="page"><span class="dot"></span><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10h16l-1.5 10h-13L4 10z"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/><path d="M9 4c0-1 1-1.5 1-2.5M13 4c0-1 1-1.5 1-2.5"/></svg></span>Варка</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg></span>Склад</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg></span>Справочник</a>
+    </nav></div><div class="phone">
+    <div class="ph1"><a class="brand" href="#">Hoplab</a><a class="icon" href="#" aria-label="Поиск"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a><span class="avatar">В</span></div>
+    <div class="ph2"><nav class="tabs"><a href="#" aria-current="page">Сейчас</a><a href="#">Журнал варок</a><a href="#">Календарь партий</a></nav></div><div class="ph-body">
+  <section class="state attention">
+    <div class="st-top"><span class="chip warn"><i></i>Ждёт вас</span><span class="st-step">Шаг 1 из 4, засыпь</span></div>
+    <div class="alert-title"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V5a1.5 1.5 0 0 1 3 0v6M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V6a1.5 1.5 0 0 1 3 0v8M17 11a1.5 1.5 0 0 1 3 0v3c0 4-3 7-7 7h-1c-3 0-5-2-7-5l-2-4a1.5 1.5 0 0 1 2.6-1.5L8 13"/></svg></span>Засыпьте солод</div>
+    <p class="alert-text">Вода нагрета до <b>66 °C</b>. Подтвердите, когда солод будет в корзине, и начнётся пауза 60 мин.</p>
+    <a class="btn btn-confirm" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Подтвердить</a>
+    <div class="alert-foot"><span class="num mid">66,0<small>°C</small></span><span class="st-rec">в котле, насос работает</span><a class="btn btn-quiet" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span>Пауза</a></div>
+  </section><div class="stats"><div class="stat"><span class="num">—</span><span class="lbl">осталось шага</span><span class="hint">начнётся после засыпи</span></div><div class="stat"><span class="num">0:00</span><span class="lbl">до цели</span><span class="hint">66 °C достигнуто</span></div><div class="stat"><span class="num">2:10:00</span><span class="lbl">вся программа</span><span class="hint">без учёта нагрева</span></div><div class="stat"><span class="num">1,1<small>кВт·ч</small></span><span class="lbl">электричество</span><span class="hint">оценка</span></div></div><section class="card"><h3>Программа<span>4 шага, 2 ч 10 мин</span></h3><ol class="steps"><li class="current"><span class="n">1</span><span class="sname">Засыпь<small>подтверждение</small></span><span class="num sval">66<small>°C</small></span></li><li class=""><span class="n">2</span><span class="sname">Пауза 66 °C<small>осахаривание</small></span><span class="num sval">60<small>мин</small></span></li><li class=""><span class="n">3</span><span class="sname">Мэш-аут<small>10 мин</small></span><span class="num sval">76<small>°C</small></span></li><li class=""><span class="n">4</span><span class="sname">Кипячение<small>3 закладки</small></span><span class="num sval">60<small>мин</small></span></li></ol></section><section class="card chart"><h3>Температура<span>последний час</span><span class="win"><a href="#">30 мин</a><a href="#" aria-current="page">1 ч</a><a href="#">3 ч</a><a href="#">6 ч</a></span></h3>
+    <svg viewBox="0 0 340 212" class="plot">
+      <g class="grid"><line x1="0" x2="340" y1="98.0" y2="98.0"/><line x1="0" x2="340" y1="150.0" y2="150.0"/></g>
+      <path class="area" d="M0,186.0 L34,170.0 L68,150.0 L102,130.0 L136,114.0 L170,104.0 L187,99.0 L204,97.6 L227,98.0 L249,97.4 L272,97.8 L295,97.6 L317,98.0 L340,97.6 L340,190 L0,190 Z"/>
+      <path class="tgt" d="M0,98.0 L340,98.0"/>
+      <path class="line" d="M0,186.0 L34,170.0 L68,150.0 L102,130.0 L136,114.0 L170,104.0 L187,99.0 L204,97.6 L227,98.0 L249,97.4 L272,97.8 L295,97.6 L317,98.0 L340,97.6"/>
+      <line class="mark" x1="204" x2="204" y1="14" y2="190"/>
+      <text class="marktext" x="210" y="24">пауза началась 11:52</text>
+      <g class="yl"><text x="4" y="94">66 °C</text><text x="4" y="146">40 °C</text></g><g class="xl"><text x="0" y="206" text-anchor="start">11:20</text><text x="113" y="206" text-anchor="middle">11:40</text><text x="227" y="206" text-anchor="middle">12:00</text><text x="340" y="206" text-anchor="end">12:20</text></g>
+    </svg></section><section class="card"><h3>Управление</h3>
+    <div class="ctl"><span class="cn">Питание<small>включена</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Насос<small>рециркуляция</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Поток<small>рециркуляции</small></span><span class="slider"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num sv">5</span></div>
+    <div class="ctl row2"><a class="btn btn-secondary" href="#">Ручной режим</a><span class="hint">нагрев только с водой</span></div>
+    <div class="ctl soon"><span class="cn">Отложенный старт<small>нагрев к заданному часу</small></span><span class="later">скоро</span></div>
+    </section><section class="card"><h3>События</h3><ul class="ev"><li class="hand"><span class="num">11:31</span><span>Пивоварня ждёт: засыпьте солод</span></li><li class="step"><span class="num">11:02</span><span>Нагрев до 66 °C</span></li><li class="step"><span class="num">10:40</span><span>Рецепт «American IPA» запущен</span></li></ul><p class="soon-line">Голосовые подсказки появятся здесь же: пивоварня скажет «засыпьте солод» вслух.</p></section></div>
+    <nav class="ph-bottom" aria-label="Разделы">
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3z"/><path d="M7.4 8h9.2"/></svg></span>Рецепты</a>
+      <a href="#" aria-current="page"><span class="dot"></span><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10h16l-1.5 10h-13L4 10z"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/><path d="M9 4c0-1 1-1.5 1-2.5M13 4c0-1 1-1.5 1-2.5"/></svg></span>Варка</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg></span>Склад</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg></span>Справочник</a>
+    </nav></div></div></div>
+
+<p class="mock-note">Фаза 3, десктоп: кипячение, до закладки Centennial 04:12</p>
+<div class="wrap"><div class="frame frame-desktop"><div>
+    <div class="dh1">
+      <a class="brand" href="#">Hoplab</a>
+      <nav class="hubs" aria-label="Разделы"><a href="#">Рецепты</a><a href="#" aria-current="page">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+      <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Рецепты, ингредиенты, разделы"><span class="keys"><kbd>Ctrl</kbd><kbd>K</kbd></span></label>
+      <a class="live-ind" href="#"><i></i>Варка идёт<b>American IPA</b></a>
+      <div class="account"><span class="avatar">В</span><span>Владимир</span><span class="chev"></span></div>
+    </div>
+    <div class="dh2"><nav class="tabs" aria-label="Варка"><a href="#" aria-current="page">Сейчас</a><a href="#">Журнал варок</a><a href="#">Календарь партий<span class="count">3</span></a></nav></div>
+  <div class="body">
+  <section class="state boil">
+    <div class="st-left">
+      <div class="st-top"><span class="chip boil-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4-1 7-4 7-8 0-3-2-5-3-7-1 3-2 4-3 4 0-3-1-6-4-8 0 4-3 6-3 10 0 5 3 8 6 9z"/></svg></span>Кипячение</span><span class="st-step">Шаг 4 из 4, 60 мин</span><span class="st-rec">American IPA, партия 30 л</span></div>
+      <div class="temp"><span class="num big">100,1<small>°C</small></span><span class="target">кипит, мощность <b>100 %</b></span></div>
+    </div>
+    <div class="st-right">
+      <div class="st-lbl"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2 6 5 6 10a6 6 0 0 1-12 0c0-5 3-8 6-10z"/><path d="M12 3v18M8 10c1.5 1 2.5 2 4 4 1.5-2 2.5-3 4-4"/></svg></span>Следующая закладка</div>
+      <div class="due-title">Centennial <b>30 г</b></div>
+      <div class="num timer"><span class="through">через</span>04:12</div>
+      <div class="bar"><i style="width:68%"></i></div>
+      <div class="st-next">закладка за 15 мин до конца, кипячения осталось <b class="num">19:12</b></div>
+      <div class="st-actions"><a class="btn btn-secondary" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span>Пауза</a><a class="btn btn-quiet" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>Звук включён</a></div>
+    </div>
+  </section><div class="stats"><div class="stat"><span class="num">19:12</span><span class="lbl">осталось шага</span><span class="hint">кипячение</span></div><div class="stat"><span class="num">04:12</span><span class="lbl">до закладки</span><span class="hint">Centennial 30 г</span></div><div class="stat"><span class="num">19:12</span><span class="lbl">вся программа</span><span class="hint">последний шаг</span></div><div class="stat"><span class="num">5,8<small>кВт·ч</small></span><span class="lbl">электричество</span><span class="hint">оценка, ТЭН 2500 Вт</span></div></div>
+    <div class="grid2">
+      <div class="col"><section class="card"><h3>Программа<span>4 шага, 2 ч 10 мин</span></h3><ol class="steps"><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Засыпь<small>подтверждение</small></span><span class="num sval">66<small>°C</small></span></li><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Пауза 66 °C<small>осахаривание</small></span><span class="num sval">60<small>мин</small></span></li><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Мэш-аут<small>10 мин</small></span><span class="num sval">76<small>°C</small></span></li><li class="current"><span class="n">4</span><span class="sname">Кипячение<small>3 закладки</small><i class="pbar"><b style="width:68%"></b></i></span><span class="num sval">60<small>мин</small></span></li></ol></section><section class="card chart"><h3>Температура<span>последний час</span><span class="win"><a href="#">30 мин</a><a href="#" aria-current="page">1 ч</a><a href="#">3 ч</a><a href="#">6 ч</a></span></h3>
+    <svg viewBox="0 0 600 212" class="plot">
+      <g class="grid"><line x1="0" x2="600" y1="30.0" y2="30.0"/><line x1="0" x2="600" y1="78.0" y2="78.0"/><line x1="0" x2="600" y1="98.0" y2="98.0"/></g>
+      <path class="area" d="M0,97.8 L40,97.6 L80,90.0 L120,78.0 L160,77.8 L200,78.0 L240,66.0 L280,50.0 L320,38.0 L360,31.0 L400,29.8 L440,30.0 L480,29.8 L520,29.8 L560,30.0 L600,29.8 L600,190 L0,190 Z"/>
+      <path class="tgt" d="M0,98.0 L80,98.0 L80,78.0 L220,78.0 L220,30.0 L600,30.0"/>
+      <path class="line" d="M0,97.8 L40,97.6 L80,90.0 L120,78.0 L160,77.8 L200,78.0 L240,66.0 L280,50.0 L320,38.0 L360,31.0 L400,29.8 L440,30.0 L480,29.8 L520,29.8 L560,30.0 L600,29.8"/>
+      <line class="mark" x1="400" x2="400" y1="14" y2="190"/>
+      <text class="marktext" x="406" y="24">закипело 13:28</text>
+      <g class="yl"><text x="4" y="26">100 °C</text><text x="4" y="74">76 °C</text><text x="4" y="94">66 °C</text></g><g class="xl"><text x="0" y="206" text-anchor="start">12:50</text><text x="200" y="206" text-anchor="middle">13:10</text><text x="400" y="206" text-anchor="middle">13:30</text><text x="600" y="206" text-anchor="end">13:50</text></g>
+    </svg></section><section class="card"><h3>Журнал варки<span>по ходу</span></h3>
+    <div class="jq"><a class="btn btn-secondary" href="#">Плотность</a><a class="btn btn-secondary" href="#">pH</a><a class="btn btn-secondary" href="#">Заметка</a><a class="btn btn-secondary" href="#">Фото</a></div>
+    <ul class="jl"><li><span class="num">11:55</span><span>Первяк <b>14,2 °P</b>, pH <b>5,34</b></span></li><li><span class="num">11:40</span><span>Засыпь 7,1 кг, помол 0,8 мм</span></li></ul>
+    </section></div>
+      <div class="col"><section class="card"><h3>Закладки<span>на кипячении</span></h3><ul class="adds"><li class="done"><span class="num am">60<small>мин</small></span><span class="an">Columbus<small>25 г, горечь</small></span><span class="ok"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>заложил 11:48</span></li><li class="next"><span class="num am">15<small>мин</small></span><span class="an">Centennial<small>30 г, вкус</small></span><span class="num until">04:12</span></li><li class=""><span class="am txt">вирпул</span><span class="an">Citra и Simcoe<small>40 + 30 г, 20 мин при 80 °C</small></span><span class="when">через 19:12</span></li></ul></section><section class="card"><h3>Управление</h3>
+    <div class="ctl"><span class="cn">Питание<small>включена</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Насос<small>выключен на кипячении</small></span><span class="sw"><i></i></span></div>
+    <div class="ctl"><span class="cn">Поток<small>рециркуляции</small></span><span class="slider"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num sv">5</span></div>
+    <div class="ctl row2"><a class="btn btn-secondary" href="#">Ручной режим</a><span class="hint">нагрев только с водой</span></div>
+    <div class="ctl soon"><span class="cn">Отложенный старт<small>нагрев к заданному часу</small></span><span class="later">скоро</span></div>
+    </section><section class="card"><h3>События</h3><ul class="ev"><li class="step"><span class="num">13:28</span><span>Кипячение началось, 60 мин</span></li><li class="ok"><span class="num">13:28</span><span>Columbus 25 г заложен</span></li><li class="hand"><span class="num">13:28</span><span>Пора закладывать: Columbus 25 г</span></li><li class="ok"><span class="num">13:12</span><span>Корзина вынута, подтверждено</span></li><li class="step"><span class="num">13:02</span><span>Мэш-аут 76 °C, 10 мин</span></li></ul><p class="soon-line">Голосовые подсказки появятся здесь же: пивоварня скажет «засыпьте солод» вслух.</p></section></div>
+    </div>
+  </div></div></div></div>
+
+<p class="mock-note">Фаза 3, телефон 390 px: отсчёт дошёл до нуля, пивоварня ждёт «Заложил»</p>
+<div class="wrap"><div class="phones"><div class="phone">
+    <div class="ph1"><a class="brand" href="#">Hoplab</a><a class="icon" href="#" aria-label="Поиск"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a><span class="avatar">В</span></div>
+    <div class="ph2"><nav class="tabs"><a href="#" aria-current="page">Сейчас</a><a href="#">Журнал варок</a><a href="#">Календарь партий</a></nav></div><div class="ph-body">
+  <section class="state boil attention">
+    <div class="st-left">
+      <div class="st-top"><span class="chip boil-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4-1 7-4 7-8 0-3-2-5-3-7-1 3-2 4-3 4 0-3-1-6-4-8 0 4-3 6-3 10 0 5 3 8 6 9z"/></svg></span>Кипячение</span><span class="st-step">Шаг 4 из 4, 60 мин</span><span class="st-rec">American IPA, партия 30 л</span></div>
+      <div class="temp"><span class="num big">100,1<small>°C</small></span><span class="target">кипит, мощность <b>100 %</b></span></div>
+    </div>
+    <div class="st-right">
+      <div class="st-lbl warn-text"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2 6 5 6 10a6 6 0 0 1-12 0c0-5 3-8 6-10z"/><path d="M12 3v18M8 10c1.5 1 2.5 2 4 4 1.5-2 2.5-3 4-4"/></svg></span>Пора закладывать</div>
+      <div class="due-title">Centennial <b>30 г</b></div>
+      <div class="st-next">закладка за 15 мин до конца кипячения</div>
+      <a class="btn btn-confirm" href="#"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Заложил</a>
+    </div>
+  </section><div class="stats"><div class="stat"><span class="num">19:12</span><span class="lbl">осталось шага</span><span class="hint">кипячение</span></div><div class="stat"><span class="num">04:12</span><span class="lbl">до закладки</span><span class="hint">Centennial 30 г</span></div><div class="stat"><span class="num">19:12</span><span class="lbl">вся программа</span><span class="hint">последний шаг</span></div><div class="stat"><span class="num">5,8<small>кВт·ч</small></span><span class="lbl">электричество</span><span class="hint">оценка, ТЭН 2500 Вт</span></div></div><section class="card"><h3>Закладки<span>на кипячении</span></h3><ul class="adds"><li class="done"><span class="num am">60<small>мин</small></span><span class="an">Columbus<small>25 г, горечь</small></span><span class="ok"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>заложил 11:48</span></li><li class="due"><span class="num am">15<small>мин</small></span><span class="an">Centennial<small>30 г, вкус</small></span><a class="btn btn-primary btn-sm" href="#">Заложил</a></li><li class=""><span class="am txt">вирпул</span><span class="an">Citra и Simcoe<small>40 + 30 г, 20 мин при 80 °C</small></span><span class="when">через 15:00</span></li></ul></section><section class="card"><h3>Программа<span>4 шага, 2 ч 10 мин</span></h3><ol class="steps"><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Засыпь<small>подтверждение</small></span><span class="num sval">66<small>°C</small></span></li><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Пауза 66 °C<small>осахаривание</small></span><span class="num sval">60<small>мин</small></span></li><li class="done"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="sname">Мэш-аут<small>10 мин</small></span><span class="num sval">76<small>°C</small></span></li><li class="current"><span class="n">4</span><span class="sname">Кипячение<small>3 закладки</small><i class="pbar"><b style="width:68%"></b></i></span><span class="num sval">60<small>мин</small></span></li></ol></section><section class="card chart"><h3>Температура<span>последний час</span><span class="win"><a href="#">30 мин</a><a href="#" aria-current="page">1 ч</a><a href="#">3 ч</a><a href="#">6 ч</a></span></h3>
+    <svg viewBox="0 0 340 212" class="plot">
+      <g class="grid"><line x1="0" x2="340" y1="30.0" y2="30.0"/><line x1="0" x2="340" y1="78.0" y2="78.0"/><line x1="0" x2="340" y1="98.0" y2="98.0"/></g>
+      <path class="area" d="M0,97.8 L23,97.6 L45,90.0 L68,78.0 L91,77.8 L113,78.0 L136,66.0 L159,50.0 L181,38.0 L204,31.0 L227,29.8 L249,30.0 L272,29.8 L295,29.8 L317,30.0 L340,29.8 L340,190 L0,190 Z"/>
+      <path class="tgt" d="M0,98.0 L45,98.0 L45,78.0 L125,78.0 L125,30.0 L340,30.0"/>
+      <path class="line" d="M0,97.8 L23,97.6 L45,90.0 L68,78.0 L91,77.8 L113,78.0 L136,66.0 L159,50.0 L181,38.0 L204,31.0 L227,29.8 L249,30.0 L272,29.8 L295,29.8 L317,30.0 L340,29.8"/>
+      <line class="mark" x1="227" x2="227" y1="14" y2="190"/>
+      <text class="marktext" x="233" y="24">закипело 13:28</text>
+      <g class="yl"><text x="4" y="26">100 °C</text><text x="4" y="74">76 °C</text><text x="4" y="94">66 °C</text></g><g class="xl"><text x="0" y="206" text-anchor="start">12:50</text><text x="113" y="206" text-anchor="middle">13:10</text><text x="227" y="206" text-anchor="middle">13:30</text><text x="340" y="206" text-anchor="end">13:50</text></g>
+    </svg></section><section class="card"><h3>Журнал варки<span>по ходу</span></h3>
+    <div class="jq"><a class="btn btn-secondary" href="#">Плотность</a><a class="btn btn-secondary" href="#">pH</a><a class="btn btn-secondary" href="#">Заметка</a><a class="btn btn-secondary" href="#">Фото</a></div>
+    <ul class="jl"><li><span class="num">11:55</span><span>Первяк <b>14,2 °P</b>, pH <b>5,34</b></span></li><li><span class="num">11:40</span><span>Засыпь 7,1 кг, помол 0,8 мм</span></li></ul>
+    </section><section class="card"><h3>Управление</h3>
+    <div class="ctl"><span class="cn">Питание<small>включена</small></span><span class="sw on"><i></i></span></div>
+    <div class="ctl"><span class="cn">Насос<small>выключен на кипячении</small></span><span class="sw"><i></i></span></div>
+    <div class="ctl"><span class="cn">Поток<small>рециркуляции</small></span><span class="slider"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num sv">5</span></div>
+    <div class="ctl row2"><a class="btn btn-secondary" href="#">Ручной режим</a><span class="hint">нагрев только с водой</span></div>
+    <div class="ctl soon"><span class="cn">Отложенный старт<small>нагрев к заданному часу</small></span><span class="later">скоро</span></div>
+    </section><section class="card"><h3>События</h3><ul class="ev"><li class="step"><span class="num">13:28</span><span>Кипячение началось, 60 мин</span></li><li class="ok"><span class="num">13:28</span><span>Columbus 25 г заложен</span></li><li class="hand"><span class="num">13:28</span><span>Пора закладывать: Columbus 25 г</span></li><li class="ok"><span class="num">13:12</span><span>Корзина вынута, подтверждено</span></li><li class="step"><span class="num">13:02</span><span>Мэш-аут 76 °C, 10 мин</span></li></ul><p class="soon-line">Голосовые подсказки появятся здесь же: пивоварня скажет «засыпьте солод» вслух.</p></section></div>
+    <nav class="ph-bottom" aria-label="Разделы">
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3z"/><path d="M7.4 8h9.2"/></svg></span>Рецепты</a>
+      <a href="#" aria-current="page"><span class="dot"></span><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10h16l-1.5 10h-13L4 10z"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/><path d="M9 4c0-1 1-1.5 1-2.5M13 4c0-1 1-1.5 1-2.5"/></svg></span>Варка</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg></span>Склад</a>
+      <a href="#"><span class="ic" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg></span>Справочник</a>
+    </nav></div></div></div>
+
+<p class="foot">Направление Б, экран варки. Заделы под будущее показаны, но не раздуты: «Журнал варки» (плотность, pH, заметка, фото), «Отложенный старт» в управлении, строка про голосовые подсказки в событиях. Нижняя панель телефона в жизни закреплена внизу экрана.</p>
+</body>
+</html>

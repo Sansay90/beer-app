@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoplab — направление А, варочный журнал</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Sofia+Sans+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F3; --ink:#1F2A25; --ink-2:#5B6762; --grid:#E3E9E4; --rule:#C9D4CC; --rule-2:#AEBDB3;
+  --hop:#4C7A17; --hop-soft:#DCE9C6; --mark:#C43D2B; --field:#FFFFFF;
+  --f-text:'IBM Plex Sans', system-ui, 'Segoe UI', sans-serif;
+  --f-num:'Sofia Sans Condensed', 'Arial Narrow', sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 var(--f-text); font-feature-settings:"tnum";
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:16px 16px; background-position:-1px -1px}
+a{color:inherit; text-decoration:none}
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{outline:2px solid var(--hop); outline-offset:2px}
+svg{display:block}
+.wrap{max-width:1120px; margin:0 auto; padding:0 16px}
+h1,h2,h3{margin:0; font-family:var(--f-num); font-weight:700; line-height:1.05; letter-spacing:.005em}
+.num{font-family:var(--f-num); font-weight:600}
+button, .btn{font:500 15px/1 var(--f-text); border:1.5px solid var(--ink); background:var(--field); color:var(--ink); border-radius:3px; padding:10px 16px; cursor:pointer; white-space:nowrap}
+.btn-primary{background:var(--hop); border-color:var(--hop); color:#fff}
+.btn-quiet{border-color:transparent; background:transparent; padding-inline:10px; color:var(--ink-2)}
+.btn-danger{border-color:var(--mark); color:var(--mark)}
+.btn-sm{padding:7px 12px; font-size:14px}
+
+/* ── шапка ── */
+.top{border-bottom:1.5px solid var(--ink); background:var(--paper)}
+.top .wrap{display:flex; align-items:center; gap:28px; height:60px}
+.brand{font:800 27px/1 var(--f-num); letter-spacing:.01em; margin-right:8px}
+.nav{display:flex; gap:22px; align-self:stretch}
+.nav a{display:flex; align-items:center; padding:0 2px; border-bottom:3px solid transparent; margin-bottom:-1.5px; font-weight:500; color:var(--ink-2)}
+.nav a[aria-current]{color:var(--ink); border-color:var(--hop)}
+.top .login{margin-left:auto}
+
+/* ── подписи макета ── */
+.slip{max-width:1120px; margin:34px auto 0; padding:0 16px; display:flex; align-items:center; gap:12px; color:var(--ink-2); font-size:13px}
+.slip::after{content:""; flex:1; border-top:1px dashed var(--rule-2)}
+.screen{background:var(--paper); border:1.5px solid var(--ink); margin:10px auto 0; max-width:1120px}
+.screen > .wrap{max-width:none}
+
+/* ── каталог ── */
+.cat-head{display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px 24px; padding:28px 0 18px}
+.cat-head h1{font-size:38px}
+.cat-head .count{color:var(--ink-2); margin:4px 0 0}
+.cat-head .add{margin-left:auto}
+.tools{display:grid; grid-template-columns:minmax(0,1fr) 190px 170px; gap:10px; padding-bottom:22px}
+.field{position:relative; display:flex; align-items:center; background:var(--field); border:1.5px solid var(--rule-2); border-radius:3px; height:42px}
+.field:focus-within{border-color:var(--ink)}
+.field input, .field select{appearance:none; border:0; background:transparent; font:inherit; color:inherit; width:100%; height:100%; padding:0 12px}
+.field input::placeholder{color:var(--ink-2)}
+.field .lbl{position:absolute; left:12px; top:-9px; padding:0 4px; background:var(--field); font-size:11px; line-height:14px; color:var(--ink-2)}
+.field.search svg{position:absolute; left:11px; width:16px; height:16px; stroke:var(--ink-2); fill:none; stroke-width:1.8}
+.field.search input{padding-left:34px}
+.field.select::after{content:""; position:absolute; right:13px; top:15px; width:7px; height:7px; border-right:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg)}
+.field select{padding-right:30px}
+
+.ledger{border-top:1.5px solid var(--ink)}
+.entry, .axes{display:grid; grid-template-columns:76px minmax(0,1fr) 380px; column-gap:24px; align-items:stretch}
+.entry{border-bottom:1px solid var(--rule); padding:18px 0}
+.axes{padding:10px 0 6px; border-bottom:1px solid var(--rule); color:var(--ink-2); font-size:13px}
+.axes .legend{grid-column:1 / 3; align-self:end; display:flex; gap:18px; flex-wrap:wrap}
+.axes .legend i{display:inline-block; width:18px; height:6px; background:var(--hop); opacity:.45; vertical-align:middle; margin-right:6px}
+.axes .legend b{display:inline-block; width:0; border-left:4px solid transparent; border-right:4px solid transparent; border-top:6px solid var(--ink); vertical-align:middle; margin-right:6px}
+.entry-glass{display:flex; align-items:flex-start; justify-content:center; color:var(--ink); padding-top:2px}
+.glass{height:112px; width:auto}
+.entry-text{min-width:0}
+.entry-text h3{font-size:23px}
+.entry-text h3 a:hover{text-decoration:underline; text-decoration-thickness:1.5px; text-underline-offset:3px}
+.entry-text .style{margin:3px 0 0; color:var(--ink-2); font-size:14px}
+.entry-text .about{margin:8px 0 0; max-width:48ch}
+.entry-text .meta{margin:10px 0 0; display:flex; gap:18px; flex-wrap:wrap; font-size:14px; color:var(--ink-2)}
+.entry-text .meta .num{color:var(--ink); font-size:17px}
+.entry-scales{display:flex; flex-direction:column; justify-content:center; gap:7px}
+
+/* шкала: подпись + линейка с делениями, рамка стиля и маркер */
+.ruler, .axis{display:grid; grid-template-columns:34px minmax(0,1fr); align-items:end; column-gap:8px}
+.rk{font:600 13px/1 var(--f-num); color:var(--ink-2); padding-bottom:1px}
+.rt{position:relative; height:28px; margin-right:1px}
+.rt::before{content:""; position:absolute; left:0; right:-1px; bottom:0; height:10px;
+  background:linear-gradient(var(--ink),var(--ink)) left bottom/100% 1px no-repeat,
+  repeating-linear-gradient(90deg, var(--rule-2) 0 1px, transparent 1px var(--minor)) left bottom/100% 4px no-repeat,
+  repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px var(--major)) left bottom/100% 9px no-repeat}
+.rt::after{content:""; position:absolute; right:-1px; bottom:0; width:1px; height:9px; background:var(--ink)}
+.band{position:absolute; bottom:1px; height:6px; background:var(--hop); opacity:.45}
+.strip{position:absolute; left:0; right:-1px; bottom:-6px; height:4px}
+.entry-scales .ruler.ebc{margin-bottom:6px}
+.mark{position:absolute; bottom:0; transform:translateX(-50%); width:0; border-left:4.5px solid transparent; border-right:4.5px solid transparent; border-top:7px solid var(--ink)}
+.mark span{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font:700 15px/1 var(--f-num); color:var(--ink); white-space:nowrap}
+.out .mark{border-top-color:var(--mark)}
+.out .mark span{color:var(--mark)}
+.axis{height:16px}
+.ax{position:relative; margin-right:1px}
+.ax span{position:absolute; top:-2px; transform:translateX(-50%); font:500 12px/1 var(--f-num); color:var(--ink-2)}
+.axes .axis-col{display:flex; flex-direction:column; gap:19px; padding-bottom:4px}
+
+/* ── страница рецепта ── */
+.crumb{padding:22px 0 0; font-size:14px; color:var(--ink-2)}
+.crumb a:hover{color:var(--ink)}
+.rec-head{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 24px; padding:8px 0 6px}
+.rec-head h1{font-size:46px; letter-spacing:0}
+.rec-head .actions{margin-left:auto; display:flex; gap:8px}
+.rec-facts{display:flex; flex-wrap:wrap; gap:6px 28px; padding:0 0 22px; color:var(--ink-2); font-size:14px; border-bottom:1.5px solid var(--ink)}
+.rec-facts b{font-weight:500; color:var(--ink)}
+.hero{display:grid; grid-template-columns:150px minmax(0,1fr) 300px; gap:24px 36px; padding:26px 0 30px; border-bottom:1px solid var(--rule)}
+.hero-glass{color:var(--ink); display:flex; justify-content:center}
+.hero-glass .glass{height:236px}
+.hero-text .about{margin:0; font-size:18px; line-height:1.45; max-width:40ch}
+.figs{display:grid; grid-template-columns:repeat(3, auto); justify-content:start; gap:14px 32px; margin:24px 0 0}
+.fig{display:flex; flex-direction:column}
+.fig b{font:700 50px/1 var(--f-num); letter-spacing:-.01em}
+.fig b small{font-size:24px; font-weight:600; margin-left:3px}
+.fig span{color:var(--ink-2); font-size:14px; margin-top:4px; white-space:nowrap}
+.fig .fr{display:block; height:6px; margin-top:8px; position:relative; background:var(--rule)}
+.fig .fr i{position:absolute; inset:0 auto 0 0; background:var(--hop); opacity:.45}
+.fig .fr b{position:absolute; top:-4px; width:2px; height:14px; background:var(--ink); transform:translateX(-50%)}
+.fig .fr.ebcs{background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)}
+.hero-text .batch{margin:20px 0 0; font-size:14px; color:var(--ink-2)}
+
+/* ареометр */
+.hydro{display:grid; grid-template-columns:minmax(0,1fr) 44px; column-gap:10px; height:250px; align-self:start}
+.hydro-cap{font-size:13px; color:var(--ink-2); margin:0 0 6px}
+.hv{position:relative; border-right:1.5px solid var(--ink)}
+.hv::before{content:""; position:absolute; right:0; top:0; bottom:0; width:12px;
+  background:repeating-linear-gradient(180deg, var(--rule-2) 0 1px, transparent 1px 2.5%) right top/5px 100% no-repeat,
+  repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 12.5%) right top/11px 100% no-repeat}
+.hv::after{content:""; position:absolute; right:0; bottom:0; width:11px; height:1px; background:var(--ink)}
+.hband{position:absolute; right:0; width:12px; background:var(--hop); opacity:.45}
+.hmark{position:absolute; right:-1px; height:0; display:flex; align-items:center; justify-content:flex-end; gap:8px; padding-right:18px; white-space:nowrap}
+.hmark::after{content:""; position:absolute; right:0; top:-5px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid var(--ink)}
+.hv-num{font:700 26px/1 var(--f-num)}
+.hv-cap{font-size:13px; color:var(--ink-2)}
+.hatt{position:absolute; right:18px; transform:translateY(-50%); font-size:13px; color:var(--hop); font-weight:500}
+.hl{position:relative}
+.hl span{position:absolute; left:0; transform:translateY(-50%); font:500 12px/1 var(--f-num); color:var(--ink-2)}
+
+/* разделы страницы рецепта */
+.sections{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0 48px}
+.sec{padding:22px 0 26px; border-bottom:1px solid var(--rule)}
+.sec.full{grid-column:1 / -1}
+.sec h2{font-size:24px; display:flex; align-items:baseline; gap:12px}
+.sec h2 small{font:500 15px/1 var(--f-text); color:var(--ink-2)}
+.gbar{display:flex; height:16px; margin:16px 0 10px; border:1px solid var(--ink)}
+.gbar i{display:block; height:100%; border-right:1px solid var(--ink)}
+.gbar i:last-child{border-right:0}
+.grist{width:100%; border-collapse:collapse; font-size:15px}
+.grist td{padding:7px 0; border-bottom:1px solid var(--rule); vertical-align:top}
+.grist td:first-child i{display:inline-block; width:12px; height:12px; border:1px solid var(--ink); vertical-align:-1px; margin-right:10px}
+.grist td.n{text-align:right; font-family:var(--f-num); font-weight:600; font-size:17px; white-space:nowrap}
+.grist td.c{color:var(--ink-2)}
+.grist tr:last-child td{border-bottom:0}
+.mash{width:100%; height:auto; margin-top:14px}
+.mash .gmin{stroke:var(--grid); stroke-width:1}
+.mash .gmaj{stroke:var(--rule); stroke-width:1}
+.mash .gl{font:500 12px var(--f-num); fill:var(--ink-2)}
+.mash .gl-unit{font-size:11px}
+.mash .mline{fill:none; stroke:var(--ink); stroke-width:2.2; stroke-linejoin:round}
+.mash .mdot{fill:var(--paper); stroke:var(--ink); stroke-width:2}
+.mash .ml{font:700 15px var(--f-num); fill:var(--ink)}
+.steps{margin:12px 0 0; padding:0; list-style:none; display:flex; gap:28px; flex-wrap:wrap; font-size:14px; color:var(--ink-2)}
+.steps b{font:700 17px/1 var(--f-num); color:var(--ink)}
+
+/* таймлайн кипа */
+.boil{margin-top:18px}
+.boil-flags{position:relative; height:140px; margin-right:1px}
+.flag{position:absolute; bottom:0; padding:0 0 10px 10px; border-left:1.5px solid var(--ink); white-space:nowrap; line-height:1.25}
+.flag b{display:block; font:700 17px/1.1 var(--f-num)}
+.flag span{display:block; font:600 15px/1.2 var(--f-num); margin-top:2px}
+.flag em{display:block; font-style:normal; font-size:12.5px; color:var(--ink-2); margin-top:3px}
+.flag-up{padding-bottom:74px}
+.boil-rt{position:relative; height:26px; margin-right:1px}
+.boil-rt::before{content:""; position:absolute; left:0; right:-1px; bottom:0; height:10px;
+  background:linear-gradient(var(--ink),var(--ink)) left bottom/100% 1px no-repeat,
+  repeating-linear-gradient(90deg, var(--rule-2) 0 1px, transparent 1px var(--minor)) left bottom/100% 4px no-repeat,
+  repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px var(--major)) left bottom/100% 9px no-repeat}
+.boil-rt::after{content:""; position:absolute; right:-1px; bottom:0; width:1px; height:9px; background:var(--ink)}
+.phase{position:absolute; top:0; height:14px; background:var(--hop-soft); border-left:1px solid var(--ink)}
+.phase span{position:absolute; left:8px; top:0; font:600 12px/14px var(--f-num); color:var(--ink); white-space:nowrap}
+.phase.wp{background:var(--rule)}
+.boil-rt .tick{position:absolute; bottom:0; transform:translateX(-50%); width:0; border-left:4.5px solid transparent; border-right:4.5px solid transparent; border-top:8px solid var(--mark)}
+.boil-ax{position:relative; height:16px; margin-right:1px}
+.boil-ax span{position:absolute; top:3px; transform:translateX(-50%); font:500 12px/1 var(--f-num); color:var(--ink-2)}
+.boil-ax span:first-child{transform:none}
+.boil-ax span:last-child{transform:translateX(-100%)}
+.boil-cap{margin:10px 0 0; font-size:13px; color:var(--ink-2)}
+
+/* ── образец стиля ── */
+.spec{padding:26px 16px 30px}
+.spec h2{font-size:24px; margin-bottom:14px}
+.spec-grid{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:34px 48px}
+.swatches{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px}
+.sw{border:1px solid var(--ink); background:var(--field); padding:0 0 8px; font-size:13px}
+.sw i{display:block; height:46px; border-bottom:1px solid var(--ink)}
+.sw b{display:block; padding:7px 10px 0; font:700 15px/1.1 var(--f-num)}
+.sw span{display:block; padding:2px 10px 0; color:var(--ink-2)}
+.types p{margin:0 0 10px}
+.types .t1{font:800 44px/1 var(--f-num)}
+.types .t2{font:700 24px/1.15 var(--f-num)}
+.types .t3{font:600 30px/1 var(--f-num); letter-spacing:.01em}
+.types .t4{font:400 15px/1.5 var(--f-text); max-width:46ch}
+.types .t5{font:500 13px/1.3 var(--f-text); color:var(--ink-2)}
+.types .role{font-size:12.5px; color:var(--ink-2); margin:-6px 0 14px}
+.ctrls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px}
+.fields{display:grid; grid-template-columns:minmax(0,1fr) 150px; gap:16px 10px; margin-top:22px}
+.field.unit::after{content:attr(data-unit); position:absolute; right:12px; color:var(--ink-2); font-size:14px}
+.field.unit input{padding-right:40px; font-family:var(--f-num); font-weight:600; font-size:18px}
+.hint{font-size:12.5px; color:var(--ink-2); margin:6px 0 0}
+.hint.err{color:var(--mark)}
+.field.invalid{border-color:var(--mark)}
+
+/* тёмная тема: фрагмент «Варка» на телефоне */
+.dark{--paper:#172019; --ink:#E9EFE9; --ink-2:#9AAA9F; --grid:#1F2B23; --rule:#33423A; --rule-2:#4A5C51;
+  --hop:#9CCB4A; --hop-soft:#2C4318; --mark:#F0694F; --field:#1F2B23;
+  background:var(--paper); color:var(--ink); border:1.5px solid #0E1511; width:360px; max-width:100%; padding:16px 16px 18px;
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size:16px 16px}
+.dark .btn-primary{color:#0F1A08}
+.brew-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+.brew-top h3{font-size:22px}
+.brew-top .live{font-size:12.5px; color:var(--hop); white-space:nowrap}
+.brew-top .live::before{content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--hop); margin-right:6px; vertical-align:1px}
+.brew-step{margin:2px 0 0; font-size:14px; color:var(--ink-2)}
+.brew-body{display:grid; grid-template-columns:minmax(0,1fr) 104px; gap:16px; margin-top:14px}
+.brew-main .big{font:800 64px/1 var(--f-num); letter-spacing:-.02em; margin-top:4px}
+.brew-main .big small{font-size:26px; font-weight:600; margin-left:4px}
+.brew-main .sub{color:var(--ink-2); font-size:13.5px; margin-top:6px}
+.timer{margin-top:22px}
+.timer .tnum{font:700 30px/1 var(--f-num)}
+.timer .tnum small{font:500 13px var(--f-text); color:var(--ink-2); margin-left:6px}
+.timer .trt{position:relative; height:16px; margin-top:8px; --minor:8.3333%; --major:25.0000%}
+.timer .trt::before{content:""; position:absolute; left:0; right:0; bottom:0; height:10px;
+  background:linear-gradient(var(--ink),var(--ink)) left bottom/100% 1px no-repeat,
+  repeating-linear-gradient(90deg, var(--rule-2) 0 1px, transparent 1px var(--minor)) left bottom/100% 4px no-repeat,
+  repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px var(--major)) left bottom/100% 9px no-repeat}
+.timer .trt i{position:absolute; left:0; bottom:1px; height:6px; background:var(--hop)}
+.timer .tcap{display:flex; justify-content:space-between; font:500 12px/1 var(--f-num); color:var(--ink-2); margin-top:4px}
+.brew-actions{display:flex; gap:8px; margin-top:18px}
+.brew-actions button{flex:1}
+.dark button{background:transparent; border-color:var(--ink-2); color:var(--ink)}
+.dark .btn-primary{background:var(--hop); border-color:var(--hop)}
+.thermo{display:grid; grid-template-columns:28px 36px; column-gap:8px; height:230px}
+.tv{position:relative; border-right:1.5px solid var(--ink)}
+.tv::before{content:""; position:absolute; right:0; top:0; bottom:0; width:12px;
+  background:repeating-linear-gradient(180deg, var(--rule-2) 0 1px, transparent 1px var(--minor)) right top/5px 100% no-repeat,
+  repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px var(--major)) right top/11px 100% no-repeat}
+.tv::after{content:""; position:absolute; right:0; bottom:0; width:11px; height:1px; background:var(--ink)}
+.tfill{position:absolute; right:0; bottom:0; width:5px; background:var(--mark); opacity:.9}
+.ttarget{position:absolute; left:-4px; right:-1px; height:0; border-top:1.5px dashed var(--hop)}
+.ttarget span{position:absolute; right:14px; top:-15px; font:600 12px/1 var(--f-num); color:var(--hop); white-space:nowrap}
+.tcur{position:absolute; right:-1px; height:0}
+.tcur::after{content:""; position:absolute; right:0; top:-5px; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid var(--mark)}
+.tcur span{position:absolute; right:12px; top:-6px; font:700 16px/1 var(--f-num); color:var(--mark)}
+.tl{position:relative}
+.tl span{position:absolute; left:0; transform:translateY(-50%); font:500 12px/1 var(--f-num); color:var(--ink-2)}
+.dark-wrap{display:flex; flex-direction:column; gap:10px; align-items:flex-start}
+.dark-cap{font-size:13px; color:var(--ink-2); margin:0}
+
+/* ── адаптив ── */
+@media (max-width:980px){
+  .entry, .axes{grid-template-columns:76px minmax(0,1fr) 300px}
+  .hero{grid-template-columns:120px minmax(0,1fr); grid-template-rows:auto auto}
+  .hero .hydro{grid-column:1 / -1}
+  .sections, .spec-grid{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .top .wrap{flex-wrap:wrap; height:auto; padding-top:12px; gap:10px 16px}
+  .brand{order:0}
+  .top .login{order:1}
+  .nav{order:2; width:100%; gap:18px; border-top:1px solid var(--rule); margin-top:2px}
+  .nav a{padding:10px 0 8px; margin-bottom:0; border-bottom-width:2px}
+  .nav a[aria-current]{border-color:var(--hop)}
+  .cat-head{padding-top:22px}
+  .cat-head h1{font-size:32px}
+  .cat-head .add{margin-left:0; width:100%}
+  .tools{grid-template-columns:1fr 1fr}
+  .tools .search{grid-column:1 / -1}
+  .axes{display:none}
+  .ledger{border-top-width:1.5px}
+  .entry{grid-template-columns:64px minmax(0,1fr); grid-template-rows:auto auto; column-gap:16px; row-gap:14px; padding:16px 0 14px}
+  .entry-scales{grid-column:1 / -1; gap:6px}
+  .glass{height:96px}
+  .entry-text h3{font-size:21px}
+  .entry-text .about{font-size:14px}
+  .rec-head h1{font-size:34px}
+  .rec-head .actions{margin-left:0; width:100%}
+  .rec-head .actions .btn{flex:1}
+  .hero{grid-template-columns:82px minmax(0,1fr); gap:18px 14px; padding:20px 0 24px}
+  .hero-glass{align-self:start}
+  .hero-glass .glass{height:140px}
+  .hero-text .about{font-size:16px}
+  .figs{gap:10px 16px; margin-top:16px}
+  .fig span{font-size:13px}
+  .fig b{font-size:38px}
+  .fig b small{font-size:19px}
+  .hydro{height:220px}
+  .hv-num{font-size:22px}
+  .sec h2{font-size:21px}
+  .flag b{font-size:15px}
+  .flag span{font-size:13px}
+  .flag em{display:none}
+  .flag{white-space:normal; max-width:96px}
+  .flag-up{padding-bottom:50px}
+  .boil-flags{height:100px}
+  .hmark{flex-direction:column; align-items:flex-end; gap:0}
+  .hydro{grid-template-columns:minmax(0,1fr) 40px}
+  .phase span{font-size:11px}
+  .swatches{grid-template-columns:repeat(2, 1fr)}
+  .fields{grid-template-columns:1fr}
+  .types .t1{font-size:36px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .nav a, button, .btn{transition:border-color .15s, background-color .15s, color .15s}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="beer-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+</defs></svg>
+
+<p class="slip">Каталог рецептов, главная публичная страница</p>
+<div class="screen" id="catalog">
+<header class="top"><div class="wrap">
+<a class="brand" href="#catalog">Hoplab</a>
+<nav class="nav" aria-label="Разделы">
+<a href="#brew">Варка</a>
+<a href="#catalog" aria-current="page">Рецепты</a>
+<a href="#settings">Настройки</a>
+</nav>
+<a class="btn login" href="#login">Войти</a>
+</div></header>
+
+<main class="wrap">
+<div class="cat-head">
+<div><h1>Рецепты</h1><p class="count">6 рецептов, открытый каталог</p></div>
+<a class="btn btn-primary add" href="#new">Добавить свой рецепт</a>
+</div>
+<div class="tools">
+<label class="field search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="Название или стиль"></label>
+<label class="field select"><span class="lbl">Стиль</span><select><option>Все стили</option><option>Лагеры</option><option>Эли</option><option>Пшеничные</option><option>Бельгийские</option><option>Стауты и портеры</option></select></label>
+<label class="field select"><span class="lbl">Порядок</span><select><option>Недавние</option><option>По названию</option><option>По крепости</option><option>По горечи</option></select></label>
+</div>
+
+<section class="ledger" aria-label="Список рецептов">
+<div class="axes">
+<div class="legend"><span><i></i>рамки стиля по BJCP</span><span><b></b>значение рецепта</span></div>
+<div class="axis-col">
+<div class="axis"><span class="rk">ABV</span><div class="ax"><span style="left:0.00%">0</span><span style="left:16.67%">2</span><span style="left:33.33%">4</span><span style="left:50.00%">6</span><span style="left:66.67%">8</span><span style="left:83.33%">10</span><span style="left:100.00%">12</span></div></div>
+<div class="axis"><span class="rk">IBU</span><div class="ax"><span style="left:0.00%">0</span><span style="left:20.00%">20</span><span style="left:40.00%">40</span><span style="left:60.00%">60</span><span style="left:80.00%">80</span><span style="left:100.00%">100</span></div></div>
+<div class="axis"><span class="rk">EBC</span><div class="ax"><span style="left:0.00%">0</span><span style="left:25.00%">20</span><span style="left:50.00%">40</span><span style="left:75.00%">60</span><span style="left:100.00%">80</span></div></div>
+</div>
+</div>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 30 EBC">
+<defs><clipPath id="gc0"><path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z"/></clipPath></defs>
+<g clip-path="url(#gc0)">
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="15" width="48" height="80" fill="#A14918"/>
+<rect x="0" y="15" width="48" height="80" fill="url(#beer-shade)"/>
+<rect x="0" y="15" width="48" height="80" fill="#fff" fill-opacity=".16"/>
+<rect x="0" y="9.5" width="48" height="5.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="9.5" r="2.6" fill="#FBF3DF"/>
+<path d="M10.6 19 L12.6 19 L15.2 70 L13.4 70 Z" fill="#fff" fill-opacity=".14"/>
+</g>
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">Ржаной с можжевельником</a></h3>
+<p class="style">Авторский, пряный ржаной</p>
+<p class="about">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+<p class="meta"><span class="num">13,5&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 25 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%">
+<b class="mark" style="left:48.33%"><span>5,8</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%">
+<b class="mark" style="left:26.00%"><span>26</span></b></div></div>
+<div class="ruler ebc"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:37.50%"><span>30</span></b></div></div>
+</div>
+</article>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 38 EBC">
+<defs><clipPath id="gc1"><path d="M11 4 H37 Q38.5 10 38 16 Q37 34 24 44 Q11 34 10 16 Q9.5 10 11 4 Z"/></clipPath></defs>
+<g clip-path="url(#gc1)">
+<path d="M11 4 H37 Q38.5 10 38 16 Q37 34 24 44 Q11 34 10 16 Q9.5 10 11 4 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="14" width="48" height="80" fill="#753113"/>
+<rect x="0" y="14" width="48" height="80" fill="url(#beer-shade)"/>
+
+<rect x="0" y="8.5" width="48" height="5.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="8.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="8.5" r="2.6" fill="#FBF3DF"/>
+<path d="M13.6 11 L15.6 11 L17.4 30 L15.8 30 Z" fill="#fff" fill-opacity=".28"/>
+</g>
+<path d="M11 4 H37 Q38.5 10 38 16 Q37 34 24 44 Q11 34 10 16 Q9.5 10 11 4 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M22.8 43 H25.2 V70.5 H22.8 Z M13 74 Q13 70.5 24 70.5 Q35 70.5 35 74 Q35 76.5 24 76.5 Q13 76.5 13 74 Z" fill="currentColor" fill-opacity=".10" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" stroke-linejoin="round"/>
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">Belgian Dubbel</a></h3>
+<p class="style">26B Belgian Dubbel</p>
+<p class="about">Тёмно-янтарный до медного, с плотной кремовой пеной, сухофрукты и карамель</p>
+<p class="meta"><span class="num">16,4&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 40 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%"><i class="band" style="left:50.00%;width:13.33%"></i>
+<b class="mark" style="left:60.00%"><span>7,2</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%"><i class="band" style="left:15.00%;width:10.00%"></i>
+<b class="mark" style="left:19.00%"><span>19</span></b></div></div>
+<div class="ruler ebc out"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="band" style="left:25.00%;width:17.50%"></i><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:47.50%"><span>38</span></b></div></div>
+</div>
+</article>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 75 EBC">
+<defs><clipPath id="gc2"><path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z"/></clipPath></defs>
+<g clip-path="url(#gc2)">
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="15" width="48" height="80" fill="#0E0806"/>
+<rect x="0" y="15" width="48" height="80" fill="url(#beer-shade)"/>
+
+<rect x="0" y="9.5" width="48" height="5.5" fill="#E3C9A0"/>
+<circle cx="3.0" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="8.4" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="13.8" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="19.2" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="24.6" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="30.0" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="35.4" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="40.8" cy="9.5" r="2.6" fill="#E3C9A0"/><circle cx="46.2" cy="9.5" r="2.6" fill="#E3C9A0"/>
+<path d="M10.6 19 L12.6 19 L15.2 70 L13.4 70 Z" fill="#fff" fill-opacity=".28"/>
+</g>
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">Irish Stout</a></h3>
+<p class="style">15B Irish Stout</p>
+<p class="about">Сухой, кофейная горечь жжёного ячменя, кремовая пена</p>
+<p class="meta"><span class="num">10,3&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 10 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%"><i class="band" style="left:33.33%;width:4.17%"></i>
+<b class="mark" style="left:34.17%"><span>4,1</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%"><i class="band" style="left:25.00%;width:20.00%"></i>
+<b class="mark" style="left:34.00%"><span>34</span></b></div></div>
+<div class="ruler ebc"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="band" style="left:61.25%;width:37.50%"></i><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:93.75%"><span>75</span></b></div></div>
+</div>
+</article>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 8 EBC">
+<defs><clipPath id="gc3"><path d="M10 3 H38 Q41.5 15 37.5 29 Q33.5 42 32.5 56 L31.6 72 Q31.4 76 28 76 H20 Q16.6 76 16.4 72 L15.5 56 Q14.5 42 10.5 29 Q6.5 15 10 3 Z"/></clipPath></defs>
+<g clip-path="url(#gc3)">
+<path d="M10 3 H38 Q41.5 15 37.5 29 Q33.5 42 32.5 56 L31.6 72 Q31.4 76 28 76 H20 Q16.6 76 16.4 72 L15.5 56 Q14.5 42 10.5 29 Q6.5 15 10 3 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="14" width="48" height="80" fill="#EDC03A"/>
+<rect x="0" y="14" width="48" height="80" fill="url(#beer-shade)"/>
+<rect x="0" y="14" width="48" height="80" fill="#fff" fill-opacity=".16"/>
+<rect x="0" y="7.5" width="48" height="6.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="7.5" r="2.6" fill="#FBF3DF"/>
+<path d="M12.8 10 L14.8 10 L19.2 62 L17.8 62 Z" fill="#fff" fill-opacity=".14"/>
+</g>
+<path d="M10 3 H38 Q41.5 15 37.5 29 Q33.5 42 32.5 56 L31.6 72 Q31.4 76 28 76 H20 Q16.6 76 16.4 72 L15.5 56 Q14.5 42 10.5 29 Q6.5 15 10 3 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">Weissbier</a></h3>
+<p class="style">10A Weissbier</p>
+<p class="about">Банан и гвоздика от дрожжей, мягкое пшеничное тело, мутное</p>
+<p class="meta"><span class="num">12,0&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 50 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%"><i class="band" style="left:35.83%;width:10.83%"></i>
+<b class="mark" style="left:41.67%"><span>5,0</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%"><i class="band" style="left:8.00%;width:7.00%"></i>
+<b class="mark" style="left:12.00%"><span>12</span></b></div></div>
+<div class="ruler ebc"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="band" style="left:5.00%;width:10.00%"></i><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:10.00%"><span>8</span></b></div></div>
+</div>
+</article>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 14 EBC">
+<defs><clipPath id="gc4"><path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z"/></clipPath></defs>
+<g clip-path="url(#gc4)">
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="15" width="48" height="80" fill="#DC9729"/>
+<rect x="0" y="15" width="48" height="80" fill="url(#beer-shade)"/>
+
+<rect x="0" y="9.5" width="48" height="5.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="9.5" r="2.6" fill="#FBF3DF"/>
+<path d="M10.6 19 L12.6 19 L15.2 70 L13.4 70 Z" fill="#fff" fill-opacity=".28"/>
+</g>
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">American IPA</a></h3>
+<p class="style">21A American IPA</p>
+<p class="about">Цитрус, тропические фрукты и хвоя на сухом теле, вирпул и сухое охмеление</p>
+<p class="meta"><span class="num">15,5&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 10 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%"><i class="band" style="left:45.83%;width:16.67%"></i>
+<b class="mark" style="left:58.33%"><span>7,0</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%"><i class="band" style="left:40.00%;width:30.00%"></i>
+<b class="mark" style="left:53.00%"><span>53</span></b></div></div>
+<div class="ruler ebc"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="band" style="left:15.00%;width:20.00%"></i><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:17.50%"><span>14</span></b></div></div>
+</div>
+</article>
+<article class="entry">
+<a class="entry-glass" href="#recipe" aria-hidden="true" tabindex="-1"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 7 EBC">
+<defs><clipPath id="gc5"><path d="M8 3 H40 L31 63 H17 Z"/></clipPath></defs>
+<g clip-path="url(#gc5)">
+<path d="M8 3 H40 L31 63 H17 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="13" width="48" height="80" fill="#F0C844"/>
+<rect x="0" y="13" width="48" height="80" fill="url(#beer-shade)"/>
+
+<rect x="0" y="7.5" width="48" height="5.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="7.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="7.5" r="2.6" fill="#FBF3DF"/>
+<path d="M12.2 9 L14.4 9 L19 57 L17.6 57 Z" fill="#fff" fill-opacity=".28"/>
+</g>
+<path d="M8 3 H40 L31 63 H17 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M17 63 H31 L32.5 74 Q32.6 77 30 77 H18 Q15.4 77 15.5 74 Z" fill="currentColor" fill-opacity=".10" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" stroke-linejoin="round"/>
+</svg></a>
+<div class="entry-text">
+<h3><a href="#recipe">German Pils</a></h3>
+<p class="style">5D German Pils</p>
+<p class="about">Сухой, хмелевой, с чистой горечью и цветочным ароматом</p>
+<p class="meta"><span class="num">11,7&nbsp;°P</span><span>Владимир</span><span>варка 2 ч 45 мин</span></p>
+</div>
+<div class="entry-scales">
+<div class="ruler "><span class="rk">ABV</span>
+<div class="rt" style="--minor:4.1667%;--major:16.6667%"><i class="band" style="left:36.67%;width:6.67%"></i>
+<b class="mark" style="left:41.67%"><span>5,0</span></b></div></div>
+<div class="ruler "><span class="rk">IBU</span>
+<div class="rt" style="--minor:5.0000%;--major:20.0000%"><i class="band" style="left:22.00%;width:18.00%"></i>
+<b class="mark" style="left:30.00%"><span>30</span></b></div></div>
+<div class="ruler ebc"><span class="rk">EBC</span>
+<div class="rt" style="--minor:6.2500%;--major:25.0000%"><i class="band" style="left:5.00%;width:7.50%"></i><i class="strip" style="background:linear-gradient(90deg,#F8EAA2 0.0%,#F8EAA2 2.5%,#F6E07A 5.0%,#F2D04E 7.5%,#EDC03A 10.0%,#E2A42C 15.0%,#D58A26 20.0%,#C77423 25.0%,#B4561A 32.5%,#923F16 41.2%,#692B12 50.0%,#3D1C0F 58.8%,#1F100B 71.2%,#120A07 86.2%,#0A0605 100.0%)"></i>
+<b class="mark" style="left:8.75%"><span>7</span></b></div></div>
+</div>
+</article>
+</section>
+</main>
+</div>
+
+<p class="slip">Страница рецепта, верх</p>
+<div class="screen" id="recipe">
+<header class="top"><div class="wrap">
+<a class="brand" href="#catalog">Hoplab</a>
+<nav class="nav" aria-label="Разделы">
+<a href="#brew">Варка</a>
+<a href="#catalog" aria-current="page">Рецепты</a>
+<a href="#settings">Настройки</a>
+</nav>
+<a class="btn login" href="#login">Войти</a>
+</div></header>
+
+<main class="wrap">
+<p class="crumb"><a href="#catalog">Все рецепты</a></p>
+<div class="rec-head">
+<h1>American IPA</h1>
+<div class="actions"><a class="btn btn-primary" href="#brew">Варить</a><a class="btn" href="#edit">Изменить</a></div>
+</div>
+<p class="rec-facts"><span>Стиль <b>21A American IPA</b></span><span>Автор <b>Владимир</b></span><span>Партия <b>30 л после кипячения</b></span><span>Варка <b>2 ч 10 мин</b></span></p>
+
+<section class="hero">
+<div class="hero-glass"><svg class="glass" viewBox="0 0 48 80" role="img" aria-label="Цвет 14 EBC">
+<defs><clipPath id="gr0"><path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z"/></clipPath></defs>
+<g clip-path="url(#gr0)">
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="currentColor" fill-opacity=".05"/>
+<rect x="0" y="15" width="48" height="80" fill="#DC9729"/>
+<rect x="0" y="15" width="48" height="80" fill="url(#beer-shade)"/>
+
+<rect x="0" y="9.5" width="48" height="5.5" fill="#FBF3DF"/>
+<circle cx="3.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="8.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="13.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="19.2" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="24.6" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="30.0" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="35.4" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="40.8" cy="9.5" r="2.6" fill="#FBF3DF"/><circle cx="46.2" cy="9.5" r="2.6" fill="#FBF3DF"/>
+<path d="M10.6 19 L12.6 19 L15.2 70 L13.4 70 Z" fill="#fff" fill-opacity=".28"/>
+</g>
+<path d="M7 5 H41 L41.6 15 Q42.4 19 40.8 23 L37 73 Q36.8 76 34 76 H14 Q11.2 76 11 73 L7.2 23 Q5.6 19 6.4 15 Z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+
+</svg></div>
+<div class="hero-text">
+<p class="about">Цитрус, тропические фрукты и хвоя на сухом теле, вирпул и сухое охмеление.</p>
+<div class="figs">
+<div class="fig"><b>7,0<small>%</small></b><span>крепость</span><span class="fr"><i style="left:45.8%;width:16.7%"></i><b style="left:58.3%"></b></span></div>
+<div class="fig"><b>53</b><span>IBU, горечь</span><span class="fr"><i style="left:40%;width:30%"></i><b style="left:53%"></b></span></div>
+<div class="fig"><b>14</b><span>EBC, цвет</span><span class="fr ebcs"><i style="left:15%;width:20%"></i><b style="left:17.5%"></b></span></div>
+</div>
+<p class="batch">Полоски под цифрами — рамки стиля 21A: крепость 5,5–7,5&nbsp;%, горечь 40–70 IBU, цвет 12–28 EBC.</p>
+</div>
+<div class="hydro" aria-label="Плотность: начальная 1.063, конечная 1.011">
+<div class="hv">
+<i class="hband" style="top:21.25%;height:65.00%"></i>
+<b class="hmark og" style="top:21.25%"><span class="hv-num">1.063</span><span class="hv-cap">начальная, 15,5&nbsp;°P</span></b>
+<b class="hmark fg" style="top:86.25%"><span class="hv-num">1.011</span><span class="hv-cap">конечная, 2,8&nbsp;°P</span></b>
+<span class="hatt" style="top:53.75%">сброжено 82&nbsp;%</span>
+</div>
+<div class="hl"><span style="top:100.00%">1.000</span><span style="top:87.50%">1.010</span><span style="top:75.00%">1.020</span><span style="top:62.50%">1.030</span><span style="top:50.00%">1.040</span><span style="top:37.50%">1.050</span><span style="top:25.00%">1.060</span><span style="top:12.50%">1.070</span><span style="top:0.00%">1.080</span></div>
+</div>
+</section>
+
+<div class="sections">
+<section class="sec">
+<h2>Засыпь <small>7,1 кг</small></h2>
+<div class="gbar" aria-hidden="true"><i style="width:87.3%;background:#F2D04E"></i><i style="width:8.5%;background:#D89028"></i><i style="width:4.2%;background:#F7E58E"></i></div>
+<table class="grist">
+<tr><td><i style="background:#F2D04E"></i>Pale Ale</td><td class="c">база</td><td class="n">6,2 кг</td><td class="n">87 %</td></tr>
+<tr><td><i style="background:#D89028"></i>Munich</td><td class="c">солодовость, цвет</td><td class="n">0,6 кг</td><td class="n">8 %</td></tr>
+<tr><td><i style="background:#F7E58E"></i>Carapils</td><td class="c">пена, тело</td><td class="n">0,3 кг</td><td class="n">4 %</td></tr>
+</table>
+</section>
+
+<section class="sec">
+<h2>Затирание <small>70 мин</small></h2>
+<svg class="mash" viewBox="0 0 560 170" role="img" aria-label="Затирание: 66 °C 60 минут, мэш-аут 76 °C 10 минут">
+<line x1="44" y1="140.0" x2="548" y2="140.0" class="gmaj"/><text x="38" y="144.0" class="gl" text-anchor="end">50</text><line x1="44" y1="120.7" x2="548" y2="120.7" class="gmin"/><line x1="44" y1="101.3" x2="548" y2="101.3" class="gmaj"/><text x="38" y="105.3" class="gl" text-anchor="end">60</text><line x1="44" y1="82.0" x2="548" y2="82.0" class="gmin"/><line x1="44" y1="62.7" x2="548" y2="62.7" class="gmaj"/><text x="38" y="66.7" class="gl" text-anchor="end">70</text><line x1="44" y1="43.3" x2="548" y2="43.3" class="gmin"/><line x1="44" y1="24.0" x2="548" y2="24.0" class="gmaj"/><text x="38" y="28.0" class="gl" text-anchor="end">80</text><line x1="44.0" y1="24" x2="44.0" y2="140" class="gmaj"/><text x="44.0" y="156" class="gl" text-anchor="middle">0</text><line x1="77.6" y1="24" x2="77.6" y2="140" class="gmin"/><line x1="111.2" y1="24" x2="111.2" y2="140" class="gmin"/><line x1="144.8" y1="24" x2="144.8" y2="140" class="gmaj"/><text x="144.8" y="156" class="gl" text-anchor="middle">15</text><line x1="178.4" y1="24" x2="178.4" y2="140" class="gmin"/><line x1="212.0" y1="24" x2="212.0" y2="140" class="gmin"/><line x1="245.6" y1="24" x2="245.6" y2="140" class="gmaj"/><text x="245.6" y="156" class="gl" text-anchor="middle">30</text><line x1="279.2" y1="24" x2="279.2" y2="140" class="gmin"/><line x1="312.8" y1="24" x2="312.8" y2="140" class="gmin"/><line x1="346.4" y1="24" x2="346.4" y2="140" class="gmaj"/><text x="346.4" y="156" class="gl" text-anchor="middle">45</text><line x1="380.0" y1="24" x2="380.0" y2="140" class="gmin"/><line x1="413.6" y1="24" x2="413.6" y2="140" class="gmin"/><line x1="447.2" y1="24" x2="447.2" y2="140" class="gmaj"/><text x="447.2" y="156" class="gl" text-anchor="middle">60</text><line x1="480.8" y1="24" x2="480.8" y2="140" class="gmin"/><line x1="514.4" y1="24" x2="514.4" y2="140" class="gmin"/><line x1="548.0" y1="24" x2="548.0" y2="140" class="gmaj"/><text x="548.0" y="156" class="gl" text-anchor="middle">75</text>
+<text x="38" y="12" class="gl gl-unit" text-anchor="end">°C</text>
+<text x="548" y="170" class="gl gl-unit" text-anchor="end">мин</text>
+<path d="M44.0 140.0 L64.2 78.1 L467.4 78.1 L487.5 39.5 L548.0 39.5" class="mline"/>
+<circle cx="64.2" cy="78.1" r="3.5" class="mdot"/><circle cx="487.5" cy="39.5" r="3.5" class="mdot"/>
+<text x="265.8" y="68.1" class="ml" text-anchor="middle">66 °C, 60 мин</text>
+<text x="514.4" y="29.5" class="ml" text-anchor="middle">76 °C, 10 мин</text>
+</svg>
+<ul class="steps"><li><b>66 °C</b> 60 мин, осахаривание</li><li><b>76 °C</b> 10 мин, мэш-аут</li></ul>
+</section>
+
+<section class="sec full">
+<h2>Кипячение <small>60 мин, затем вирпул</small></h2>
+<div class="boil">
+<div class="boil-flags"><div class="flag" style="left:0.00%"><b>Columbus</b><span>25 г</span><em>в начале кипа, 60 мин</em></div><div class="flag flag-up" style="left:56.25%"><b>Centennial</b><span>30 г</span><em>за 15 мин до конца</em></div><div class="flag" style="left:75.00%"><b>Citra + Simcoe</b><span>40 г + 30 г</span><em>вирпул 20 мин, 80 °C</em></div></div>
+<div class="boil-rt" style="--minor:6.2500%;--major:12.5000%">
+<i class="phase" style="left:0;width:75.00%"><span>кипячение 60 мин</span></i>
+<i class="phase wp" style="left:75.00%;width:25.00%"><span>вирпул 20 мин, 80 °C</span></i>
+<b class="tick" style="left:0.00%"></b><b class="tick" style="left:56.25%"></b><b class="tick" style="left:75.00%"></b>
+</div>
+<div class="boil-ax"><span style="left:0.00%">60</span><span style="left:12.50%">50</span><span style="left:25.00%">40</span><span style="left:37.50%">30</span><span style="left:50.00%">20</span><span style="left:62.50%">10</span><span style="left:75.00%">0</span><span style="left:87.50%">+10</span><span style="left:100.00%">+20</span></div>
+</div>
+<p class="boil-cap">Деления — минуты до конца кипячения; после нуля — минуты вирпула. Красные метки — закладки хмеля.</p>
+</section>
+
+<section class="sec full">
+<h2>Брожение</h2>
+<ul class="steps"><li><b>US-05</b> дрожжи</li><li><b>19 °C</b> основное брожение</li><li><b>Citra 60 г</b> сухое охмеление</li></ul>
+</section>
+</div>
+</main>
+</div>
+
+<p class="slip">Образец стиля</p>
+<div class="screen" id="spec">
+<main class="wrap spec">
+<div class="spec-grid">
+<div>
+<h2>Цвета</h2>
+<div class="swatches">
+<div class="sw"><i style="background:#F5F7F3"></i><b>#F5F7F3</b><span>бумага, фон</span></div>
+<div class="sw"><i style="background:#1F2A25"></i><b>#1F2A25</b><span>чернила, текст и деления</span></div>
+<div class="sw"><i style="background:#5B6762"></i><b>#5B6762</b><span>второстепенный текст</span></div>
+<div class="sw"><i style="background:#C9D4CC"></i><b>#C9D4CC</b><span>линейки, сетка бумаги</span></div>
+<div class="sw"><i style="background:#4C7A17"></i><b>#4C7A17</b><span>хмель: действия, рамки стиля</span></div>
+<div class="sw"><i style="background:#C43D2B"></i><b>#C43D2B</b><span>красный карандаш: текущее, вне рамок</span></div>
+</div>
+<p class="hint" style="margin-top:12px">Цвет пива в бокале и на шкалах — по EBC, он данные, а не часть палитры.</p>
+
+<h2 style="margin-top:30px">Кнопки и поля</h2>
+<div class="ctrls">
+<button class="btn-primary">Сохранить рецепт</button>
+<button>Отмена</button>
+<button class="btn-quiet">Скопировать</button>
+<button class="btn-danger">Удалить</button>
+</div>
+<div class="fields">
+<div><label class="field"><span class="lbl">Название</span><input type="text" value="American IPA"></label></div>
+<div><label class="field unit" data-unit="°C"><span class="lbl">Температура</span><input type="text" value="66,0"></label></div>
+<div><label class="field select"><span class="lbl">Стиль</span><select><option>21A American IPA</option></select></label></div>
+<div><label class="field unit invalid" data-unit="л"><span class="lbl">Партия</span><input type="text" value="0"></label><p class="hint err">Объём больше нуля</p></div>
+</div>
+</div>
+
+<div>
+<h2>Шрифты</h2>
+<div class="types">
+<p class="t1">Hoplab</p>
+<p class="role">Sofia Sans Condensed 800, название сервиса</p>
+<p class="t2">Ржаной с можжевельником</p>
+<p class="role">Sofia Sans Condensed 700, заголовки и названия рецептов</p>
+<p class="t3">1.063 &nbsp;15,5 °P &nbsp;53 IBU &nbsp;66,0 °C</p>
+<p class="role">Sofia Sans Condensed 600, цифры и деления шкал</p>
+<p class="t4">Сухой хмель закладывают при остаточном экстракте 1,5–2 %, пока дрожжи ещё активны и съедают кислород.</p>
+<p class="role">IBM Plex Sans 400, текст и описания</p>
+<p class="t5">Варка 2 ч 10 мин, автор Владимир</p>
+<p class="role">IBM Plex Sans 500, подписи и служебный текст</p>
+</div>
+
+<h2 style="margin-top:26px">Тёмная тема, «Варка» на телефоне</h2>
+<div class="dark-wrap">
+<div class="dark">
+<div class="brew-top"><h3>American IPA</h3><span class="live">пивоварня на связи</span></div>
+<p class="brew-step">Затирание, пауза 1 из 2</p>
+<div class="brew-body">
+<div class="brew-main">
+<div class="big">63,4<small>°C</small></div>
+<p class="sub">цель 66,0 °C, нагрев</p>
+<div class="timer">
+<div class="tnum">42:10<small>осталось из 60 мин</small></div>
+<div class="trt"><i style="width:29.7%"></i></div>
+<div class="tcap"><span>0</span><span>30</span><span>60</span></div>
+</div>
+<div class="brew-actions"><button>Пауза</button><button class="btn-primary">К мэш-ауту</button></div>
+</div>
+<div class="thermo">
+<div class="tv" style="--minor:5.0000%;--major:20.0000%">
+<i class="tfill" style="top:63.00%"></i>
+<b class="ttarget" style="top:50.00%"><span>цель 66,0</span></b>
+<b class="tcur" style="top:63.00%"><span>63,4</span></b>
+</div>
+<div class="tl"><span style="top:100.00%">56</span><span style="top:80.00%">60</span><span style="top:60.00%">64</span><span style="top:40.00%">68</span><span style="top:20.00%">72</span><span style="top:0.00%">76</span></div>
+</div>
+</div>
+</div>
+<p class="dark-cap">Те же чернила и деления на тёмной бумаге: текущая температура красным, цель зелёным пунктиром.</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div style="height:40px"></div>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoplab — направление Б, навигация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alumni+Sans:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+/* ── Токены — те же, что в b-tap-list.html ─────────────── */
+:root{
+  --oak:#221A14; --cask:#2E241C; --foam:#F4EAD6; --ash:#A8998A; --hop:#A3B35A;
+  --line:rgba(244,234,214,.14); --line-strong:rgba(244,234,214,.28);
+  --bg:var(--oak); --surface:var(--cask); --text:var(--foam); --muted:var(--ash);
+  --btn-bg:var(--foam); --btn-text:var(--oak);
+  --glass-line:rgba(244,234,214,.42); --glass-fill:rgba(244,234,214,.07); --foam-color:#F6ECD8;
+  --display:"Alumni Sans","Arial Narrow",sans-serif;
+  --serif:"Literata",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.5 var(--serif)}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--hop);outline-offset:2px}
+svg{display:block}
+.num{font-family:var(--display);font-weight:600;line-height:1}
+.num small{font-family:var(--serif);font-weight:400;font-size:.44em;margin-left:.08em}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+@media (max-width:480px){.wrap{padding:0 16px}}
+
+/* заметки макета */
+.mock-note{max-width:1180px;margin:56px auto 16px;padding:0 20px;color:var(--muted);font-style:italic;font-size:14px;display:flex;align-items:center;gap:14px}
+.mock-note::after{content:"";flex:1;height:1px;background:var(--line)}
+.mock-note:first-of-type{margin-top:36px}
+@media (max-width:480px){.mock-note{padding:0 16px;margin-top:44px}}
+.mock-title{max-width:1180px;margin:40px auto 0;padding:0 20px}
+.mock-title h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(44px,6vw,72px);line-height:.95}
+.mock-title p{margin:10px 0 0;max-width:62ch;color:var(--muted)}
+@media (max-width:480px){.mock-title{padding:0 16px}}
+
+/* ── Общие элементы шапки ─────────────────────────────── */
+.brand{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;letter-spacing:.01em;white-space:nowrap}
+.hubs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:21px;line-height:1}
+.hubs a{position:relative;display:flex;align-items:center;height:64px;padding:0 12px;color:var(--muted)}
+.hubs a:hover{color:var(--text)}
+.hubs a[aria-current]{color:var(--text)}
+.hubs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:3px;background:var(--text)}
+.hubs a .dot{position:absolute;top:18px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--hop)}
+
+.search{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);min-width:0}
+.search svg{flex:none;opacity:.6}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;padding:0;font-size:15px}
+.search input::placeholder{color:var(--muted);font-style:italic}
+.search kbd{font-family:var(--display);font-weight:600;font-size:14px;line-height:1;padding:3px 5px 2px;border:1px solid var(--line-strong);border-radius:4px;color:var(--muted)}
+.search .keys{display:flex;gap:3px;flex:none}
+
+.live-ind{display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 12px 0 10px;border-radius:6px;border:1px solid rgba(163,179,90,.5);font-family:var(--display);font-weight:600;font-size:18px;line-height:1;white-space:nowrap}
+.live-ind i{width:9px;height:9px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 3px rgba(163,179,90,.22)}
+.live-ind b{font-weight:600;color:var(--hop)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font-family:var(--display);font-weight:700;font-size:18px;line-height:1;letter-spacing:.01em;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--btn-bg);color:var(--btn-text)}
+.btn-secondary{border-color:var(--line-strong)}
+
+.avatar{width:36px;height:36px;border-radius:50%;background:#B54C00;color:var(--foam);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:20px;flex:none}
+.account{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;position:relative}
+.account .chev{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6}
+
+.tabs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{position:relative;display:flex;align-items:center;height:46px;padding:0 12px;color:var(--muted);white-space:nowrap}
+.tabs a:hover{color:var(--text)}
+.tabs a[aria-current]{color:var(--text)}
+.tabs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--text)}
+.tabs .count{margin-left:6px;font-size:15px;color:var(--muted)}
+
+/* ── Десктопный кадр ─────────────────────────────────── */
+.frame{border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--bg)}
+.frame-desktop{overflow-x:auto}
+.frame-desktop > *{min-width:1100px}
+.dh1{display:flex;align-items:center;gap:20px;height:64px;padding:0 24px;border-bottom:1px solid var(--line)}
+.dh1 .hubs{margin-left:8px}
+.dh1 .search{flex:1;max-width:360px;margin-left:auto}
+.dh2{display:flex;align-items:center;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dh2 .tabs a{padding:0 12px}
+.dh2 .tabs a:first-child{padding-left:0}
+.dh2 .tabs a:first-child::after{left:0}
+
+/* выпадающее меню аккаунта */
+.menu{position:absolute;right:0;top:46px;width:248px;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:6px;z-index:5;box-shadow:0 18px 40px rgba(0,0,0,.45);font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.3}
+.menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.menu .who b{display:block;font-family:var(--display);font-weight:700;font-size:20px}
+.menu .who span{color:var(--muted);font-size:13px;font-style:italic}
+.menu a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:5px}
+.menu a:hover{background:rgba(244,234,214,.06)}
+.menu a .badge{font-family:var(--display);font-weight:700;font-size:15px;line-height:1;padding:3px 7px 2px;border-radius:10px;background:var(--hop);color:var(--oak)}
+.menu a .note{font-size:12px;font-style:italic;color:var(--muted)}
+.menu .sep{height:1px;background:var(--line);margin:6px 0}
+.menu a.out{color:var(--muted)}
+
+/* содержимое под шапкой: карточки рецептов */
+.catalog-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px 24px 18px;flex-wrap:wrap}
+.catalog-head h1{margin:0;font-family:var(--display);font-weight:800;font-size:72px;line-height:.9}
+.catalog-head p{margin:0 0 8px;max-width:38ch;color:var(--muted);font-size:16px;line-height:1.4}
+.cards{list-style:none;margin:0;padding:0 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{
+  position:relative;display:flex;min-width:0;gap:16px;padding:16px;border-radius:12px;height:100%;
+  border:1px solid var(--line);
+  background:radial-gradient(130% 100% at 0% 0%, color-mix(in oklab, var(--beer) 13%, transparent), transparent 65%) var(--surface);
+}
+.card:hover{border-color:var(--line-strong)}
+.card .glass{width:64px;height:96px;flex:none;transition:transform .3s}
+.card:hover .glass{transform:translateY(-4px) rotate(-3deg)}
+@media (prefers-reduced-motion:reduce){.card .glass{transition:none}}
+.card .cb{display:flex;flex-direction:column;min-width:0;flex:1}
+.card .cname{font-family:var(--display);font-weight:700;font-size:25px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cstyle{font-size:14px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cstyle b{font-weight:600;color:var(--text)}
+.card .cabout{margin:8px 0 0;font-style:italic;font-size:14px;line-height:1.4;height:2.8em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card .cstats{display:flex;gap:10px;margin-top:12px;white-space:nowrap;overflow:hidden;font-size:12px;color:var(--muted);align-items:baseline}
+.card .cstats b{font-family:var(--display);font-weight:600;font-size:21px;line-height:1;color:var(--text);margin-right:3px}
+.card .cfoot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:12px;font-size:13px;color:var(--muted);min-height:44px}
+.card .cfoot > span{padding-bottom:4px;line-height:1.3}
+.thumbs{display:flex;flex:none}
+.thumbs i,.thumbs em{width:36px;height:36px;border-radius:6px;border:2px solid var(--surface);margin-left:-10px;flex:none}
+.thumbs i:first-child{margin-left:0}
+.thumbs i{background:linear-gradient(160deg, color-mix(in oklab, var(--beer) 55%, #FFD878), var(--beer) 55%, color-mix(in oklab, var(--beer) 55%, #000))}
+.thumbs i:nth-child(2){background:linear-gradient(200deg, color-mix(in oklab, var(--beer) 70%, #fff), var(--beer) 50%, color-mix(in oklab, var(--beer) 40%, #000))}
+.thumbs i:nth-child(3){background:linear-gradient(120deg, var(--beer), color-mix(in oklab, var(--beer) 50%, #000))}
+.thumbs em{display:grid;place-items:center;background:var(--oak);font-style:normal;font-family:var(--display);font-weight:600;font-size:16px;color:var(--muted)}
+.fade{height:40px;background:linear-gradient(transparent,var(--bg))}
+
+/* содержимое: «Варка → Сейчас» */
+.now{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px 48px;padding:28px 24px 24px;align-items:start}
+.now .rec{color:var(--muted);font-size:15px}
+.now .rec b{color:var(--text);font-weight:600}
+.now .temp{font-family:var(--display);font-weight:700;font-size:168px;line-height:.85;letter-spacing:-.02em;margin:6px 0 0}
+.now .temp small{font-family:var(--serif);font-weight:400;font-size:40px;margin-left:6px;color:var(--muted)}
+.now .target{font-size:16px;color:var(--muted);margin-top:14px;font-style:italic}
+.now .target b{color:var(--text);font-style:normal;font-weight:600}
+.now .stage{padding-top:6px}
+.now .stage h2{margin:0;font-family:var(--display);font-weight:700;font-size:40px;line-height:1}
+.now .stage h2 span{color:var(--muted);font-weight:500;font-size:24px;margin-left:10px}
+.timer{font-family:var(--display);font-weight:600;font-size:88px;line-height:1;margin:10px 0 0}
+.timer small{font-family:var(--serif);font-weight:400;font-size:18px;color:var(--muted);margin-left:8px}
+.pauses{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--line)}
+.pauses li{display:grid;grid-template-columns:70px 70px minmax(0,1fr);gap:0 14px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.pauses li .num{font-size:28px;color:var(--muted)}
+.pauses li.done{color:var(--muted);opacity:.6}
+.pauses li.cur{color:var(--text)}
+.pauses li.cur .num{color:var(--text)}
+.pauses li .what{font-size:15px;font-style:italic}
+.pauses li.cur .what{font-style:normal;font-weight:600}
+.now .actions{grid-column:1 / -1;display:flex;gap:10px}
+.now .actions .btn{height:44px;font-size:21px;padding:0 20px}
+
+/* ── Телефонные кадры ─────────────────────────────────── */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,390px));gap:32px;justify-content:start}
+.phone{width:390px;max-width:100%;height:760px;border:1px solid var(--line-strong);border-radius:22px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.ph1{display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;flex:none}
+.ph1 .brand{font-size:26px;margin-right:auto}
+.ph1 .icon{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text)}
+.ph1 .icon:hover{background:var(--surface)}
+.ph1 .avatar{width:34px;height:34px;font-size:18px}
+.ph2{position:relative;flex:none;border-bottom:1px solid var(--line);background:var(--surface)}
+.ph2 .tabs{padding:0 16px}
+.ph2 .tabs a{height:44px;font-size:18px;padding:0 10px}
+.ph2 .tabs a:first-child{padding-left:0}
+.ph2 .tabs a:first-child::after{left:0}
+.ph2::after{content:"";position:absolute;right:0;top:0;bottom:0;width:36px;background:linear-gradient(90deg,transparent,var(--surface));pointer-events:none}
+.ph-body{flex:1;overflow:hidden;position:relative}
+.ph-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.ph-bottom{flex:none;display:grid;grid-template-columns:repeat(4,1fr);height:68px;border-top:1px solid var(--line-strong);background:var(--surface);padding:0 6px 4px}
+.ph-bottom a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;color:var(--muted);font-family:var(--display);font-weight:600;font-size:15px;line-height:1;border-radius:8px}
+.ph-bottom a[aria-current]{color:var(--text)}
+.ph-bottom a svg{width:26px;height:26px}
+.ph-bottom a .dot{position:absolute;top:9px;left:calc(50% + 10px);width:8px;height:8px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 2px var(--surface)}
+
+/* телефон: каталог — одна колонка карточек */
+.m-head{padding:14px 16px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.m-head h1{margin:0;font-family:var(--display);font-weight:800;font-size:46px;line-height:.9}
+.m-head .btn{height:36px}
+.m-cards{list-style:none;margin:0;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.m-cards .card{padding:14px;gap:12px}
+.m-cards .card .glass{width:56px;height:84px}
+.m-cards .card .cname{font-size:24px}
+.m-cards .card .cfoot{font-size:12px}
+@media (max-width:480px){
+  .phones{margin:0 -16px;gap:24px}
+  .phone{border-radius:0;border-left:0;border-right:0}
+}
+
+/* телефон: справочник хмеля */
+.m-ref{padding:0 16px}
+.m-ref .m-search{margin:14px 0 10px}
+.m-ref .m-search .search{height:40px}
+.m-ref .filters{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px 8px;padding:0 16px}
+.m-ref .filters::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;flex:none}
+.chip{font-family:var(--display);font-weight:600;font-size:16px;line-height:1;padding:8px 11px 7px;border:1px solid var(--line-strong);border-radius:16px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--foam);color:var(--oak);border-color:var(--foam)}
+.hops{list-style:none;margin:0;padding:0;border-top:1px solid var(--line-strong)}
+.hops li{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:0 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.hops .h{font-family:var(--display);font-weight:700;font-size:26px;line-height:1}
+.hops .h span{font-family:var(--serif);font-weight:400;font-size:13px;color:var(--muted);margin-left:8px;font-style:italic}
+.hops .d{margin:4px 0 0;font-style:italic;font-size:14px;line-height:1.35;color:var(--muted)}
+.hops .aa{text-align:right}
+.hops .aa .num{font-size:36px;white-space:nowrap}
+.hops .aa .lbl{display:block;font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+
+/* ── Как растёт навигация ─────────────────────────────── */
+.grow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-top:8px}
+.grow .hub{border-top:3px solid var(--text);padding-top:12px}
+.grow .hub h3{margin:0 0 8px;font-family:var(--display);font-weight:700;font-size:28px;line-height:1}
+.grow .hub ul{list-style:none;margin:0;padding:0;font-size:15px;line-height:1.35}
+.grow .hub li{padding:6px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.grow .hub li.new{color:var(--hop);font-weight:600;border-bottom-style:dashed}
+.grow .hub li.new span{display:block;font-weight:400;font-size:13px;font-style:italic;color:var(--muted)}
+.grow .hub.ghost{border-top-style:dashed;border-top-color:var(--line-strong);color:var(--muted)}
+.grow .hub.ghost h3{color:var(--muted)}
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 40px;margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
+.rules h4{margin:0 0 6px;font-family:var(--display);font-weight:700;font-size:24px;line-height:1}
+.rules p{margin:0;font-size:15px;line-height:1.45;color:var(--muted)}
+.rules p b{color:var(--text);font-weight:600}
+@media (max-width:900px){.grow{grid-template-columns:repeat(2,minmax(0,1fr))}.rules{grid-template-columns:1fr}}
+@media (max-width:480px){.grow{grid-template-columns:1fr}}
+
+.foot{margin:64px 0 40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;font-style:italic}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="shade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".24"/>
+      <stop offset=".22" stop-color="#fff" stop-opacity=".05"/>
+      <stop offset=".6" stop-color="#000" stop-opacity=".04"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".38"/>
+    </linearGradient>
+    <path id="foam-s" d="M-2,-2 H82 V13 C72,19 63,11 54,15 C45,19 37,11 29,15 C21,19 10,12 -2,16 Z"/>
+    <path id="foam-l" d="M-2,-2 H82 V23 C72,29 63,21 54,25 C45,29 37,21 29,25 C21,29 10,22 -2,26 Z"/>
+
+    <clipPath id="c-stout"><path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z"/></clipPath>
+    <clipPath id="c-goblet"><path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z"/></clipPath>
+    <clipPath id="c-weizen"><path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z"/></clipPath>
+    <clipPath id="c-pils"><path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z"/></clipPath>
+    <clipPath id="c-ipa"><path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z"/></clipPath>
+    <clipPath id="c-becher"><path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z"/></clipPath>
+
+    <symbol id="g-stout" viewBox="0 0 80 120">
+      <g clip-path="url(#c-stout)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-goblet" viewBox="0 0 80 120">
+      <g clip-path="url(#c-goblet)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)" transform="translate(0,2)"/>
+      </g>
+      <path d="M37,67 L43,67 L45,100 L35,100 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M20,109 C20,103 60,103 60,109 C60,114 20,114 20,109 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-weizen" viewBox="0 0 80 120">
+      <g clip-path="url(#c-weizen)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-l" fill="var(--foam-color)"/>
+      </g>
+      <path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-pils" viewBox="0 0 80 120">
+      <g clip-path="url(#c-pils)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M37,98 L43,98 L44,106 L36,106 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M23,110 C23,105 57,105 57,110 C57,115 23,115 23,110 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-ipa" viewBox="0 0 80 120">
+      <g clip-path="url(#c-ipa)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <g stroke="var(--glass-line)" stroke-width="1" opacity=".7">
+          <path d="M25,78 H55 M25,88 H55 M25,98 H55 M25,108 H55"/>
+        </g>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-becher" viewBox="0 0 80 120">
+      <g clip-path="url(#c-becher)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="mock-title">
+  <h1>Навигация, которая не переполняется</h1>
+  <p>Четыре хаба наверху, их число не растёт. Всё новое добавляется вкладками внутрь хаба. Поиск один на сайт, аккаунт справа, идущая варка видна из любого раздела.</p>
+</div>
+
+<!-- ════════ 1. Десктоп, гость: Рецепты → Каталог ════════ -->
+<p class="mock-note">Макет 1: десктоп, гость, «Рецепты → Каталог»</p>
+<div class="wrap">
+<div class="frame frame-desktop">
+  <div>
+    <div class="dh1">
+      <a class="brand" href="#">Hoplab</a>
+      <nav class="hubs" aria-label="Разделы">
+        <a href="#" aria-current="page">Рецепты</a>
+        <a href="#">Варка</a>
+        <a href="#">Склад</a>
+        <a href="#">Справочник</a>
+      </nav>
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input placeholder="Рецепты, ингредиенты, разделы">
+        <span class="keys"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+      </label>
+      <a class="btn btn-secondary" href="#">Войти</a>
+    </div>
+    <div class="dh2">
+      <nav class="tabs" aria-label="Рецепты">
+        <a href="#" aria-current="page">Каталог</a>
+        <a href="#">Мои рецепты</a>
+        <a href="#">Избранное и подборки</a>
+        <a href="#">Лента</a>
+      </nav>
+    </div>
+
+    <div class="catalog-head">
+      <h1>Каталог</h1>
+      <p>Открытые рецепты пивоваров. Цвет в бокале и отсвет карточки честные: считаются по EBC.</p>
+    </div>
+    <ol class="cards">
+      <li><a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+        <svg class="glass"><use href="#g-becher"/></svg>
+        <div class="cb">
+          <div class="cname">Ржаной с можжевельником</div>
+          <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+          <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+          <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#A13700">
+        <svg class="glass"><use href="#g-goblet"/></svg>
+        <div class="cb">
+          <div class="cname">Belgian Dubbel</div>
+          <div class="cstyle"><b>26B</b>, бельгийский дуббель</div>
+          <p class="cabout">Тёмно-янтарный до медного, с плотной кремовой пеной, сухофрукты и карамель</p>
+          <div class="cstats"><span><b>16,4</b>°P</span><span><b>7,2</b>% ABV</span><span><b>19</b>IBU</span><span><b>38</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 40 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#2B0508;--foam-color:#E8D5B4">
+        <svg class="glass"><use href="#g-stout"/></svg>
+        <div class="cb">
+          <div class="cname">Irish Stout</div>
+          <div class="cstyle"><b>15B</b>, ирландский стаут</div>
+          <p class="cabout">Сухой, кофейная горечь жжёного ячменя, кремовая пена</p>
+          <div class="cstats"><span><b>10,3</b>°P</span><span><b>4,1</b>% ABV</span><span><b>34</b>IBU</span><span><b>75</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 10 мин, автор Владимир</span><div class="thumbs"><i></i><i></i></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#FFBF42;--haze:.26">
+        <svg class="glass"><use href="#g-weizen"/></svg>
+        <div class="cb">
+          <div class="cname">Weissbier</div>
+          <div class="cstyle"><b>10A</b>, пшеничное нефильтрованное</div>
+          <p class="cabout">Банан и гвоздика от дрожжей, мягкое пшеничное тело, мутное</p>
+          <div class="cstats"><span><b>12,0</b>°P</span><span><b>5,0</b>% ABV</span><span><b>12</b>IBU</span><span><b>8</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 50 мин, автор Владимир</span></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#F39C00">
+        <svg class="glass"><use href="#g-ipa"/></svg>
+        <div class="cb">
+          <div class="cname">American IPA</div>
+          <div class="cstyle"><b>21A</b>, американский IPA</div>
+          <p class="cabout">Цитрус, тропические фрукты и хвоя на сухом теле, вирпул и сухое охмеление</p>
+          <div class="cstats"><span><b>15,5</b>°P</span><span><b>7,0</b>% ABV</span><span><b>53</b>IBU</span><span><b>14</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 10 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+5</em></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#FFC54E">
+        <svg class="glass"><use href="#g-pils"/></svg>
+        <div class="cb">
+          <div class="cname">German Pils</div>
+          <div class="cstyle"><b>5D</b>, немецкий пилснер</div>
+          <p class="cabout">Сухой, хмелевой, с чистой горечью и цветочным ароматом</p>
+          <div class="cstats"><span><b>11,7</b>°P</span><span><b>5,0</b>% ABV</span><span><b>30</b>IBU</span><span><b>7</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+        </div>
+      </a></li>
+    </ol>
+    <div class="fade"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ 2. Десктоп, вошедший: Варка → Сейчас ════════ -->
+<p class="mock-note">Макет 2: десктоп, вошедший пивовар, «Варка → Сейчас», меню аккаунта открыто</p>
+<div class="wrap">
+<div class="frame frame-desktop">
+  <div>
+    <div class="dh1">
+      <a class="brand" href="#">Hoplab</a>
+      <nav class="hubs" aria-label="Разделы">
+        <a href="#">Рецепты</a>
+        <a href="#" aria-current="page">Варка</a>
+        <a href="#">Склад</a>
+        <a href="#">Справочник</a>
+      </nav>
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input placeholder="Рецепты, ингредиенты, разделы">
+        <span class="keys"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+      </label>
+      <a class="live-ind" href="#"><i></i>Варка идёт, затирание <b>64,5 °C</b></a>
+      <div class="account">
+        <span class="avatar">В</span><span>Владимир</span><span class="chev"></span>
+        <div class="menu" role="menu">
+          <div class="who"><b>Владимир</b><span>vladimir@example.ru</span></div>
+          <a href="#">Мои пивоварни</a>
+          <a href="#">Профиль</a>
+          <a href="#">Настройки</a>
+          <a href="#">Уведомления<span class="badge">2</span></a>
+          <a href="#">Пользователи<span class="note">администратору</span></a>
+          <div class="sep"></div>
+          <a href="#" class="out">Выйти</a>
+        </div>
+      </div>
+    </div>
+    <div class="dh2">
+      <nav class="tabs" aria-label="Варка">
+        <a href="#" aria-current="page">Сейчас</a>
+        <a href="#">Журнал варок</a>
+        <a href="#">Календарь партий<span class="count">3</span></a>
+      </nav>
+    </div>
+
+    <div class="now">
+      <div>
+        <div class="rec">Варится <b>American IPA</b>, партия 30 л, начало 10:40</div>
+        <p class="temp">64,5<small>°C</small></p>
+        <div class="target">цель <b>66 °C</b>, нагрев</div>
+      </div>
+      <div class="stage">
+        <h2>Затирание<span>пауза 2 из 3</span></h2>
+        <p class="timer">38:20<small>осталось</small></p>
+        <ol class="pauses">
+          <li class="done"><span class="num">52<small>°C</small></span><span class="num">15<small>мин</small></span><span class="what">белковая, готово</span></li>
+          <li class="cur"><span class="num">66<small>°C</small></span><span class="num">60<small>мин</small></span><span class="what">Осахаривание</span></li>
+          <li><span class="num">76<small>°C</small></span><span class="num">10<small>мин</small></span><span class="what">мэш-аут</span></li>
+        </ol>
+      </div>
+      <div class="actions"><a class="btn btn-primary" href="#">Следующая пауза</a><a class="btn btn-secondary" href="#">Пауза таймера</a><a class="btn btn-secondary" href="#">Остановить варку</a></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ 3 и 4. Телефон ════════ -->
+<p class="mock-note">Макеты 3 и 4: телефон 390 px, «Рецепты → Каталог» и «Справочник → Хмель»</p>
+<div class="wrap">
+<div class="phones">
+
+  <div class="phone">
+    <div class="ph1">
+      <a class="brand" href="#">Hoplab</a>
+      <a class="icon" href="#" aria-label="Поиск"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a>
+      <a class="btn btn-secondary" href="#">Войти</a>
+    </div>
+    <div class="ph2">
+      <nav class="tabs" aria-label="Рецепты">
+        <a href="#" aria-current="page">Каталог</a>
+        <a href="#">Мои рецепты</a>
+        <a href="#">Избранное и подборки</a>
+        <a href="#">Лента</a>
+      </nav>
+    </div>
+    <div class="ph-body">
+      <div class="m-head"><h1>Каталог</h1><a class="btn btn-primary" href="#">Добавить</a></div>
+      <ol class="m-cards">
+      <li><a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+        <svg class="glass"><use href="#g-becher"/></svg>
+        <div class="cb">
+          <div class="cname">Ржаной с можжевельником</div>
+          <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+          <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+          <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#A13700">
+        <svg class="glass"><use href="#g-goblet"/></svg>
+        <div class="cb">
+          <div class="cname">Belgian Dubbel</div>
+          <div class="cstyle"><b>26B</b>, бельгийский дуббель</div>
+          <p class="cabout">Тёмно-янтарный до медного, с плотной кремовой пеной, сухофрукты и карамель</p>
+          <div class="cstats"><span><b>16,4</b>°P</span><span><b>7,2</b>% ABV</span><span><b>19</b>IBU</span><span><b>38</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 40 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+        </div>
+      </a></li>
+      <li><a class="card" href="#" style="--beer:#2B0508;--foam-color:#E8D5B4">
+        <svg class="glass"><use href="#g-stout"/></svg>
+        <div class="cb">
+          <div class="cname">Irish Stout</div>
+          <div class="cstyle"><b>15B</b>, ирландский стаут</div>
+          <p class="cabout">Сухой, кофейная горечь жжёного ячменя, кремовая пена</p>
+          <div class="cstats"><span><b>10,3</b>°P</span><span><b>4,1</b>% ABV</span><span><b>34</b>IBU</span><span><b>75</b>EBC</span></div>
+          <div class="cfoot"><span>2 ч 10 мин, автор Владимир</span><div class="thumbs"><i></i><i></i></div></div>
+        </div>
+      </a></li>
+      </ol>
+    </div>
+    <nav class="ph-bottom" aria-label="Разделы">
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3z"/><path d="M7.4 8h9.2"/></svg>Рецепты</a>
+      <a href="#"><span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10h16l-1.5 10h-13L4 10z"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/><path d="M9 4c0-1 1-1.5 1-2.5M13 4c0-1 1-1.5 1-2.5"/></svg>Варка</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg>Склад</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg>Справочник</a>
+    </nav>
+  </div>
+
+  <div class="phone">
+    <div class="ph1">
+      <a class="brand" href="#">Hoplab</a>
+      <a class="icon" href="#" aria-label="Поиск"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a>
+      <span class="avatar">В</span>
+    </div>
+    <div class="ph2">
+      <nav class="tabs" aria-label="Справочник">
+        <a href="#">Стили BJCP</a>
+        <a href="#">Солод</a>
+        <a href="#" aria-current="page">Хмель</a>
+        <a href="#">Дрожжи</a>
+        <a href="#">Вода</a>
+        <a href="#">Оборудование</a>
+      </nav>
+    </div>
+    <div class="ph-body">
+      <div class="m-ref">
+        <div class="m-head" style="padding-left:0;padding-right:0"><h1>Хмель</h1><span class="num" style="font-size:22px;color:var(--muted)">184 сорта</span></div>
+        <div class="filters"><span class="chip" aria-pressed="true">Все</span><span class="chip">Горький</span><span class="chip">Ароматный</span><span class="chip">США</span><span class="chip">Германия</span></div>
+        <ul class="hops">
+          <li><div><div class="h">Citra<span>США</span></div><p class="d">Грейпфрут, лайм, маракуйя. Вирпул и сухое охмеление</p></div><div class="aa"><span class="num">12<small>%</small></span><span class="lbl">альфа-кислоты</span></div></li>
+          <li><div><div class="h">Simcoe<span>США</span></div><p class="d">Хвоя, грейпфрут, маракуйя. Горечь и аромат</p></div><div class="aa"><span class="num">13<small>%</small></span><span class="lbl">альфа-кислоты</span></div></li>
+          <li><div><div class="h">Hallertau Mittelfrüh<span>Германия</span></div><p class="d">Цветы, травы, пряность. Лагеры</p></div><div class="aa"><span class="num">4<small>%</small></span><span class="lbl">альфа-кислоты</span></div></li>
+          <li><div><div class="h">Saaz<span>Чехия</span></div><p class="d">Мягкая пряность, травы. Пилснер</p></div><div class="aa"><span class="num">3,5<small>%</small></span><span class="lbl">альфа-кислоты</span></div></li>
+        </ul>
+      </div>
+    </div>
+    <nav class="ph-bottom" aria-label="Разделы">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3z"/><path d="M7.4 8h9.2"/></svg>Рецепты</a>
+      <a href="#"><span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10h16l-1.5 10h-13L4 10z"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/><path d="M9 4c0-1 1-1.5 1-2.5M13 4c0-1 1-1.5 1-2.5"/></svg>Варка</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg>Склад</a>
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg>Справочник</a>
+    </nav>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════ 5. Как растёт навигация ════════ -->
+<p class="mock-note">Макет 5: как растёт навигация</p>
+<div class="wrap">
+  <div class="grow">
+    <div class="hub">
+      <h3>Рецепты</h3>
+      <ul><li>Каталог</li><li>Мои рецепты</li><li>Избранное и подборки</li><li>Лента</li><li class="new">Дегустации<span>новый раздел: оценки сваренного пива</span></li></ul>
+    </div>
+    <div class="hub">
+      <h3>Варка</h3>
+      <ul><li>Сейчас</li><li>Журнал варок</li><li>Календарь партий</li><li class="new">Отчёты<span>новый раздел: план и факт по партиям</span></li></ul>
+    </div>
+    <div class="hub">
+      <h3>Склад</h3>
+      <ul><li>Инвентарь</li><li>Покупки</li><li>Магазины и цены</li></ul>
+    </div>
+    <div class="hub">
+      <h3>Справочник</h3>
+      <ul><li>Стили BJCP</li><li>Солод</li><li>Хмель</li><li>Дрожжи</li><li>Вода</li><li>Оборудование</li><li class="new">Добавки<span>новый раздел: соли, кислоты, осветлители</span></li></ul>
+    </div>
+  </div>
+  <div class="rules">
+    <div><h4>Новое — вкладкой в хаб</h4><p>Раздел добавляется второй строкой в тот хаб, где его будут искать. <b>Дегустации</b> идут к рецептам, <b>отчёты</b> к варке, <b>добавки</b> в справочник. Шапка при этом не меняется.</p></div>
+    <div><h4>Хабов не больше пяти</h4><p>Пятый появляется только для того, что не ложится ни в один из четырёх, например <b>Сообщество</b>. Шестого не бывает: нижняя панель телефона держит пять кнопок по 44 px, дальше начинается «Ещё».</p></div>
+    <div><h4>Вкладок — сколько нужно</h4><p>Строка вкладок прокручивается на телефоне и показывает до семи на десктопе; остальные уходят в последнюю вкладку <b>Ещё</b>. Порядок — по частоте использования, не по алфавиту.</p></div>
+  </div>
+  <p class="foot">Направление Б «Тап-лист», навигация. Токены, шрифты и бокалы те же, что в b-tap-list.html.</p>
+</div>
+</body>
+</html>

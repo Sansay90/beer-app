@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoplab — направление Б, выбор шрифта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alumni+Sans:wght@600;700&family=PT+Sans+Narrow:wght@400;700&family=Fira+Sans+Extra+Condensed:wght@500;600;700&family=Sofia+Sans+Semi+Condensed:wght@600;700;800&family=Sofia+Sans+Condensed:wght@600;700;800&family=Oswald:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --oak:#221A14; --cask:#2E241C; --foam:#F4EAD6; --ash:#A8998A; --hop:#A3B35A;
+  --line:rgba(244,234,214,.14); --line-strong:rgba(244,234,214,.28);
+  --bg:var(--oak); --surface:var(--cask); --text:var(--foam); --muted:var(--ash);
+  --btn-bg:var(--foam); --btn-text:var(--oak);
+  --glass-line:rgba(244,234,214,.42); --glass-fill:rgba(244,234,214,.07); --foam-color:#F6ECD8;
+  --serif:"Literata",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.5 var(--serif)}
+a{color:inherit;text-decoration:none}
+svg{display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.num{font-family:var(--display);font-weight:var(--w-num,600);line-height:1;font-variant-numeric:tabular-nums}
+.num small{font-family:var(--serif);font-weight:400;font-size:.44em;margin-left:.08em}
+
+.intro{padding:40px 0 8px}
+.intro h1{margin:0;font-family:"Literata",serif;font-weight:600;font-size:40px;line-height:1.1}
+.intro p{margin:10px 0 0;max-width:70ch;color:var(--muted)}
+
+.band{padding:28px 0 36px;border-top:1px solid var(--line)}
+.band-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 32px;align-items:baseline;margin-bottom:18px}
+.band-head h2{margin:0;font-family:var(--display);font-weight:var(--w-name);font-size:44px;line-height:1}
+.band-head h2 span{font-family:var(--serif);font-weight:400;font-style:italic;font-size:15px;color:var(--muted);margin-left:12px}
+.metrics{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.metrics li{border:1px solid var(--line-strong);border-radius:14px;padding:3px 10px}
+.band-head p{grid-column:1 / -1;margin:0;max-width:80ch;color:var(--muted);font-size:15px}
+
+.band-grid{display:grid;grid-template-columns:360px 360px minmax(0,1fr);gap:16px 24px;align-items:stretch}
+.card{position:relative;display:flex;min-width:0;gap:16px;padding:16px;border-radius:12px;height:100%;border:1px solid var(--line);
+  background:radial-gradient(130% 100% at 0% 0%, color-mix(in oklab, var(--beer) 13%, transparent), transparent 65%) var(--surface)}
+.card .glass{width:64px;height:96px;flex:none}
+.card .cb{display:flex;flex-direction:column;min-width:0;flex:1}
+.card .cname{font-family:var(--display);font-weight:var(--w-name);font-size:25px;line-height:1.02;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .cstyle{font-size:14px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cstyle b{font-weight:600;color:var(--text)}
+.card .cabout{margin:8px 0 0;font-style:italic;font-size:14px;line-height:1.4;height:2.8em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card .cstats{display:flex;gap:10px;margin-top:12px;white-space:nowrap;overflow:hidden;font-size:12px;color:var(--muted);align-items:baseline}
+.card .cstats b{font-family:var(--display);font-weight:var(--w-num);font-size:21px;line-height:1;color:var(--text);margin-right:3px;font-variant-numeric:tabular-nums}
+.card .cfoot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:12px;font-size:13px;color:var(--muted);min-height:44px}
+.card .cfoot > span{padding-bottom:4px;line-height:1.3}
+.thumbs{display:flex;flex:none}
+.thumbs i,.thumbs em{width:36px;height:36px;border-radius:6px;border:2px solid var(--surface);margin-left:-10px;flex:none}
+.thumbs i:first-child{margin-left:0}
+.thumbs i{background:linear-gradient(160deg, color-mix(in oklab, var(--beer) 55%, #FFD878), var(--beer) 55%, color-mix(in oklab, var(--beer) 55%, #000))}
+.thumbs i:nth-child(2){background:linear-gradient(200deg, color-mix(in oklab, var(--beer) 70%, #fff), var(--beer) 50%, color-mix(in oklab, var(--beer) 40%, #000))}
+.thumbs i:nth-child(3){background:linear-gradient(120deg, var(--beer), color-mix(in oklab, var(--beer) 50%, #000))}
+.thumbs em{display:grid;place-items:center;background:var(--oak);font-style:normal;font-family:var(--display);font-weight:600;font-size:16px;color:var(--muted)}
+
+.navs{display:flex;flex-direction:column;gap:10px;min-width:0}
+.hubs,.tabs{display:flex;gap:4px;font-family:var(--display);font-weight:var(--w-nav);line-height:1;overflow:hidden}
+.hubs{font-size:21px;border-bottom:1px solid var(--line)}
+.hubs a{position:relative;display:flex;align-items:center;height:48px;padding:0 12px;color:var(--muted)}
+.hubs a:first-child{padding-left:0}
+.hubs a[aria-current]{color:var(--text)}
+.hubs a[aria-current]::after{content:"";position:absolute;left:0;right:12px;bottom:-1px;height:3px;background:var(--text)}
+.tabs{font-size:19px;background:var(--surface);padding:0 12px;border-radius:6px}
+.tabs a{position:relative;display:flex;align-items:center;height:42px;padding:0 10px;color:var(--muted);white-space:nowrap}
+.tabs a[aria-current]{color:var(--text)}
+.tabs a[aria-current]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--text)}
+.btns{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 18px;border-radius:6px;border:1px solid transparent;font-family:var(--display);font-weight:var(--w-name);font-size:20px;line-height:1;white-space:nowrap}
+.btn-primary{background:var(--btn-bg);color:var(--btn-text)}
+.btn-secondary{border-color:var(--line-strong)}
+.hop{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0 0;margin-top:auto;border-top:1px solid var(--line)}
+.hop .h{font-family:var(--display);font-weight:var(--w-name);font-size:26px;line-height:1}
+.hop .h span{font-family:var(--serif);font-weight:400;font-size:13px;color:var(--muted);margin-left:8px;font-style:italic}
+.hop .aa .num{font-size:36px}
+
+.bignums{display:flex;flex-wrap:wrap;gap:16px 48px;align-items:baseline;margin-top:22px;padding-top:18px;border-top:1px dashed var(--line)}
+.bignums .num{font-size:100px;letter-spacing:-.01em;white-space:nowrap}
+.bignums .num.tiny{font-size:40px;color:var(--muted)}
+.bignums .num.tiny small{font-size:13px;margin:0 8px}
+
+.verdict{border-top:1px solid var(--line-strong);padding:32px 0 48px}
+.verdict h2{margin:0 0 10px;font-family:"Literata",serif;font-weight:600;font-size:30px;line-height:1.1}
+.verdict p{margin:0 0 10px;max-width:78ch}
+.verdict p b{font-weight:600}
+.rejected{margin:18px 0 0;padding:0;list-style:none;max-width:78ch;color:var(--muted);font-size:15px}
+.rejected li{padding:5px 0;border-top:1px solid var(--line)}
+.rejected li b{color:var(--text);font-weight:600}
+@media (max-width:1100px){.band-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.navs{grid-column:1 / -1}}
+@media (max-width:760px){.band-grid{grid-template-columns:minmax(0,1fr)}.bignums .num{font-size:64px}.band-head{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="shade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".24"/>
+      <stop offset=".22" stop-color="#fff" stop-opacity=".05"/>
+      <stop offset=".6" stop-color="#000" stop-opacity=".04"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".38"/>
+    </linearGradient>
+    <path id="foam-s" d="M-2,-2 H82 V13 C72,19 63,11 54,15 C45,19 37,11 29,15 C21,19 10,12 -2,16 Z"/>
+    <path id="foam-l" d="M-2,-2 H82 V23 C72,29 63,21 54,25 C45,29 37,21 29,25 C21,29 10,22 -2,26 Z"/>
+
+    <clipPath id="c-stout"><path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z"/></clipPath>
+    <clipPath id="c-goblet"><path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z"/></clipPath>
+    <clipPath id="c-weizen"><path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z"/></clipPath>
+    <clipPath id="c-pils"><path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z"/></clipPath>
+    <clipPath id="c-ipa"><path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z"/></clipPath>
+    <clipPath id="c-becher"><path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z"/></clipPath>
+
+    <symbol id="g-stout" viewBox="0 0 80 120">
+      <g clip-path="url(#c-stout)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M23,116 L57,116 L63,44 C65,40 64,36 60,34 L61,6 L19,6 L20,34 C16,36 15,40 17,44 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-goblet" viewBox="0 0 80 120">
+      <g clip-path="url(#c-goblet)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)" transform="translate(0,2)"/>
+      </g>
+      <path d="M37,67 L43,67 L45,100 L35,100 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M20,109 C20,103 60,103 60,109 C60,114 20,114 20,109 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M17,8 L63,8 C69,24 70,44 57,56 C50,62 44,66 40,68 C36,66 30,62 23,56 C10,44 11,24 17,8 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-weizen" viewBox="0 0 80 120">
+      <g clip-path="url(#c-weizen)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-l" fill="var(--foam-color)"/>
+      </g>
+      <path d="M29,116 L51,116 C51,100 49,90 49,80 C49,60 65,40 64,24 C63,14 64,8 62,6 L18,6 C16,8 17,14 16,24 C15,40 31,60 31,80 C31,90 29,100 29,116 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-pils" viewBox="0 0 80 120">
+      <g clip-path="url(#c-pils)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M37,98 L43,98 L44,106 L36,106 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M23,110 C23,105 57,105 57,110 C57,115 23,115 23,110 Z" fill="var(--glass-fill)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M31,98 C33,98 47,98 49,98 C52,70 60,34 64,6 L16,6 C20,34 28,70 31,98 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-ipa" viewBox="0 0 80 120">
+      <g clip-path="url(#c-ipa)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <g stroke="var(--glass-line)" stroke-width="1" opacity=".7">
+          <path d="M25,78 H55 M25,88 H55 M25,98 H55 M25,108 H55"/>
+        </g>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M18,6 L62,6 C67,22 68,42 56,54 C52,58 52,62 54,68 L56,116 L24,116 L26,68 C28,62 28,58 24,54 C12,42 13,22 18,6 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="g-becher" viewBox="0 0 80 120">
+      <g clip-path="url(#c-becher)">
+        <rect width="80" height="120" fill="var(--beer)"/>
+        <rect width="80" height="120" fill="#fff" opacity="var(--haze,0)"/>
+        <rect width="80" height="120" fill="url(#shade)"/>
+        <use href="#foam-s" fill="var(--foam-color)"/>
+      </g>
+      <path d="M21,116 L59,116 L66,46 C68,30 66,16 62,6 L18,6 C14,16 12,30 14,46 Z" fill="none" stroke="var(--glass-line)" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+<div class="wrap intro">
+  <h1>Шрифт названий, цифр и навигации</h1>
+  <p>Шесть кандидатов в одинаковых условиях: карточки с длинным названием, строка хабов и вкладок, кнопки, строка справочника с латиницей и крупные цифры с табличными цифрами (где есть). Описания везде Literata, она не меняется. Метрики измерены в Edge при кегле 100 px, жирное начертание: ширина строки «Ржаной с можжевельником» относительно Alumni Sans и ширина пробела в пикселях.</p>
+</div>
+
+<section class="band" style="--display:'Alumni Sans',sans-serif;--w-name:700;--w-nav:600;--w-num:600">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>Alumni Sans<span>600, 700</span></h2>
+      <ul class="metrics"><li>ширина заголовка 100 %</li><li>пробел 16,6</li><li>табличные цифры через tnum</li></ul>
+      <p>Нынешний. Узкий, тесный пробел: «Ржаной с можжевельником» читается как одно слово. Знак % — стилизованная дробь; с табличными цифрами запятая получает ширину цифры и разваливает «64,5».</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="band" style="--display:'PT Sans Narrow',sans-serif;--w-name:700;--w-nav:700;--w-num:700">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>PT Sans Narrow<span>400, 700</span></h2>
+      <ul class="metrics"><li>+9 % к Alumni</li><li>пробел 20,5</li><li>цифры табличные по умолчанию</li></ul>
+      <p>ParaType, кириллица родная. Всего два начертания (400 и 700), поэтому навигация и названия — одним жирным.</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="band" style="--display:'Fira Sans Extra Condensed',sans-serif;--w-name:700;--w-nav:600;--w-num:600">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>Fira Sans Extra Condensed<span>500, 600, 700</span></h2>
+      <ul class="metrics"><li>+17 % к Alumni</li><li>пробел 18,5</li><li>табличные цифры через tnum</li></ul>
+      <p>Гуманистический, девять весов, кириллица Carrois. Свободная посадка букв, слова не слипаются.</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="band" style="--display:'Sofia Sans Semi Condensed',sans-serif;--w-name:700;--w-nav:600;--w-num:600">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>Sofia Sans Semi Condensed<span>600, 700, 800</span></h2>
+      <ul class="metrics"><li>+27 % к Alumni</li><li>пробел 19,5</li><li>табличные цифры через tnum</li></ul>
+      <p>Современный гротеск, самый широкий из кандидатов. Длинное название в карточке переносится раньше остальных.</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="band" style="--display:'Sofia Sans Condensed',sans-serif;--w-name:700;--w-nav:600;--w-num:600">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>Sofia Sans Condensed<span>600, 700, 800</span></h2>
+      <ul class="metrics"><li>+7 % к Alumni</li><li>пробел 15,6</li><li>табличные цифры через tnum</li></ul>
+      <p>Узкая версия той же семьи. Пробел у́же, чем у Alumni, — проблему слияния не решает.</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="band" style="--display:'Oswald',sans-serif;--w-name:600;--w-nav:500;--w-num:600">
+  <div class="wrap">
+    <header class="band-head">
+      <h2>Oswald<span>500, 600, 700</span></h2>
+      <ul class="metrics"><li>+22 % к Alumni</li><li>пробел 25,0</li><li>табличных цифр нет</li></ul>
+      <p>Классика вывески и тап-листов. Цифры только пропорциональные: «1» у́же «0», таймер и плотности будут дрожать.</p>
+    </header>
+    <div class="band-grid">
+      <a class="card" href="#" style="--beer:#BB5100;--haze:.12">
+  <svg class="glass"><use href="#g-becher"/></svg>
+  <div class="cb">
+    <div class="cname">Ржаной с можжевельником</div>
+    <div class="cstyle"><b>Авторский</b>, пряный ржаной</div>
+    <p class="cabout">Медно-красный, слегка мутноватый от ржи, с плотной пеной и хвойной ноткой можжевельника</p>
+    <div class="cstats"><span><b>13,5</b>°P</span><span><b>5,8</b>% ABV</span><span><b>26</b>IBU</span><span><b>30</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 25 мин, автор Владимир</span><div class="thumbs"><i></i><i></i><i></i><em>+2</em></div></div>
+  </div>
+</a>
+      <a class="card" href="#" style="--beer:#FFBF42;--haze:.08">
+  <svg class="glass"><use href="#g-goblet"/></svg>
+  <div class="cb">
+    <div class="cname">Бельгийский трипель с кориандром и апельсиновой цедрой</div>
+    <div class="cstyle"><b>26C</b>, бельгийский трипель</div>
+    <p class="cabout">Золотистый, сухой и пряный, цитрусовая цедра и кориандр поверх дрожжевой фруктовости</p>
+    <div class="cstats"><span><b>19,0</b>°P</span><span><b>8,6</b>% ABV</span><span><b>32</b>IBU</span><span><b>10</b>EBC</span></div>
+    <div class="cfoot"><span>2 ч 45 мин, автор Владимир</span><div class="thumbs"><i></i></div></div>
+  </div>
+</a>
+      <div class="navs">
+        <nav class="hubs"><a href="#" aria-current="page">Рецепты</a><a href="#">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+        <nav class="tabs"><a href="#" aria-current="page">Каталог</a><a href="#">Мои рецепты</a><a href="#">Избранное и подборки</a><a href="#">Лента</a></nav>
+        <div class="btns"><a class="btn btn-primary" href="#">Начать варку</a><a class="btn btn-secondary" href="#">Редактировать</a></div>
+        <div class="hop"><span class="h">Hallertau Mittelfrüh<span>Германия</span></span><span class="aa"><b class="num">4<small>%</small></b></span></div>
+      </div>
+    </div>
+    <div class="bignums">
+      <span class="num">64,5<small>°C</small></span>
+      <span class="num">1.063</span>
+      <span class="num">7,0<small>%</small></span>
+      <span class="num">38:20</span>
+      <span class="num tiny">11:11<small>против</small>00:00</span>
+    </div>
+  </div>
+</section>
+<section class="verdict">
+  <div class="wrap">
+    <h2>Рекомендация: Fira Sans Extra Condensed</h2>
+    <p><b>Fira Sans Extra Condensed 600 для названий и навигации, 700 для кнопок, цифры с <i>tabular-nums</i>.</b> Он на 17 % шире Alumni Sans, но у него свободная посадка букв и честный пробел, поэтому «Ржаной с можжевельником» распадается на три слова, а двухстрочный «Бельгийский трипель…» остаётся карточкой, а не плакатом. Табличные цифры есть, «1» и «0» одной ширины — таймер и плотности не дрожат; девять весов дают запас на иерархию без второго шрифта.</p>
+    <p>Запасной вариант — <b>PT Sans Narrow 700</b>: ближе всего к Alumni по ширине (+9 %), с самым широким относительным пробелом и родной кириллицей, но только два начертания, и он настолько привычен в рунете, что характер вывески теряется. Sofia Sans Semi Condensed хорош, но заметно шире и быстрее переносит названия; Oswald красив в цифрах 64,5 °C, но без табличных цифр.</p>
+    <ul class="rejected">
+      <li><b>Отброшены до сравнения.</b> IBM Plex Sans Condensed — на Google Fonts только cyrillic-ext без базовой кириллицы (css2 не отдаёт subset cyrillic). Yanone Kaffeesatz и Ubuntu Sans 75 % — пробел ещё у́же, чем у Alumni (12 и 15 px). Tektur — на 56 % шире, это уже широкий гротеск. Ubuntu Condensed — одно начертание. Roboto Condensed — системный, без характера. Archivo Narrow, Barlow Semi Condensed, Saira Semi Condensed — без кириллицы. Fira Sans Condensed — та же семья, что рекомендована, но на 27 % шире Alumni, Extra Condensed ближе к задаче.</li>
+    </ul>
+  </div>
+</section>
+</body>
+</html>

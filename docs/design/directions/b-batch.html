@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoplab — направление Б, страница варки (партия)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Extra+Condensed:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+/* ── Токены — те же, что в b-tap-list.html / b-brew.html ─────────── */
+:root{
+  --oak:#221A14; --cask:#2E241C; --foam:#F4EAD6; --ash:#A8998A; --hop:#A3B35A;
+  --line:rgba(244,234,214,.14); --line-strong:rgba(244,234,214,.28);
+  --bg:var(--oak); --surface:var(--cask); --text:var(--foam); --muted:var(--ash);
+  --btn-bg:var(--foam); --btn-text:var(--oak);
+  --ipa:#F39C00; --ipa-soft:color-mix(in oklab,#F39C00 18%,transparent); --ipa-line:color-mix(in oklab,#F39C00 45%,transparent);
+  --display:"Fira Sans Extra Condensed","Arial Narrow",sans-serif;
+  --serif:"Literata",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.5 var(--serif)}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;padding:0}
+svg{display:block}
+.num{font-family:var(--display);font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.num small{font-family:var(--serif);font-weight:400;font-size:.44em;margin-left:.08em}
+.ic{display:inline-flex;width:20px;height:20px;flex:none;vertical-align:middle}
+.ic svg{width:100%;height:100%}
+
+.mock-title{max-width:1180px;margin:40px auto 0;padding:0 20px}
+.mock-title h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,64px);line-height:1}
+.mock-title p{margin:10px 0 0;max-width:70ch;color:var(--muted)}
+.mock-note{max-width:1180px;margin:56px auto 16px;padding:0 20px;color:var(--muted);font-style:italic;font-size:14px;display:flex;align-items:center;gap:14px}
+.mock-note::after{content:"";flex:1;height:1px;background:var(--line)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.foot{max-width:1180px;margin:64px auto 40px;padding:18px 20px 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px;font-style:italic}
+@media (max-width:480px){.wrap,.mock-note,.mock-title{padding:0 16px}}
+
+/* ── Шапка (b-navigation) ─────────────────────────────── */
+.brand{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;white-space:nowrap}
+.hubs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:21px;line-height:1}
+.hubs a{position:relative;display:flex;align-items:center;height:64px;padding:0 12px;color:var(--muted)}
+.hubs a[aria-current]{color:var(--text)}
+.hubs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:3px;background:var(--text)}
+.search{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);min-width:0}
+.search svg{flex:none;opacity:.6}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;padding:0;font-size:15px}
+.search input::placeholder{color:var(--muted);font-style:italic}
+.live-ind{display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 12px 0 10px;border-radius:6px;border:1px solid rgba(163,179,90,.5);font-family:var(--display);font-weight:600;font-size:18px;line-height:1;white-space:nowrap}
+.live-ind i{width:9px;height:9px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 3px rgba(163,179,90,.22)}
+.live-ind b{font-weight:600;color:var(--hop)}
+.avatar{width:36px;height:36px;border-radius:50%;background:#B54C00;color:var(--foam);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:20px;flex:none}
+.account{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1}
+.tabs{display:flex;gap:4px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;overflow-x:auto;scrollbar-width:none}
+.tabs a{position:relative;display:flex;align-items:center;height:46px;padding:0 12px;color:var(--muted);white-space:nowrap}
+.tabs a[aria-current]{color:var(--text)}
+.tabs a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--text)}
+.tabs a:first-child{padding-left:0}.tabs a:first-child::after{left:0}
+.frame{border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--bg)}
+.frame-desktop{overflow-x:auto}
+.frame-desktop > *{min-width:1100px}
+.dh1{display:flex;align-items:center;gap:20px;height:64px;padding:0 24px;border-bottom:1px solid var(--line)}
+.dh1 .hubs{margin-left:8px}
+.dh1 .search{flex:1;max-width:320px;margin-left:auto}
+.dh2{display:flex;align-items:center;gap:16px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dh2 .crumb{font-family:var(--display);font-weight:600;font-size:19px;color:var(--muted);white-space:nowrap}
+.dh2 .crumb b{color:var(--text);font-weight:700}
+.dh2 .tabs{margin-left:auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:6px;border:1px solid transparent;font-family:var(--display);font-weight:700;font-size:20px;line-height:1;white-space:nowrap;cursor:pointer}
+.btn .ic{width:20px;height:20px}
+.btn-primary{background:var(--btn-bg);color:var(--btn-text)}
+.btn-secondary{border-color:var(--line-strong)}
+.btn-quiet{background:transparent;color:var(--muted);border-color:transparent}
+.btn-sm{height:36px;font-size:17px;padding:0 14px}
+.btn-warm{background:var(--ipa);color:var(--oak)}
+.chip{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 10px;border-radius:15px;font-family:var(--display);font-weight:600;font-size:17px;line-height:1;border:1px solid var(--line-strong)}
+.chip .ic{width:18px;height:18px}
+.chip.live{border-color:rgba(163,179,90,.5)}
+.chip.live i{width:9px;height:9px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 3px rgba(163,179,90,.22)}
+.chip.warm{border-color:var(--ipa-line);color:var(--ipa)}
+
+/* ── Тело страницы ────────────────────────────────────── */
+.body{padding:20px 24px 28px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 24px;margin-bottom:16px}
+.head h1{margin:0;font-family:var(--display);font-weight:700;font-size:48px;line-height:1;letter-spacing:-.01em}
+.head .sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;color:var(--muted);font-size:15px}
+.head .sub .chip{height:28px;font-size:16px}
+.head .figs{margin-left:auto;display:flex;gap:22px}
+.fig .num{font-size:34px;font-weight:700;white-space:nowrap}
+.fig .num small{font-size:14px;color:var(--muted)}
+.fig .lbl{font-size:12px;color:var(--muted);font-style:italic}
+
+/* «Сейчас» */
+.state{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px 40px;padding:22px 24px 22px;border:1px solid var(--ipa-line);border-radius:14px;background:radial-gradient(120% 140% at 0% 0%,var(--ipa-soft),transparent 60%) var(--surface);align-items:start}
+.st-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px;color:var(--muted)}
+.st-lbl{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:20px;color:var(--muted)}
+.st-title{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;letter-spacing:-.01em;margin-top:8px}
+.st-title small{display:block;font-family:var(--serif);font-weight:400;font-style:italic;font-size:17px;color:var(--muted);margin-top:6px;letter-spacing:0}
+.num.timer{font-size:96px;font-weight:700;letter-spacing:-.01em;line-height:.95}
+.num.big{font-size:120px;font-weight:700;letter-spacing:-.02em;line-height:.9}
+.num.big small{font-size:34px;color:var(--muted)}
+.bar{height:8px;border-radius:4px;background:rgba(244,234,214,.1);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--ipa)}
+.st-next{font-size:15px;color:var(--muted);margin-top:8px}
+.st-next b{color:var(--text);font-weight:600}
+.st-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.st-right{display:flex;flex-direction:column;gap:6px}
+
+/* две колонки */
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px}
+.card h3{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-weight:700;font-size:26px;line-height:1}
+.card h3 span{font-family:var(--serif);font-weight:400;font-style:italic;font-size:14px;color:var(--muted)}
+.card h3 .right{margin-left:auto;font-style:normal;font-family:var(--display);font-weight:600;font-size:16px;color:var(--muted)}
+
+/* ── Таймлайн варочного дня ────────────────────────────── */
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl li{display:grid;grid-template-columns:64px 34px minmax(0,1fr);gap:0 10px;align-items:start;position:relative;padding:12px 0}
+.tl li::before{content:"";position:absolute;left:calc(64px + 10px + 16px);top:0;bottom:0;width:2px;background:var(--line)}
+.tl li:first-child::before{top:26px}
+.tl li:last-child::before{bottom:auto;height:26px}
+.tl .when{font-family:var(--display);font-weight:600;font-size:16px;line-height:1.2;color:var(--muted);padding-top:6px;text-align:right}
+.tl .when b{display:block;color:var(--text);font-weight:600;font-size:18px}
+.tl .when i{display:block;font-family:var(--serif);font-style:italic;font-size:12px;font-weight:400}
+.tl .node{position:relative;z-index:1;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--bg);border:2px solid var(--line-strong);color:var(--muted);font-family:var(--display);font-weight:700;font-size:15px}
+.tl .node .ic{width:18px;height:18px}
+.tl .t{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.05;color:var(--muted)}
+.tl .t .v{font-weight:700;color:var(--text)}
+.tl .t small{font-family:var(--serif);font-weight:400;font-style:italic;font-size:14px;color:var(--muted);margin-left:8px}
+.tl .d{font-size:14px;color:var(--muted);margin-top:4px;max-width:62ch}
+.tl .d b{color:var(--text);font-weight:600}
+.tl .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:8px}
+.tl .meas{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px dashed var(--line-strong);border-radius:6px;font-size:14px;color:var(--muted)}
+.tl .meas b{font-family:var(--display);font-weight:700;font-size:19px;color:var(--text)}
+.tl .meas.empty{color:var(--muted)}
+.tl li.done .node{background:var(--hop);border-color:var(--hop);color:var(--oak)}
+.tl li.done .t{color:var(--text)}
+.tl li.done::before{background:var(--hop)}
+.tl li.now .node{background:var(--ipa);border-color:var(--ipa);color:var(--oak);box-shadow:0 0 0 6px var(--ipa-soft)}
+.tl li.now .t{color:var(--text);font-size:28px}
+.tl li.now .t .v{color:var(--ipa)}
+.tl li.now{background:linear-gradient(90deg,var(--ipa-soft),transparent 70%);margin:0 -18px;padding:14px 18px;border-radius:10px}
+.tl li.now::before{left:calc(64px + 10px + 16px + 18px)}
+.tl li.next .t{color:var(--muted)}
+.tl li.far{opacity:.75}
+.tl .adds{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
+.tl .adds li{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:0 10px;align-items:center;padding:6px 10px;margin:0;border:0;border-radius:6px;background:rgba(244,234,214,.05)}
+.tl .adds li::before{display:none}
+.tl .adds .am{font-family:var(--display);font-weight:700;font-size:20px;white-space:nowrap}
+.tl .adds .am small{font-family:var(--serif);font-weight:400;font-style:italic;font-size:12px;color:var(--muted);margin-left:2px}
+.tl .adds .an{font-size:15px}
+.tl .adds .an b{font-weight:600}
+.tl .adds .an i{color:var(--muted);font-size:13px}
+.tl .adds .ok{font-size:13px;color:var(--hop)}
+.tl .adds .bell{font-size:13px;color:var(--muted);font-style:italic}
+.tl .sub{display:grid;gap:3px;margin-top:6px;font-size:14px;color:var(--muted)}
+.tl .sub b{color:var(--text);font-weight:600}
+.tl .phase{display:flex;align-items:center;gap:12px;margin:18px 0 4px;font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tl .phase::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* правая колонка */
+.kv{list-style:none;margin:0;padding:0}
+.kv li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:0 14px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
+.kv li:first-child{border-top:0}
+.kv .plan{font-family:var(--display);font-weight:600;font-size:17px;color:var(--muted);white-space:nowrap}
+.kv .fact{font-family:var(--display);font-weight:700;font-size:22px;color:var(--text);white-space:nowrap;min-width:64px;text-align:right}
+.kv .fact.empty{color:var(--muted);font-weight:500}
+.kv .fact.up{color:var(--hop)}
+.kv .fact.down{color:var(--ipa)}
+.jl{list-style:none;margin:10px 0 0;padding:0;font-size:14px}
+.jl li{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted)}
+.jl li .num{color:var(--text);font-size:16px;width:44px;flex:none}
+.jl li b{color:var(--text);font-weight:600}
+.jq{display:flex;gap:8px;flex-wrap:wrap}
+.jq .btn{height:40px;font-size:18px;padding:0 14px}
+.ctl{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ctl:last-child{border-bottom:0}
+.ctl .cn{flex:1;font-family:var(--display);font-weight:600;font-size:20px;line-height:1}
+.ctl .cn small{display:block;font-family:var(--serif);font-weight:400;font-style:italic;font-size:13px;color:var(--muted);margin-top:3px}
+.sw{width:52px;height:30px;border-radius:15px;background:rgba(244,234,214,.14);position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--foam);opacity:.6}
+.sw.on{background:var(--hop)}
+.sw.on i{left:25px;opacity:1}
+.rc{display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.rc b{color:var(--text);font-weight:600}
+.rc .line{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line)}
+.rc .line:first-child{border-top:0}
+
+/* ── Easy Brew: тот же блок «Сейчас» ───────────────────── */
+.compare{display:grid;grid-template-columns:1fr;gap:20px}
+.diff{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.diff li{border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--muted)}
+.diff li b{display:block;font-family:var(--display);font-weight:700;font-size:22px;color:var(--text);margin-bottom:6px}
+
+/* ── Телефон ───────────────────────────────────────────── */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,390px));gap:32px;justify-content:start;align-items:start}
+.phone{width:390px;max-width:100%;border:1px solid var(--line-strong);border-radius:22px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.ph1{display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;flex:none}
+.ph1 .brand{font-size:26px;margin-right:auto}
+.ph1 .avatar{width:34px;height:34px;font-size:18px}
+.ph2{position:relative;flex:none;border-bottom:1px solid var(--line);background:var(--surface);padding:0 16px}
+.ph2 .tabs a{height:44px;font-size:18px;padding:0 10px}
+.ph-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.ph-bottom{flex:none;display:grid;grid-template-columns:repeat(4,1fr);height:68px;border-top:1px solid var(--line-strong);background:var(--surface);padding:0 6px 4px;position:sticky;bottom:0}
+.ph-bottom a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;color:var(--muted);font-family:var(--display);font-weight:600;font-size:15px;line-height:1}
+.ph-bottom a[aria-current]{color:var(--text)}
+.ph-bottom a svg{width:26px;height:26px}
+.phone .head h1{font-size:36px}
+.phone .head .figs{margin-left:0;gap:16px}
+.phone .fig .num{font-size:28px}
+.phone .state{grid-template-columns:1fr;gap:10px;padding:16px}
+.phone .st-title{font-size:40px}
+.phone .num.timer{font-size:80px}
+.phone .st-actions .btn{flex:1}
+.phone .card{padding:14px 14px 16px}
+.phone .card h3{font-size:24px}
+.phone .tl li{grid-template-columns:30px minmax(0,1fr);gap:0 10px}
+.phone .tl .when{display:none}
+.phone .tl li::before{left:14px}
+.phone .tl li.now{margin:0 -14px;padding:14px}
+.phone .tl li.now::before{left:28px}
+.phone .tl .t{font-size:22px}
+.phone .tl li.now .t{font-size:24px}
+.phone .tl .adds li{grid-template-columns:60px minmax(0,1fr)}
+.phone .tl .adds .ok,.phone .tl .adds .bell{grid-column:2}
+@media (max-width:480px){.phones{margin:0 -16px;gap:24px}.phone{border-radius:0;border-left:0;border-right:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.17 1-3Z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-therm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 1 1 4 0Z"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8v10H3z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M6 8h12l-1 6a5 5 0 0 1-10 0z"/><path d="M12 19v3"/></symbol>
+  <symbol id="i-pot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 10h20M8 6c0 2 1 2 1 4M13 6c0 2 1 2 1 4"/></symbol>
+</defs></svg>
+
+<div class="mock-title">
+  <h1>Страница варки — одна на кастрюлю и Easy Brew</h1>
+  <p>Партия: рецепт загружен на страницу и подстроен под оборудование. Варка — таймлайн из этого рецепта: подготовка, нагрев, засыпь, паузы, промывка, кипячение с закладками, охлаждение, дрожжи — и дальше по той же линии брожение и розлив. Замеры — на шаге, где их делают. На Easy Brew те же шаги, пивоварня сама греет и ведёт таймеры; на кастрюле таймеры ведёт сервис и напоминает push.</p>
+</div>
+
+<div class="mock-note">Десктоп · кастрюля 20 л · идёт пауза осахаривания</div>
+<div class="wrap">
+<div class="frame frame-desktop">
+  <div class="dh1">
+    <span class="brand">Hoplab</span>
+    <nav class="hubs"><a href="#">Рецепты</a><a href="#" aria-current="page">Варка</a><a href="#">Склад</a><a href="#">Справочник</a></nav>
+    <div class="search"><svg width="18" height="18"><use href="#i-search"/></svg><input placeholder="Рецепт, хмель, солод…"></div>
+    <span class="live-ind"><i></i>Варится <b>American IPA</b></span>
+    <span class="account"><span class="avatar">В</span>Валерий</span>
+  </div>
+  <div class="dh2">
+    <span class="crumb">Мои варки / <b>American IPA · 29 октября</b></span>
+    <nav class="tabs"><a href="#" aria-current="page">Варка</a><a href="#">Брожение</a><a href="#">Журнал</a><a href="#">Рецепт партии</a></nav>
+  </div>
+
+  <div class="body">
+    <div class="head">
+      <h1>American IPA</h1>
+      <div class="sub">
+        <span class="chip"><span class="ic"><svg><use href="#i-pot"/></svg></span>Кастрюля 20 л</span>
+        <span class="chip warm">варочный день</span>
+        <span>четверг, 29 октября · начали в 09:40</span>
+      </div>
+      <div class="figs">
+        <div class="fig"><div class="num">15<small>л</small></div><div class="lbl">партия</div></div>
+        <div class="fig"><div class="num">15,5<small>°P</small></div><div class="lbl">OG по плану</div></div>
+        <div class="fig"><div class="num">53<small>IBU</small></div><div class="lbl">горечь</div></div>
+        <div class="fig"><div class="num">7,0<small>%</small></div><div class="lbl">крепость</div></div>
+      </div>
+    </div>
+
+    <!-- Сейчас -->
+    <section class="state">
+      <div>
+        <div class="st-top"><span class="chip warm"><span class="ic"><svg><use href="#i-therm"/></svg></span>шаг 4 из 9</span><span>затирание · пауза 1 из 2</span></div>
+        <div class="st-title">Осахаривание <span class="v num">66°</span><small>держать 60 мин</small></div>
+        <div class="st-next">дальше — <b>Мэш-аут 78 °C · 10 мин</b>, потом промывка</div>
+        <div class="st-actions">
+          <button class="btn btn-primary"><span class="ic"><svg><use href="#i-check"/></svg></span>Пауза выдержана — дальше</button>
+          <button class="btn btn-secondary"><span class="ic"><svg><use href="#i-pen"/></svg></span>Записать pH</button>
+          <button class="btn btn-quiet">+5 мин</button>
+        </div>
+      </div>
+      <div class="st-right">
+        <div class="st-lbl"><span class="ic"><svg><use href="#i-bell"/></svg></span>до конца паузы · напомним push</div>
+        <div class="num timer">42:10</div>
+        <div class="bar"><i style="width:30%"></i></div>
+        <div class="st-next">начата в <b class="num">10:07</b> · конец в <b class="num">11:07</b></div>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <div class="col">
+        <section class="card">
+          <h3>Варочный день <span>план · факт</span><span class="right">9 шагов · ~4 ч 30 мин</span></h3>
+          <ol class="tl">
+            <li class="done">
+              <div class="when"><b>09:40</b><i>план 09:30</i></div>
+              <div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div>
+              <div><div class="t">Подготовка</div>
+                <div class="sub">
+                  <div><b>Вода:</b> затор 13,3 л — гипс 3,75 г, хлорид кальция 1,07 г · промывка 7,7 л</div>
+                  <div><b>Засыпь 4,45 кг:</b> Pale Ale 3,857 кг · Munich 0,268 кг · Карамельный 120 EBC 0,321 кг</div>
+                </div></div>
+            </li>
+            <li class="done">
+              <div class="when"><b>10:05</b><i>25 мин</i></div>
+              <div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div>
+              <div><div class="t">Нагрев до <span class="v num">66°</span></div></div>
+            </li>
+            <li class="done">
+              <div class="when"><b>10:07</b></div>
+              <div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div>
+              <div><div class="t">Засыпать солод</div>
+                <div class="row"><span class="meas">pH затора <b>5,35</b></span><span class="meas">температура затора <b>65,5°</b></span></div></div>
+            </li>
+            <li class="now">
+              <div class="when"><b>10:07</b><i>→ 11:07</i></div>
+              <div class="node">4</div>
+              <div><div class="t">Осахаривание <span class="v num">66°</span> · 60 мин</div>
+                </div>
+            </li>
+            <li class="next">
+              <div class="when"><i>11:07</i></div>
+              <div class="node">5</div>
+              <div><div class="t">Мэш-аут <span class="v num">78°</span> · 10 мин</div></div>
+            </li>
+            <li class="next">
+              <div class="when"><i>~11:20</i></div>
+              <div class="node">6</div>
+              <div><div class="t">Промывка <small>7,7 л при 78 °C</small></div>
+                <div class="row"><span class="meas empty">первое сусло, °P</span><span class="meas empty">объём до кипячения, л</span><span class="meas empty">плотность до кипячения</span></div></div>
+            </li>
+            <li class="next">
+              <div class="when"><i>~11:45</i></div>
+              <div class="node"><span class="ic"><svg><use href="#i-flame"/></svg></span></div>
+              <div><div class="t">Кипячение · 60 мин</div>
+                <ol class="adds">
+                  <li><span class="am">60<small>мин</small></span><span class="an"><b>Magnum</b> 26 г <i>· в начале кипячения</i></span><span class="bell">напомним</span></li>
+                  <li><span class="am">15<small>мин</small></span><span class="an"><b>Ирландский мох</b> 3,5 г · <b>Чиллер</b> <i>· за 15 мин до конца</i></span><span class="bell">напомним</span></li>
+                  <li><span class="am">10<small>мин</small></span><span class="an"><b>Centennial</b> 15 г</span><span class="bell">напомним</span></li>
+                  <li><span class="am">0<small>мин</small></span><span class="an"><b>Citra</b> 25 г · <b>Simcoe</b> 25 г <i>· вирпул 20 мин при ~80 °C</i></span><span class="bell">напомним</span></li>
+                </ol></div>
+            </li>
+            <li class="next">
+              <div class="when"><i>~13:05</i></div>
+              <div class="node">8</div>
+              <div><div class="t">Охлаждение до <span class="v num">18°</span></div>
+                <div class="row"><span class="meas empty">OG, °P</span><span class="meas empty">объём в ферментере, л</span></div></div>
+            </li>
+            <li class="next">
+              <div class="when"><i>~13:30</i></div>
+              <div class="node">9</div>
+              <div><div class="t">Задать дрожжи <small>US-05 · 1 пак.</small></div>
+                <div class="d">с задачи дрожжей начинается брожение</div></div>
+            </li>
+            <div class="phase">Брожение · с задачи дрожжей</div>
+            <li class="far next"><div class="when"><i>день 1–7</i></div><div class="node">·</div><div><div class="t">Основное брожение <span class="v num">18°</span> · 7 дн.</div></div></li>
+            <li class="far next"><div class="when"><i>день 3</i></div><div class="node">·</div><div><div class="t">Сухое охмеление <small>Citra 62,5 г · Mosaic 62,5 г</small></div></div></li>
+            <li class="far next"><div class="when"><i>день 8–10</i></div><div class="node">·</div><div><div class="t">Дображивание <span class="v num">20°</span> · 3 дн.</div></div></li>
+            <li class="far next"><div class="when"><i>день 11–13</i></div><div class="node">·</div><div><div class="t">Холодное осветление <span class="v num">4°</span> · 3 дн.</div></div></li>
+            <li class="far next"><div class="when"><i>~11 ноября</i></div><div class="node">·</div><div><div class="t">Розлив <small>2,5 vol · 0,9 бар при 4 °C</small></div><div class="d">после розлива — «Как вышло?»: оценка и пара слов автору рецепта</div></div></li>
+          </ol>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card">
+          <h3>Замеры <span>план · факт</span></h3>
+          <ul class="kv">
+            <li><span>pH затора</span><span class="plan">5,2–5,4</span><span class="fact">5,35</span></li>
+            <li><span>Температура затора</span><span class="plan">66°</span><span class="fact">65,5°</span></li>
+            <li><span>Первое сусло</span><span class="plan">~19 °P</span><span class="fact empty">—</span></li>
+            <li><span>До кипячения</span><span class="plan">17,5 л · 13,4 °P</span><span class="fact empty">—</span></li>
+            <li><span>Начальная плотность</span><span class="plan">15,5 °P</span><span class="fact empty">—</span></li>
+            <li><span>В ферментере</span><span class="plan">15 л</span><span class="fact empty">—</span></li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h3>Журнал <span>заметки по ходу</span></h3>
+          <div class="jq"><button class="btn btn-secondary"><span class="ic"><svg><use href="#i-pen"/></svg></span>Заметка</button><button class="btn btn-secondary">Замер</button></div>
+          <ul class="jl">
+            <li><span class="num">10:07</span><span><b>pH затора 5,35</b> — без кислоты, вода осмос + соли</span></li>
+            <li><span class="num">10:07</span><span>засыпал, помешал, комков нет</span></li>
+            <li><span class="num">10:05</span><span><b>нагрев 66 °C</b> — 25 мин на плите с крышкой</span></li>
+            <li><span class="num">09:40</span><span>начал варочный день · вода 13,3 л, соли внёс</span></li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h3>Оборудование</h3>
+          <div class="rc">
+            <div class="line"><span><b>Кастрюля 20 л</b> · без подключения</span><span>15 л · 70 %</span></div>
+            <div class="line"><span>Таймеры шагов и закладок</span><span><b>сервис, push</b></span></div>
+            <div class="line"><span>Испарение</span><span>2,5 л/ч · 60 мин</span></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Рецепт партии <span>под кастрюлю</span></h3>
+          <div class="rc">
+            <div class="line"><span>Оригинал</span><span><b>American IPA</b> · 30 л при 75 %</span></div>
+            <div class="line"><span>Партия</span><span><b>15 л при 70 %</b></span></div>
+            <div class="line"><span>Засыпь · хмель · дрожжи</span><span>4,45 кг · 166 г · 1 пак.</span></div>
+          </div>
+          <div class="jq" style="margin-top:10px"><button class="btn btn-sm btn-secondary">Открыть рецепт партии</button></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="mock-note">Easy Brew · тот же таймлайн, другой блок «Сейчас»: пивоварня греет и считает сама</div>
+<div class="wrap compare">
+  <section class="state">
+    <div>
+      <div class="st-top"><span class="chip live"><i></i>Easy Brew 40 · на связи</span><span class="chip warm"><span class="ic"><svg><use href="#i-therm"/></svg></span>шаг 4 из 9</span><span>затирание · пауза 1 из 2</span></div>
+      <div class="st-title">Осахаривание <span class="v num">66°</span><small>держит пивоварня</small></div>
+      <div class="num big">65,8<small>°C</small></div>
+      <div class="st-next">дальше — <b>Мэш-аут 78 °C · 10 мин</b></div>
+      <div class="st-actions">
+        <button class="btn btn-secondary"><span class="ic"><svg><use href="#i-pause"/></svg></span>Пауза</button>
+        <button class="btn btn-secondary"><span class="ic"><svg><use href="#i-pen"/></svg></span>Записать pH</button>
+        <button class="btn btn-quiet">Насос · вкл</button>
+      </div>
+    </div>
+    <div class="st-right">
+      <div class="st-lbl"><span class="ic"><svg><use href="#i-bell"/></svg></span>до конца паузы · таймер пивоварни</div>
+      <div class="num timer">42:10</div>
+      <div class="bar"><i style="width:30%"></i></div>
+      <div class="st-next">ТЭН 2500 W · расход 1,8 кВт·ч · оценка</div>
+    </div>
+  </section>
+  <ul class="diff">
+    <li><b>Шаги те же</b>Таймлайн строится из рецепта партии одинаково. На Easy Brew шаг «сделан» отмечает пивоварня (перешла к следующему), на кастрюле — пивовар кнопкой «дальше»; пропустил — таймер сервиса и push напомнят.</li>
+    <li><b>Подтверждения от пивоварни</b>«Засыпьте солод», «конец затирания» приходят в тот же блок «Сейчас» большой оранжевой кнопкой — как сейчас на экране варки; закладки на кипячении — «Заложил» прямо в списке закладок шага.</li>
+    <li><b>Что добавляется</b>Живая температура и цель, таймер пивоварни, график температуры за варку, расход электричества, в «Оборудовании» — питание, насос, поток, ручной режим. Всё остальное — замеры, журнал, брожение — общее.</li>
+  </ul>
+</div>
+
+<div class="mock-note">Телефон · кастрюля · та же страница в одну колонку: «Сейчас» сверху, таймлайн, замеры и журнал — ниже</div>
+<div class="wrap"><div class="phones">
+  <div class="phone">
+    <div class="ph1"><span class="brand">Hoplab</span><span class="live-ind"><i></i><b>IPA</b></span><span class="avatar">В</span></div>
+    <div class="ph2"><nav class="tabs"><a href="#" aria-current="page">Варка</a><a href="#">Брожение</a><a href="#">Журнал</a><a href="#">Рецепт партии</a></nav></div>
+    <div class="ph-body">
+      <div class="head">
+        <h1>American IPA</h1>
+        <div class="sub"><span class="chip"><span class="ic"><svg><use href="#i-pot"/></svg></span>Кастрюля 20 л</span><span class="chip warm">варочный день</span></div>
+        <div class="figs">
+          <div class="fig"><div class="num">15<small>л</small></div><div class="lbl">партия</div></div>
+          <div class="fig"><div class="num">15,5<small>°P</small></div><div class="lbl">OG</div></div>
+          <div class="fig"><div class="num">53<small>IBU</small></div><div class="lbl">горечь</div></div>
+          <div class="fig"><div class="num">7,0<small>%</small></div><div class="lbl">ABV</div></div>
+        </div>
+      </div>
+      <section class="state">
+        <div>
+          <div class="st-top"><span class="chip warm">шаг 4 из 9</span></div>
+          <div class="st-title">Осахаривание <span class="v num">66°</span></div>
+          <div class="num timer">42:10</div>
+          <div class="bar"><i style="width:30%"></i></div>
+          <div class="st-next">конец в <b class="num">11:07</b> · напомним push · дальше <b>Мэш-аут 78°</b></div>
+          <div class="st-actions"><button class="btn btn-primary"><span class="ic"><svg><use href="#i-check"/></svg></span>Дальше</button><button class="btn btn-secondary">Записать pH</button></div>
+        </div>
+      </section>
+      <section class="card">
+        <h3>Варочный день</h3>
+        <ol class="tl">
+          <li class="done"><div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div><div><div class="t">Подготовка</div><div class="d">вода 13,3 + 7,7 л · засыпь 4,45 кг</div></div></li>
+          <li class="done"><div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div><div><div class="t">Нагрев до <span class="v num">66°</span> <small>10:05</small></div></div></li>
+          <li class="done"><div class="node"><span class="ic"><svg><use href="#i-check"/></svg></span></div><div><div class="t">Засыпать солод <small>10:07</small></div><div class="row"><span class="meas">pH <b>5,35</b></span></div></div></li>
+          <li class="now"><div class="node">4</div><div><div class="t">Осахаривание <span class="v num">66°</span> · 60 мин</div><div class="d">10:07 → 11:07</div></div></li>
+          <li class="next"><div class="node">5</div><div><div class="t">Мэш-аут <span class="v num">78°</span> · 10 мин</div></div></li>
+          <li class="next"><div class="node">6</div><div><div class="t">Промывка <small>7,7 л</small></div><div class="row"><span class="meas empty">первое сусло</span><span class="meas empty">до кипячения</span></div></div></li>
+          <li class="next"><div class="node"><span class="ic"><svg><use href="#i-flame"/></svg></span></div><div><div class="t">Кипячение · 60 мин</div>
+            <ol class="adds">
+              <li><span class="am">60<small>мин</small></span><span class="an"><b>Magnum</b> 26 г</span></li>
+              <li><span class="am">15<small>мин</small></span><span class="an"><b>Ирл. мох</b> 3,5 г · <b>Чиллер</b></span></li>
+              <li><span class="am">10<small>мин</small></span><span class="an"><b>Centennial</b> 15 г</span></li>
+              <li><span class="am">0<small>мин</small></span><span class="an"><b>Citra</b> 25 г · <b>Simcoe</b> 25 г <i>· вирпул 20 мин</i></span></li>
+            </ol></div></li>
+          <li class="next"><div class="node">8</div><div><div class="t">Охлаждение до <span class="v num">18°</span></div><div class="row"><span class="meas empty">OG</span><span class="meas empty">в ферментере</span></div></div></li>
+          <li class="next"><div class="node">9</div><div><div class="t">Задать дрожжи <small>US-05 · 1 пак.</small></div></div></li>
+        </ol>
+      </section>
+    </div>
+    <div class="ph-bottom">
+      <a href="#"><svg><use href="#i-book"/></svg>Рецепты</a>
+      <a href="#" aria-current="page"><svg><use href="#i-flame"/></svg>Варка</a>
+      <a href="#"><svg><use href="#i-box"/></svg>Склад</a>
+      <a href="#"><svg><use href="#i-help"/></svg>Справочник</a>
+    </div>
+  </div>
+</div></div>
+
+<div class="foot">Макет статичный. Цифры — American IPA, пересчитанный под кастрюлю 20 л (15 л при 70 %); время шагов — план от начала, факт — по отметкам. Вкладки «Брожение», «Журнал», «Рецепт партии» — разделы той же страницы (якоря), не отдельные экраны.</div>
+</body>
+</html>
