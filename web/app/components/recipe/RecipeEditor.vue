@@ -96,7 +96,7 @@ async function save() {
           <RecipeEditorGeneral v-model="draft" :calc="calc" />
 
           <!-- из чего пиво: вода, солод, хмель, дрожжи — потом всё остальное -->
-          <RecipeEditorWater v-model="draft.water" :volumes="volumes" :evaporation="equipment?.evaporation" :boil-minutes="draft.boil?.minutes ?? 0" />
+          <RecipeEditorWater v-model="draft.water" :volumes="volumes" :evaporation="equipment?.evaporation ?? undefined" :boil-minutes="draft.boil?.minutes ?? 0" />
           <RecipeEditorFermentables v-model="draft.fermentables" />
           <RecipeEditorHops v-model="draft.hops" :boil-minutes="draft.boil?.minutes ?? null" :volume="draft.batch.volume" />
           <RecipeEditorYeasts v-model="draft.yeasts" />

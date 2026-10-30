@@ -14,10 +14,10 @@ from ..recipes.program import build_program
 from ..schemas import Ok
 from .control import UserBrewery, ViewerBrewery
 from .equipment import EquipmentStore
+from .kinds import CATEGORIES
 from .logbook import Logbook
 from .schemas import (
     BrewDetail,
-    BrewEdit,
     BrewEntryEdit,
     BrewEntryIn,
     BrewEntryOut,
@@ -25,6 +25,7 @@ from .schemas import (
     BrewIn,
     BrewSummary,
     Equipment,
+    EquipmentCategory,
     EquipmentIn,
     EquipmentNew,
     FlowLevel,
@@ -184,12 +185,6 @@ def get_readings(bid: str, logbook: UserLogbook):
     return logbook.readings(bid)
 
 
-@router.patch("/brews/{bid}", response_model=BrewDetail, tags=["варки"], summary="Изменить день или оборудование",
-              description="Только у записанной вручную; не указанное — как было.")
-def edit_brew(bid: str, body: BrewEdit, logbook: UserLogbook):
-    return logbook.update(bid, body.startedAt, body.equipmentId)
-
-
 @router.post("/brews/{bid}/upload", response_model=Ok, tags=["варки"], summary="Загрузить программу партии в пивоварню",
              description="Программа рецепта партии с её id: запущенная, она идёт варкой в эту партию.")
 async def upload_brew(bid: str, logbook: UserLogbook, brewery: UserBrewery):
@@ -241,6 +236,12 @@ def user_equipment(user: CurrentUser) -> EquipmentStore:
 UserEquipment = Annotated[EquipmentStore, Depends(user_equipment)]
 
 
+@router.get("/equipment/kinds", response_model=list[EquipmentCategory], tags=["оборудование"],
+            summary="Каталог оборудования: группы, виды и их параметры")
+def equipment_kinds():
+    return CATEGORIES
+
+
 @router.get("/equipment", response_model=list[Equipment], tags=["оборудование"], summary="Оборудование",
             description="Основное первым.")
 def list_equipment(equipment: UserEquipment):
@@ -248,18 +249,21 @@ def list_equipment(equipment: UserEquipment):
 
 
 @router.post("/equipment", response_model=Equipment, tags=["оборудование"], summary="Добавить оборудование",
-             description="Первое — основное; не больше 10.")
+             description="Первая варочная система — основная; не больше 100.")
 def create_equipment(body: EquipmentNew, equipment: UserEquipment):
-    return equipment.create(body.name, body.kind, body.volume, body.efficiency, body.evaporation, body.kettle)
+    return equipment.create(body.name, body.kind, body.volume, body.efficiency, body.evaporation, body.kettle,
+                            body.props, body.notes)
 
 
-@router.put("/equipment/{eid}", response_model=Equipment, tags=["оборудование"], summary="Изменить оборудование")
+@router.put("/equipment/{eid}", response_model=Equipment, tags=["оборудование"], summary="Изменить оборудование",
+            description="Вид не меняется.")
 def update_equipment(eid: str, body: EquipmentIn, equipment: UserEquipment):
-    return equipment.update(eid, body.name, body.volume, body.efficiency, body.evaporation, body.kettle)
+    return equipment.update(eid, body.name, body.volume, body.efficiency, body.evaporation, body.kettle,
+                            body.props, body.notes)
 
 
 @router.put("/equipment/{eid}/main", response_model=Equipment, tags=["оборудование"],
-            summary="Сделать основным")
+            summary="Сделать основным", description="Только варочную систему (400).")
 def make_main_equipment(eid: str, equipment: UserEquipment):
     return equipment.make_main(eid)
 

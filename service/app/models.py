@@ -19,7 +19,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Column, DateTime, Index, LargeBinary
+from sqlalchemy import BigInteger, Column, DateTime, Index, LargeBinary, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -210,20 +210,25 @@ class Device(SQLModel, table=True):
 
 
 class Equipment(SQLModel, table=True):
-    """Оборудование пивовара (brewery/equipment.py): manual — без подключения (кастрюля, котёл, любая система),
-    easybrew — пивоварня, которой управляют с сайта (device_id — когда агент её завёл). Основное (main) —
-    объём, эффективность и испарение для новых рецептов и расчётов; у пользователя одно основное."""
+    """Оборудование пивовара (brewery/equipment.py, виды — brewery/kinds.py). Варочная система (кастрюля или котёл,
+    автоматическая пивоварня, easybrew — пивоварня, которой управляют с сайта: device_id — когда агент её завёл) —
+    с объёмом, эффективностью, испарением и котлом; основная (main) — для новых рецептов и расчётов, одна у
+    пользователя. У прочих видов эти столбцы пусты, параметры — в props."""
     __tablename__ = "equipment"
+    __table_args__ = (Index("ix_equipment_one_main", "user_id", unique=True, postgresql_where=text("main")),)
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id")
     name: str
     kind: str = "manual"
     device_id: uuid.UUID | None = fk("devices.id", nullable=True, ondelete="SET NULL")
     volume: float | None = None                       # л после кипячения — партия новых рецептов
-    efficiency: float = 75.0                          # % — для новых рецептов
-    evaporation: float = 3.0                          # л/ч кипячения без крышки — для расчёта воды
+    efficiency: float | None = None                   # % — для новых рецептов
+    evaporation: float | None = None                  # л/ч кипячения без крышки — для расчёта воды
     kettle: float | None = None                       # л до краёв — предупредить, если варка не влезает
-    main: bool = False
+    props: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB,   # параметры вида, кроме варочных систем
+                                  sa_column_kwargs={"server_default": "{}"})
+    notes: str | None = Field(default=None, sa_type=Text)
+    main: bool = False                                # одна у пользователя: ix_equipment_one_main
     created_at: datetime = ts()
 
 

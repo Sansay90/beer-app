@@ -38,13 +38,11 @@ def test_plan_start_and_package(brewer, ferment_recipe):
     assert summary["fermentStart"] == pitch["at"] and summary["packagedAt"] == package["at"]
 
 
-def test_moving_the_day_moves_fermentation(brewer, ferment_recipe):
-    """Записанная задним числом — брожение с того дня; день варки поправили — брожение сдвигается с ним."""
+def test_past_brew_ferments_from_its_day(brewer, ferment_recipe):
+    """Записанная задним числом — варочный день позади, брожение с того дня."""
     rid = brewer.ok("POST", "/recipes", ferment_recipe)["id"]
     past = brewer.ok("POST", "/brews", {"recipeId": rid, "startedAt": time.time() - 3 * DAY})
     assert past["phase"] == "fermenting" and past["fermentStart"] == past["startedAt"]
-    moved = brewer.ok("PATCH", f"/brews/{past['id']}", {"startedAt": past["startedAt"] - DAY})
-    assert moved["fermentStart"] == moved["startedAt"] == past["startedAt"] - DAY
 
 
 def test_reminders_follow_the_plan(service, brewer, ferment_recipe, pushes):

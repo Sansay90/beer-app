@@ -28,12 +28,12 @@ watch(picked, async (id) => {
 })
 
 // оборудование: основное выбрано; добавить можно, не уходя из окна
-const { list: equipment, data: main, refresh: refreshEquipment } = useEquipment()
+const { systems: equipment, data: main, refresh: refreshEquipment } = useEquipment()   // варят на варочной системе
 const equipmentId = ref<string | undefined>()
 const adding = ref(false)
 const equipmentItems = computed(() => equipment.value.map(e => ({
   value: e.id,
-  label: e.main ? `${e.name} · основное` : e.name,
+  label: e.main ? `${e.name} · основная` : e.name,
   description: `${e.volume != null ? fmtNumber(e.volume, 1, ' л') : 'объём не задан'} · ${fmtNumber(e.efficiency, 0, ' %')}`,
 })))
 const chosen = computed(() => equipment.value.find(e => e.id === equipmentId.value) ?? null)
@@ -108,9 +108,9 @@ async function create() {
         <UFormField label="На чём варите">
           <URadioGroup v-if="equipmentItems.length" v-model="equipmentId" :items="equipmentItems" variant="card" size="lg" />
           <p v-else class="rounded-lg bg-elevated/50 px-4 py-3 text-sm text-muted">
-            Пока ни одного оборудования. Добавьте кастрюлю, котёл или пивоварню — рецепт пересчитается под её объём и эффективность.
+            Нет ни одной варочной системы. Добавьте кастрюлю, котёл или пивоварню — рецепт пересчитается под её объём и эффективность.
           </p>
-          <UButton label="Добавить оборудование" icon="i-lucide-plus" color="neutral" variant="ghost" size="lg" class="mt-1" @click="adding = true" />
+          <UButton label="Добавить варочную систему" icon="i-lucide-plus" color="neutral" variant="ghost" size="lg" class="mt-1" @click="adding = true" />
         </UFormField>
 
         <div v-if="loading" class="flex items-center gap-2 text-sm text-muted">
@@ -137,7 +137,7 @@ async function create() {
           <UInput v-model="day" type="date" :max="today()" size="lg" />
         </UFormField>
       </form>
-      <SettingsEquipmentModal v-model:open="adding" @saved="added" />
+      <EquipmentModal v-model:open="adding" systems-only @saved="added" />
     </template>
     <template #footer>
       <div class="flex w-full justify-end gap-2">

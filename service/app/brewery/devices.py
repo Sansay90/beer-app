@@ -7,7 +7,7 @@ from sqlmodel import select
 from ..db import session
 from ..errors import Forbidden
 from ..models import Device
-from .equipment import attach_device
+from .equipment import attach_device, controlled_device
 
 log = logging.getLogger("brewapp.devices")
 
@@ -46,7 +46,7 @@ class DeviceStore:
     def current(self, user_id):
         """Пивоварня пользователя (пока она у него одна — последняя заведённая) или None."""
         with session() as s:
-            return s.exec(select(Device.id).where(Device.user_id == user_id).order_by(Device.created_at.desc())).first()
+            return controlled_device(s, user_id)
 
     def limits(self, device_id):
         with session() as s:

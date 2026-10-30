@@ -2,8 +2,8 @@
 // Партия — одна страница варки для кастрюли и пивоварни: «Сейчас» (текущий шаг, таймер; на подключённой пивоварне —
 // её живое состояние), таймлайн варочного дня из рецепта партии с замерами на своих шагах, итог против плана,
 // брожение по плану, журнал, температура с пивоварни, рецепт партии. Изменилась на сервисе (пивоварня сменила
-// шаг, закончила программу) — страница освежается сама. Записанной вручную можно поменять день; удалить — любую,
-// кроме идущей на пивоварне.
+// шаг, закончила программу) — страница освежается сама. День и оборудование задаются один раз, в «Сварить»: рецепт
+// партии посчитан под них. Удалить — любую, кроме идущей на пивоварне.
 import type { EntryKind } from '~/utils/brewlog'
 
 definePageMeta({ auth: 'user', title: 'Варка' })
@@ -12,7 +12,7 @@ const route = useRoute()
 const id = computed(() => String(route.params.id))
 const { $api } = useNuxtApp()
 const confirm = useConfirm()
-const { exec, pending } = useCommand()
+const { exec } = useCommand()
 const prefs = usePreferencesStore()
 const { data: brew, status, error, refresh } = useApi('/api/brews/{bid}', { path: { bid: id }, key: () => `brew:${id.value}` })
 const missing = computed(() => errorStatus(error.value) === 404)
@@ -91,24 +91,6 @@ const batchLabel = computed(() => {
 })
 const volumes = computed(() => (snapshot.value ? waterVolumes(snapshot.value, snapshot.value.batch?.evaporation ?? eq.value?.evaporation) : null))
 
-// день и оборудование — у записанной вручную
-const dayOpen = ref(false)
-const day = ref('')
-const equipmentId = ref<string | undefined>()
-const equipmentItems = computed(() => equipment.value.map(e => ({ label: e.name, value: e.id })))
-function editDay() {
-  day.value = localInput(brew.value!.startedAt)
-  equipmentId.value = brew.value!.equipment?.id
-  dayOpen.value = true
-}
-async function saveDay() {
-  const body = { startedAt: new Date(`${day.value}T12:00`).getTime() / 1000, equipmentId: equipmentId.value }
-  const saved = await exec(() => $api('/api/brews/{bid}', { method: 'PATCH', path: { bid: id.value }, body }))
-  if (!saved) return
-  brew.value = saved
-  dayOpen.value = false
-}
-
 async function finish() {
   const ok = await confirm({
     title: 'Закончить варочный день?',
@@ -133,7 +115,6 @@ async function remove() {
 const menu = computed(() => [[
   // пока идёт программа пивоварни, день ведёт она
   ...(brew.value?.phase === 'brewday' && (brew.value.manual || brew.value.status !== 'running') ? [{ label: 'Закончить варочный день', icon: 'i-lucide-check', onSelect: finish }] : []),
-  ...(brew.value?.manual ? [{ label: 'День и оборудование', icon: 'i-lucide-calendar', onSelect: editDay }] : []),
   { label: 'Удалить варку', icon: 'i-lucide-trash-2', color: 'error' as const, disabled: brew.value?.status === 'running' && !brew.value.manual, onSelect: remove },
 ]])
 </script>
@@ -257,25 +238,6 @@ const menu = computed(() => [[
         <USkeleton class="h-48 w-full" />
         <USkeleton class="h-80 w-full" />
       </div>
-
-      <UModal v-model:open="dayOpen" title="День и оборудование">
-        <template #body>
-          <form id="brew-day" class="flex flex-wrap gap-4" @submit.prevent="saveDay">
-            <UFormField label="День варки">
-              <UInput v-model="day" type="date" size="lg" />
-            </UFormField>
-            <UFormField v-if="equipmentItems.length" label="На чём варили" class="min-w-56 flex-1">
-              <USelect v-model="equipmentId" :items="equipmentItems" placeholder="Не указано" size="lg" class="w-full" />
-            </UFormField>
-          </form>
-        </template>
-        <template #footer>
-          <div class="flex w-full justify-end gap-2">
-            <UButton label="Отмена" color="neutral" variant="ghost" size="lg" @click="dayOpen = false" />
-            <UButton type="submit" form="brew-day" label="Сохранить" icon="i-lucide-check" size="lg" :loading="pending" :disabled="!day" />
-          </div>
-        </template>
-      </UModal>
     </template>
   </UDashboardPanel>
 </template>

@@ -36,7 +36,7 @@ users ─┬─ sessions                  входы
 | `auth_tokens` | `kind` (`verify` / `reset`), `token_hash`, `expires_at`, `used_at` — одноразовые |
 | `agents` | `token_hash`, `name`, `last_seen_at` |
 | `devices` | `tuya_id` (уникален — пивоварня принадлежит одному пользователю), `agent_id` — через какой агент на связи, `model`, `limits` (JSONB, сообщает агент) |
-| `equipment` | `user_id`, `name`, `kind` (`manual` — без подключения, `easybrew`), `device_id` (пивоварня, которую завёл агент; удалили — пусто), `volume` (л после кипячения), `efficiency`, `evaporation`, `kettle` (объём котла до краёв, л), `main` (одно у пользователя) |
+| `equipment` | `user_id`, `name`, `kind` (вид из каталога `brewery/kinds.py`: варочные системы `manual`, `allinone`, `easybrew`; прочее — `fermenter`, `keg`, `mill`, `refractometer`…), `device_id` (пивоварня, которую завёл агент; удалили — пусто), у системы — `volume` (л после кипячения), `efficiency`, `evaporation`, `kettle` (объём котла до краёв, л), у прочего они пусты; `props` (JSONB: параметры вида по каталогу), `notes`, `main` (одна система у пользователя — частичный уникальный индекс `ix_equipment_one_main`) |
 | `recipes` | `data` (JSONB — рецепт целиком), `name` (для сортировки), `visibility` (`private` / `public`), `published_at`, `updated_at` |
 | `recipe_photos` | `data` (снимок), `thumb` (JPEG до 480 px), `content_type`, `credit` |
 | `recipe_votes` | `user_id` + `recipe_id` (ключ), `value` (1 / −1) |

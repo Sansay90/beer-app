@@ -44,7 +44,7 @@ watch(running, (b) => { if (b) navigateTo(`/brews/${b.id}`, { replace: true }) }
             <UButton label="Сварить" icon="i-lucide-flame" size="lg" @click="creating = true" />
             <UButton label="Рецепты" icon="i-lucide-book-open" size="lg" color="neutral" variant="outline" to="/recipes" />
             <UButton label="Мои варки" icon="i-lucide-notebook-pen" size="lg" color="neutral" variant="outline" to="/brews" />
-            <UButton label="Оборудование" icon="i-lucide-cooking-pot" size="lg" color="neutral" variant="ghost" to="/settings/brewery" />
+            <UButton label="Оборудование" icon="i-lucide-cooking-pot" size="lg" color="neutral" variant="ghost" to="/equipment" />
           </div>
           <p v-if="!paired" class="mt-6 text-sm text-muted">
             Есть Easy Brew Connect? С подключённой пивоварней у партии будут температура вживую, шаги программы

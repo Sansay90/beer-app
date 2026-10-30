@@ -51,6 +51,8 @@ const nav = computed(() => [
   { label: 'Варка', icon: 'i-lucide-flame', to: current.value ? `/brews/${current.value.id}` : '/', active: route.path === '/' || /^\/brews\/[^/]+$/.test(route.path), badge: status.value && { ...status.value, variant: 'subtle' as const }, onSelect: close },
   // журнал варок — и с пивоварни, и без неё
   ...(auth.user ? [{ label: 'Мои варки', icon: 'i-lucide-notebook-pen', to: '/brews', active: route.path === '/brews', onSelect: close }] : []),
+  // на чём варит пивовар: рецепт партии считается под него, подключённая пивоварня — связь и калибровка
+  ...(auth.user ? [{ label: 'Оборудование', icon: 'i-lucide-cooking-pot', to: '/equipment', active: route.path.startsWith('/equipment'), onSelect: close }] : []),
   recipes.value,
   ...(auth.user ? [{ label: 'Уведомления', icon: 'i-lucide-bell', to: '/notifications', badge: unread.value || undefined, onSelect: close }] : []),
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users', onSelect: close }] : []),

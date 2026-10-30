@@ -137,12 +137,13 @@ def test_brews_counted_once_a_day(people, published):
     assert reader.post("/brews", {"recipeId": rid, "startedAt": time.time() + 3 * DAY})[0] == 400
 
 
-def test_date_and_delete(people, published):
+def test_past_day_and_delete(people, published):
     _, reader = people
     rid = published
-    bid = reader.ok("POST", "/brews", {"recipeId": rid})["id"]
     week_ago = time.time() - 7 * DAY
-    assert reader.ok("PATCH", f"/brews/{bid}", {"startedAt": week_ago})["startedAt"] == pytest.approx(week_ago)
+    brew = reader.ok("POST", "/brews", {"recipeId": rid, "startedAt": week_ago})
+    assert brew["startedAt"] == pytest.approx(week_ago)
+    bid = brew["id"]
     reader.ok("POST", f"/brews/{bid}/entries", {"kind": "note", "text": "Запомнить"})
     reader.ok("DELETE", f"/brews/{bid}")
     assert reader.get(f"/brews/{bid}")[0] == 404 and total(reader, rid) == 0

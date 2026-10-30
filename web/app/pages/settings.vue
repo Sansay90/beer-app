@@ -1,11 +1,10 @@
 <script setup lang="ts">
-// Настройки по группам — вкладками со своими адресами: профиль и аккаунт; пивоварня (подключение, калибровка,
-// оборудование); уведомления, единицы и звук — для этого устройства. Группы — pages/settings/, разделы — components/settings/.
+// Настройки по группам — вкладками со своими адресами: профиль и аккаунт; уведомления, единицы и звук — для этого
+// устройства. Группы — pages/settings/, разделы — components/settings/. Оборудование — своим пунктом меню (pages/equipment.vue).
 definePageMeta({ auth: 'user', teaser: 'settings', title: 'Настройки' })
 
 const TABS = [
   { label: 'Профиль', icon: 'i-lucide-user', to: '/settings', exact: true },
-  { label: 'Оборудование', icon: 'i-lucide-cooking-pot', to: '/settings/brewery' },
   { label: 'Уведомления и вид', icon: 'i-lucide-bell', to: '/settings/notifications' },
 ]
 </script>

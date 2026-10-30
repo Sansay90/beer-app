@@ -69,7 +69,7 @@ const fmtRatio = (v: number | null) => (v == null ? '—' : v.toLocaleString('ru
     <p v-else-if="volumes.total != null" class="num mt-3 flex flex-wrap items-center gap-x-1 text-xs text-muted">
       <span>Всего {{ fmtL(volumes.total) }}: {{ fmtL(volumes.preBoil!) }} перед кипячением и ~{{ fmtL(volumes.absorbed) }} останется в дробине.</span>
       <span>Испарение</span>
-      <ULink to="/settings/brewery#equipment" class="text-muted underline decoration-dotted underline-offset-2 hover:text-highlighted">{{ fmtNum(evaporation ?? 0) }} л/ч</ULink>
+      <ULink to="/equipment" class="text-muted underline decoration-dotted underline-offset-2 hover:text-highlighted">{{ fmtNum(evaporation ?? 0) }} л/ч</ULink>
       <span>× {{ boilMinutes }} мин.</span>
     </p>
 

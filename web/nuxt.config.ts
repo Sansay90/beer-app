@@ -45,6 +45,9 @@ export default defineNuxtConfig({
     '/': { ssr: false },
     '/settings': { ssr: false },
     '/settings/**': { ssr: false },
+    '/settings/brewery': { redirect: '/equipment' },          // старая вкладка настроек — закладки и ссылки
+    '/equipment': { ssr: false },
+    '/equipment/**': { ssr: false },
     '/notifications': { ssr: false },
     '/brews': { ssr: false },
     '/brews/**': { ssr: false },

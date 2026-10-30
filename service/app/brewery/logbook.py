@@ -31,6 +31,7 @@ from ..recipes.program import ru_num
 from ..recipes.scale import scale_recipe
 from .brewday import end_day, progress, steps_of
 from .equipment import main_of, own
+from .kinds import is_system
 
 MANUAL, DEVICE = "manual", "device"
 BREWDAY, FERMENTING, PACKAGED = "brewday", "fermenting", "packaged"   # фазы партии
@@ -223,13 +224,16 @@ class Logbook:
 
     def create(self, recipe_id, started_at=None, equipment_id=None):
         """Сварить: новая партия по рецепту, который пивовару виден, на указанном или основном оборудовании.
-        Рецепт партии — пересчитанный под его объём и эффективность (без оборудования — как есть)."""
+        Рецепт партии — пересчитанный под его объём и эффективность (без оборудования — как есть). День
+        и оборудование задаются один раз: рецепт партии посчитан под них, ошиблись — удалить и сварить заново."""
         at = check_at(started_at)
         with session() as s:
             r = s.get(Recipe, rid) if (rid := parse_id(recipe_id)) else None
             if r is None or not can_view(self.user, r):
                 raise NotFound("рецепт не найден")
             e = self._equipment(s, equipment_id) if equipment_id else main_of(s, self.user.id)
+            if e is not None and not is_system(e.kind):
+                raise Invalid("варят на варочной системе — кастрюле, котле или пивоварне")
             snapshot = batch_recipe(r.data, e)
             b = Brew(user_id=self.user.id, source=MANUAL, recipe_id=r.id, name=r.data.get("name") or "Варка",
                      equipment_id=e.id if e else None, snapshot=snapshot, plan=plan_of(snapshot),
@@ -239,26 +243,6 @@ class Logbook:
             s.commit()
             bid = b.id
         return self.get(bid)
-
-    def update(self, brew_id, started_at=None, equipment_id=None):
-        """День и оборудование — только у записанной вручную: у варки с пивоварни их знает пивоварня.
-        Не указанное — как было. Рецепт партии при смене оборудования не пересчитывается: сварено уже по нему.
-        Сдвинулся день варки — с ним и его конец."""
-        with session() as s:
-            b = self._brew(s, brew_id)
-            if b.source != MANUAL:
-                raise Conflict("варку с пивоварни не правят — день и оборудование знает пивоварня")
-            if started_at is not None:
-                at = check_at(started_at)
-                shift = at - b.started_at
-                b.started_at = at
-                b.day_ended_at = b.day_ended_at and b.day_ended_at + shift
-                b.ended_at = b.ended_at and b.ended_at + shift
-            if equipment_id is not None:
-                b.equipment_id = self._equipment(s, equipment_id).id
-            s.add(b)
-            s.commit()
-        return self.get(brew_id)
 
     def finish(self, brew_id):
         """Закончить варочный день — дальше брожение. Пока идёт программа пивоварни, день ведёт она."""

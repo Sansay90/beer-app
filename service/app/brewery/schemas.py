@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ..recipes.schemas import AdditionSlot, Recipe
+from .kinds import KIND_IDS
 
 
 # ── состояние ─────────────────────────────────────────────────────────────────
@@ -208,11 +209,6 @@ class BrewIn(BaseModel):
                                                       "пересчитывается под его объём и эффективность")
 
 
-class BrewEdit(BaseModel):
-    startedAt: float | None = None
-    equipmentId: str | None = None
-
-
 class BrewDetail(BrewSummary):
     recipe: DeviceRecipe | None = Field(None, description="рецепт, как он был в пивоварне на момент варки")
     snapshot: Recipe | None = Field(None, description="рецепт партии: пересчитан под оборудование на момент варки; "
@@ -226,27 +222,76 @@ class BrewDetail(BrewSummary):
 
 
 # ── оборудование ──────────────────────────────────────────────────────────────
-EquipmentKind = Literal["manual", "easybrew"]
+EquipmentKind = Literal[KIND_IDS]
+PropValue = bool | float | str
 
 
 class EquipmentIn(BaseModel):
-    """Оборудование: объём и эффективность — для новых рецептов, по испарению считается промывочная вода."""
+    """Оборудование. У варочной системы — объём и эффективность для новых рецептов, испарение для расчёта воды,
+    котёл; у прочего — параметры вида (props). Пределы, точность и средние — по каталогу (GET /api/equipment/kinds);
+    чужое для вида или вне пределов — 400."""
     name: str = Field(max_length=60)
-    volume: float | None = Field(None, ge=0.5, le=2000, description="л после кипячения — партия новых рецептов")
-    efficiency: float = Field(75, ge=1, le=100, description="эффективность для новых рецептов, %")
-    evaporation: float = Field(3.0, ge=0, le=20, description="испарение при кипячении без крышки, л/ч")
-    kettle: float | None = Field(None, ge=1, le=5000, description="объём котла до краёв, л — предупредить, если варка "
-                                                                   "не влезает")
+    volume: float | None = Field(None, description="система: л после кипячения — партия новых рецептов")
+    efficiency: float | None = Field(None, description="система: эффективность для новых рецептов, %; "
+                                                       "не указана — средняя из каталога")
+    evaporation: float | None = Field(None, description="система: испарение при кипячении без крышки, л/ч; "
+                                                        "не указано — среднее из каталога")
+    kettle: float | None = Field(None, description="система: объём котла до краёв, л — предупредить, если варка "
+                                                   "не влезает")
+    props: dict[str, PropValue | None] = Field({}, description="не система: параметры вида по каталогу; пустые "
+                                                               "не сохраняются")
+    notes: str | None = Field(None, max_length=2000, description="модель, где куплено, особенности")
 
 
 class EquipmentNew(EquipmentIn):
-    kind: EquipmentKind = Field("manual", description="manual — без подключения, easybrew — Easy Brew Connect")
+    kind: EquipmentKind = Field("manual", description="вид из каталога: manual — кастрюля или котёл, easybrew — "
+                                                      "Easy Brew Connect, fermenter — ферментер…")
 
 
 class Equipment(EquipmentNew):
     id: str
+    kind: str = Field(description="вид из каталога; вида там уже нет — видно как «Другое» (category other)")
+    category: str = Field(description="группа каталога: brew, mill, chill, ferment, measure, yeast, package, other")
+    system: bool = Field(description="варочная система: на ней варят, у неё объём, эффективность и испарение")
+    props: dict[str, PropValue] = {}
     connected: bool = Field(description="пивоварня привязана к сайту (агент её завёл)")
-    main: bool = Field(description="основное — для новых рецептов и расчётов")
+    controlled: bool = Field(description="пивоварня, которой сейчас управляет сайт: её связь, калибровка, команды")
+    main: bool = Field(description="основная варочная система — для новых рецептов и расчётов")
+
+
+class EquipmentOption(BaseModel):
+    value: str
+    label: str
+
+
+class EquipmentField(BaseModel):
+    key: str
+    label: str
+    type: Literal["number", "select", "bool"]
+    unit: str | None = None
+    min: float | None = None
+    max: float | None = None
+    step: float | None = None
+    digits: int | None = Field(None, description="знаков после запятой")
+    prefix: str | None = Field(None, description="перед значением в кратком описании: «котёл 40 л»")
+    default: float | None = Field(None, description="у нового")
+    short: str | None = Field(None, description="«да/нет»: в кратком описании, если да")
+    options: list[EquipmentOption] | None = None
+    help: str | None = None
+
+
+class EquipmentKindInfo(BaseModel):
+    id: EquipmentKind
+    label: str
+    hint: str
+    system: bool
+    fields: list[EquipmentField]
+
+
+class EquipmentCategory(BaseModel):
+    id: str
+    label: str
+    kinds: list[EquipmentKindInfo]
 
 
 

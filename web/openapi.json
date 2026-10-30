@@ -2107,57 +2107,6 @@
           }
         }
       },
-      "patch": {
-        "tags": [
-          "варки"
-        ],
-        "summary": "Изменить день или оборудование",
-        "description": "Только у записанной вручную; не указанное — как было.",
-        "operationId": "edit_brew_api_brews__bid__patch",
-        "parameters": [
-          {
-            "name": "bid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Bid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BrewEdit"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrewDetail"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
         "tags": [
           "варки"
@@ -2515,6 +2464,31 @@
         }
       }
     },
+    "/api/equipment/kinds": {
+      "get": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Каталог оборудования: группы, виды и их параметры",
+        "operationId": "equipment_kinds_api_equipment_kinds_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EquipmentCategory"
+                  },
+                  "type": "array",
+                  "title": "Response Equipment Kinds Api Equipment Kinds Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/equipment": {
       "get": {
         "tags": [
@@ -2545,7 +2519,7 @@
           "оборудование"
         ],
         "summary": "Добавить оборудование",
-        "description": "Первое — основное; не больше 10.",
+        "description": "Первая варочная система — основная; не больше 100.",
         "operationId": "create_equipment_api_equipment_post",
         "requestBody": {
           "content": {
@@ -2587,6 +2561,7 @@
           "оборудование"
         ],
         "summary": "Изменить оборудование",
+        "description": "Вид не меняется.",
         "operationId": "update_equipment_api_equipment__eid__put",
         "parameters": [
           {
@@ -2680,6 +2655,7 @@
           "оборудование"
         ],
         "summary": "Сделать основным",
+        "description": "Только варочную систему (400).",
         "operationId": "make_main_equipment_api_equipment__eid__main_put",
         "parameters": [
           {
@@ -3606,34 +3582,6 @@
           "events"
         ],
         "title": "BrewDetail"
-      },
-      "BrewEdit": {
-        "properties": {
-          "startedAt": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Startedat"
-          },
-          "equipmentId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Equipmentid"
-          }
-        },
-        "type": "object",
-        "title": "BrewEdit"
       },
       "BrewEntryEdit": {
         "properties": {
@@ -4593,80 +4541,300 @@
           "volume": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 2000.0,
-                "minimum": 0.5
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Volume",
-            "description": "л после кипячения — партия новых рецептов"
+            "description": "система: л после кипячения — партия новых рецептов"
           },
           "efficiency": {
-            "type": "number",
-            "maximum": 100.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Efficiency",
-            "description": "эффективность для новых рецептов, %",
-            "default": 75
+            "description": "система: эффективность для новых рецептов, %; не указана — средняя из каталога"
           },
           "evaporation": {
-            "type": "number",
-            "maximum": 20.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Evaporation",
-            "description": "испарение при кипячении без крышки, л/ч",
-            "default": 3.0
+            "description": "система: испарение при кипячении без крышки, л/ч; не указано — среднее из каталога"
           },
           "kettle": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 5000.0,
-                "minimum": 1.0
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Kettle",
-            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+            "description": "система: объём котла до краёв, л — предупредить, если варка не влезает"
+          },
+          "props": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Props",
+            "default": {}
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "модель, где куплено, особенности"
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "manual",
-              "easybrew"
-            ],
             "title": "Kind",
-            "description": "manual — без подключения, easybrew — Easy Brew Connect",
-            "default": "manual"
+            "description": "вид из каталога; вида там уже нет — видно как «Другое» (category other)"
           },
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "группа каталога: brew, mill, chill, ferment, measure, yeast, package, other"
+          },
+          "system": {
+            "type": "boolean",
+            "title": "System",
+            "description": "варочная система: на ней варят, у неё объём, эффективность и испарение"
           },
           "connected": {
             "type": "boolean",
             "title": "Connected",
             "description": "пивоварня привязана к сайту (агент её завёл)"
           },
+          "controlled": {
+            "type": "boolean",
+            "title": "Controlled",
+            "description": "пивоварня, которой сейчас управляет сайт: её связь, калибровка, команды"
+          },
           "main": {
             "type": "boolean",
             "title": "Main",
-            "description": "основное — для новых рецептов и расчётов"
+            "description": "основная варочная система — для новых рецептов и расчётов"
           }
         },
         "type": "object",
         "required": [
           "name",
+          "kind",
           "id",
+          "category",
+          "system",
           "connected",
+          "controlled",
           "main"
         ],
         "title": "Equipment"
+      },
+      "EquipmentCategory": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/EquipmentKindInfo"
+            },
+            "type": "array",
+            "title": "Kinds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "kinds"
+        ],
+        "title": "EquipmentCategory"
+      },
+      "EquipmentField": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "number",
+              "select",
+              "bool"
+            ],
+            "title": "Type"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "digits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Digits",
+            "description": "знаков после запятой"
+          },
+          "prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prefix",
+            "description": "перед значением в кратком описании: «котёл 40 л»"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default",
+            "description": "у нового"
+          },
+          "short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short",
+            "description": "«да/нет»: в кратком описании, если да"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EquipmentOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "help": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Help"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "type"
+        ],
+        "title": "EquipmentField"
       },
       "EquipmentIn": {
         "properties": {
@@ -4678,46 +4846,85 @@
           "volume": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 2000.0,
-                "minimum": 0.5
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Volume",
-            "description": "л после кипячения — партия новых рецептов"
+            "description": "система: л после кипячения — партия новых рецептов"
           },
           "efficiency": {
-            "type": "number",
-            "maximum": 100.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Efficiency",
-            "description": "эффективность для новых рецептов, %",
-            "default": 75
+            "description": "система: эффективность для новых рецептов, %; не указана — средняя из каталога"
           },
           "evaporation": {
-            "type": "number",
-            "maximum": 20.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Evaporation",
-            "description": "испарение при кипячении без крышки, л/ч",
-            "default": 3.0
+            "description": "система: испарение при кипячении без крышки, л/ч; не указано — среднее из каталога"
           },
           "kettle": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 5000.0,
-                "minimum": 1.0
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Kettle",
-            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+            "description": "система: объём котла до краёв, л — предупредить, если варка не влезает"
+          },
+          "props": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Props",
+            "description": "не система: параметры вида по каталогу; пустые не сохраняются",
+            "default": {}
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "модель, где куплено, особенности"
           }
         },
         "type": "object",
@@ -4725,7 +4932,75 @@
           "name"
         ],
         "title": "EquipmentIn",
-        "description": "Оборудование: объём и эффективность — для новых рецептов, по испарению считается промывочная вода."
+        "description": "Оборудование. У варочной системы — объём и эффективность для новых рецептов, испарение для расчёта воды,\nкотёл; у прочего — параметры вида (props). Пределы, точность и средние — по каталогу (GET /api/equipment/kinds);\nчужое для вида или вне пределов — 400."
+      },
+      "EquipmentKindInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "allinone",
+              "easybrew",
+              "mash_tun",
+              "hlt",
+              "burner",
+              "hop_spider",
+              "mill",
+              "chiller",
+              "pump",
+              "fermenter",
+              "chamber",
+              "glycol",
+              "controller",
+              "heater",
+              "sensor",
+              "hydrometer",
+              "refractometer",
+              "ph_meter",
+              "thermometer",
+              "scale",
+              "stir_plate",
+              "flask",
+              "keg",
+              "co2",
+              "tap",
+              "kegerator",
+              "filter",
+              "bottles",
+              "other"
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint"
+          },
+          "system": {
+            "type": "boolean",
+            "title": "System"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/EquipmentField"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "hint",
+          "system",
+          "fields"
+        ],
+        "title": "EquipmentKindInfo"
       },
       "EquipmentNew": {
         "properties": {
@@ -4737,55 +5012,122 @@
           "volume": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 2000.0,
-                "minimum": 0.5
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Volume",
-            "description": "л после кипячения — партия новых рецептов"
+            "description": "система: л после кипячения — партия новых рецептов"
           },
           "efficiency": {
-            "type": "number",
-            "maximum": 100.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Efficiency",
-            "description": "эффективность для новых рецептов, %",
-            "default": 75
+            "description": "система: эффективность для новых рецептов, %; не указана — средняя из каталога"
           },
           "evaporation": {
-            "type": "number",
-            "maximum": 20.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Evaporation",
-            "description": "испарение при кипячении без крышки, л/ч",
-            "default": 3.0
+            "description": "система: испарение при кипячении без крышки, л/ч; не указано — среднее из каталога"
           },
           "kettle": {
             "anyOf": [
               {
-                "type": "number",
-                "maximum": 5000.0,
-                "minimum": 1.0
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Kettle",
-            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+            "description": "система: объём котла до краёв, л — предупредить, если варка не влезает"
+          },
+          "props": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Props",
+            "description": "не система: параметры вида по каталогу; пустые не сохраняются",
+            "default": {}
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "модель, где куплено, особенности"
           },
           "kind": {
             "type": "string",
             "enum": [
               "manual",
-              "easybrew"
+              "allinone",
+              "easybrew",
+              "mash_tun",
+              "hlt",
+              "burner",
+              "hop_spider",
+              "mill",
+              "chiller",
+              "pump",
+              "fermenter",
+              "chamber",
+              "glycol",
+              "controller",
+              "heater",
+              "sensor",
+              "hydrometer",
+              "refractometer",
+              "ph_meter",
+              "thermometer",
+              "scale",
+              "stir_plate",
+              "flask",
+              "keg",
+              "co2",
+              "tap",
+              "kegerator",
+              "filter",
+              "bottles",
+              "other"
             ],
             "title": "Kind",
-            "description": "manual — без подключения, easybrew — Easy Brew Connect",
+            "description": "вид из каталога: manual — кастрюля или котёл, easybrew — Easy Brew Connect, fermenter — ферментер…",
             "default": "manual"
           }
         },
@@ -4794,6 +5136,24 @@
           "name"
         ],
         "title": "EquipmentNew"
+      },
+      "EquipmentOption": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "EquipmentOption"
       },
       "EquipmentRef": {
         "properties": {
