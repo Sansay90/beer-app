@@ -23,7 +23,6 @@ from .recipe import (
     WATTS_STEP,
     decode,
     encode,
-    same_program,
     to_steps,
 )
 
@@ -109,8 +108,7 @@ class Controller:
         with self._lock:
             # незакрытая варка из памяти, пока пивоварня не сказала, идёт ли программа, — ещё не закрыта
             brew = self.brew_id if self._brew_checked else (self.memory.get("brew") or {}).get("id")
-            return {"model": self._model(), "limits": self.limits(), "brewId": brew,
-                    "activeRecipeId": self.active["program"].get("recipeId") if self.active else None}
+            return {"model": self._model(), "limits": self.limits(), "brewId": brew}
 
     # ── реакция на DP ─────────────────────────────────────────────────────────
     def _on_change(self, changed):
@@ -173,8 +171,14 @@ class Controller:
             self._start_brew()
 
     def _start_brew(self):
+        """Программа от «Сварить» несёт id партии (brewId) — первый запуск идёт варкой в неё; повторный запуск той
+        же программы — уже новая варка, иначе её температура и события ушли бы в прошлую партию."""
         program = self.active["program"] if self.active else None
-        self.brew_id = str(uuid.uuid4())
+        batch = program.get("brewId") if program and not program.get("started") else None
+        self.brew_id = batch or str(uuid.uuid4())
+        if batch:
+            self.active = {**self.active, "program": {**program, "started": True}}
+            self.memory.update(active=self.active)
         self.memory.update(brew={"id": self.brew_id, "energyWh": 0.0})
         self._emit({"type": "brewStarted", "id": self.brew_id, "at": time.time(),
                     "name": program["name"] if program else "Рецепт из Smart Life",
@@ -365,6 +369,7 @@ class Controller:
         return {
             "name": program["name"] if program else None,
             "id": program.get("recipeId") if program else None,
+            "brewId": program.get("brewId") if program else None,
             "steps": [{"temp": s.temp, "minutes": s.minutes, "watts": s.watts, "additions": s.additions,
                        "boil": s.is_boil, "name": names[i] if i < len(names) else None}
                       for i, s in enumerate(steps)],
@@ -385,24 +390,6 @@ class Controller:
                 return list(self.active["program"].get("slots") or [])
         return [{"minutes": m, "items": [], "label": "Закладка"} for m in steps[idx].additions]
 
-    def apply_program(self, program):
-        """Загруженный рецепт поправили, не меняя программы пивоварни (названия, ингредиенты), — обновить экран.
-        Если программа уже другая, в пивоварне по-прежнему старая: её названия не трогаем."""
-        with self._lock:
-            if (self.active and program.get("recipeId") == self.active["program"].get("recipeId")
-                    and same_program(program, self.active["encoded"])):
-                self.active = {"program": program, "encoded": self.active["encoded"]}
-                self.memory.update(active=self.active)
-                self._emit_state()
-
-    def forget(self, recipe_id):
-        """Загруженный рецепт удалили — его названия больше не показываем."""
-        with self._lock:
-            if self.active and self.active["program"].get("recipeId") == recipe_id:
-                self.active = None
-                self.memory.update(active=None)
-                self._emit_state()
-
     # ── состояние для интерфейса ──────────────────────────────────────────────
     def _model(self):
         return str(self.dev.dps.get(DP_MODEL) or self.model or "") or None
@@ -419,6 +406,7 @@ class Controller:
 
             return {
                 "online": self.dev.online,
+                "brewId": self.brew_id,
                 "power": bool(d.get(DP_SWITCH)),
                 "running": bool(d.get(DP_START)),
                 "status": STATUS.get(d.get(DP_STATUS), d.get(DP_STATUS)),

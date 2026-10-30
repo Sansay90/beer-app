@@ -6,7 +6,7 @@ import type {
 } from '~/types/recipe'
 import { ADDITION_KINDS } from '~/utils/additions'
 import { calcRecipe, DEFAULT_EFFICIENCY } from '~/utils/calc'
-import { fmtMinutes, plural } from '~/utils/format'
+import { fmtMinutes, fmtNumber, plural } from '~/utils/format'
 
 // ── подписи ──────────────────────────────────────────────────────────────────
 export const FERMENTABLE_KINDS = { grain: 'Солод', adjunct: 'Несоложёное', sugar: 'Сахар', extract: 'Экстракт' } as const
@@ -42,13 +42,13 @@ export const blankWater = (): WaterDraft => ({
 export const mashStep = (watts: number, temp = 66, minutes = 60, name = ''): MashRow => ({ name, temp, minutes, watts })
 export const fermentationStep = (temp = 18, days = 7, name = ''): FermentationRow => ({ name, temp, days })
 
-/** Новый рецепт: эффективность — из профиля оборудования, объём партии задаёт пивовар. */
-export function blankRecipe(limits: Limits, equipment: Equipment | null): RecipeDraft {
+/** Новый рецепт: объём партии и эффективность — из основного оборудования (нет — объём задаёт пивовар). */
+export function blankRecipe(limits: Limits, equipment: Pick<Equipment, 'volume' | 'efficiency'> | null): RecipeDraft {
   const w = wattOptions(limits)[0]!.value
   return {
     name: 'Новый рецепт',
     style: null,
-    batch: { volume: null, efficiency: equipment?.efficiency ?? DEFAULT_EFFICIENCY },
+    batch: { volume: equipment?.volume ?? null, efficiency: equipment?.efficiency ?? DEFAULT_EFFICIENCY },
     fermentables: [],
     hops: [],
     miscs: [],
@@ -252,6 +252,16 @@ export function validateRecipe(d: RecipeDraft, l: Limits): string[] {
 // ── сводка ───────────────────────────────────────────────────────────────────
 export function totalKg(fermentables: { amount?: number | null }[]) {
   return fermentables.reduce((a, f) => a + (f.amount ?? 0), 0)
+}
+
+/** «25 л при 75 %» — объём после кипячения и эффективность. */
+export function batchLine(r: Pick<Recipe, 'batch'>) {
+  return `${fmtNumber(r.batch?.volume, 1, ' л')} при ${fmtNumber(r.batch?.efficiency, 0, ' %')}`
+}
+
+/** Сколько всего хмеля, г. */
+export function hopGrams(r: Pick<Recipe, 'hops'>) {
+  return totalKg(r.hops ?? [])
 }
 
 /** Доля в засыпи, % — от всей массы сбраживаемого. */

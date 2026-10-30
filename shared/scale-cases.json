@@ -1,0 +1,669 @@
+[
+  {
+    "name": "вдвое меньше при той же эффективности",
+    "recipe": {
+      "batch": {
+        "volume": 30,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 7.2,
+          "ebc": 6,
+          "use": "mash"
+        },
+        {
+          "name": "Карамельный",
+          "kind": "grain",
+          "amount": 0.333,
+          "ebc": 120,
+          "use": "mash"
+        },
+        {
+          "name": "Сахар",
+          "kind": "sugar",
+          "amount": 0.5,
+          "ebc": 0,
+          "use": "boil",
+          "minutes": 10
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 52,
+          "use": "boil",
+          "minutes": 60
+        },
+        {
+          "name": "Citra",
+          "alpha": 12,
+          "amount": 75,
+          "use": "dry_hop",
+          "day": 3
+        }
+      ],
+      "miscs": [
+        {
+          "name": "Ирландский мох",
+          "kind": "fining",
+          "amount": 5,
+          "unit": "g",
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Чиллер",
+          "kind": "equipment",
+          "amount": null,
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Таблетка",
+          "kind": "fining",
+          "amount": 1,
+          "unit": "pcs",
+          "use": "boil",
+          "minutes": 10
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "US-05",
+          "form": "dry",
+          "amount": 1,
+          "unit": "pkg",
+          "attenuation": 78
+        }
+      ],
+      "water": {
+        "ratio": 3,
+        "additions": [
+          {
+            "agent": "cacl2",
+            "amount": 3,
+            "target": "mash"
+          },
+          {
+            "agent": "gypsum",
+            "amount": 2,
+            "target": "sparge"
+          }
+        ]
+      },
+      "mash": [
+        {
+          "temp": 66,
+          "minutes": 60,
+          "watts": 2500
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "fermentation": [
+        {
+          "temp": 18,
+          "days": 10
+        }
+      ]
+    },
+    "to": {
+      "volume": 15,
+      "efficiency": 75
+    },
+    "expected": {
+      "batch": {
+        "volume": 15,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 3.6,
+          "ebc": 6,
+          "use": "mash"
+        },
+        {
+          "name": "Карамельный",
+          "kind": "grain",
+          "amount": 0.167,
+          "ebc": 120,
+          "use": "mash"
+        },
+        {
+          "name": "Сахар",
+          "kind": "sugar",
+          "amount": 0.25,
+          "ebc": 0,
+          "use": "boil",
+          "minutes": 10
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 26.0,
+          "use": "boil",
+          "minutes": 60
+        },
+        {
+          "name": "Citra",
+          "alpha": 12,
+          "amount": 37.5,
+          "use": "dry_hop",
+          "day": 3
+        }
+      ],
+      "miscs": [
+        {
+          "name": "Ирландский мох",
+          "kind": "fining",
+          "amount": 2.5,
+          "unit": "g",
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Чиллер",
+          "kind": "equipment",
+          "amount": null,
+          "use": "boil",
+          "minutes": 15
+        },
+        {
+          "name": "Таблетка",
+          "kind": "fining",
+          "amount": 1,
+          "unit": "pcs",
+          "use": "boil",
+          "minutes": 10
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "US-05",
+          "form": "dry",
+          "amount": 1,
+          "unit": "pkg",
+          "attenuation": 78
+        }
+      ],
+      "water": {
+        "ratio": 3,
+        "additions": [
+          {
+            "agent": "cacl2",
+            "amount": 1.5,
+            "target": "mash"
+          },
+          {
+            "agent": "gypsum",
+            "amount": 1.0,
+            "target": "sparge"
+          }
+        ]
+      },
+      "mash": [
+        {
+          "temp": 66,
+          "minutes": 60,
+          "watts": 2500
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "fermentation": [
+        {
+          "temp": 18,
+          "days": 10
+        }
+      ],
+      "targets": {
+        "og": 1.064082862283572,
+        "fg": 1.0126993226689094,
+        "ibu": 45.797178954743266,
+        "ebc": 14.122445708561537,
+        "abv": 7.013512174123447
+      }
+    }
+  },
+  {
+    "name": "другая эффективность — только затираемое",
+    "recipe": {
+      "batch": {
+        "volume": 25,
+        "efficiency": 80
+      },
+      "fermentables": [
+        {
+          "name": "Pilsner",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 3.5,
+          "use": "mash"
+        },
+        {
+          "name": "Экстракт",
+          "kind": "extract",
+          "amount": 1,
+          "ebc": 8,
+          "use": "mash"
+        },
+        {
+          "name": "Сахар",
+          "kind": "sugar",
+          "amount": 0.3,
+          "ebc": 0,
+          "use": "fermentation"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Saaz",
+          "alpha": 3.5,
+          "amount": 40,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "W-34/70",
+          "form": "dry",
+          "amount": 2,
+          "unit": "pkg",
+          "attenuation": 80
+        }
+      ],
+      "water": {
+        "ratio": 3,
+        "additions": [
+          {
+            "agent": "lactic80",
+            "amount": 1.5,
+            "target": "mash"
+          }
+        ]
+      },
+      "boil": {
+        "minutes": 90,
+        "watts": 2500
+      }
+    },
+    "to": {
+      "volume": 25,
+      "efficiency": 65
+    },
+    "expected": {
+      "batch": {
+        "volume": 25,
+        "efficiency": 65
+      },
+      "fermentables": [
+        {
+          "name": "Pilsner",
+          "kind": "grain",
+          "amount": 6.154,
+          "ebc": 3.5,
+          "use": "mash"
+        },
+        {
+          "name": "Экстракт",
+          "kind": "extract",
+          "amount": 1.0,
+          "ebc": 8,
+          "use": "mash"
+        },
+        {
+          "name": "Сахар",
+          "kind": "sugar",
+          "amount": 0.3,
+          "ebc": 0,
+          "use": "fermentation"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Saaz",
+          "alpha": 3.5,
+          "amount": 40.0,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "W-34/70",
+          "form": "dry",
+          "amount": 2,
+          "unit": "pkg",
+          "attenuation": 80
+        }
+      ],
+      "water": {
+        "ratio": 3,
+        "additions": [
+          {
+            "agent": "lactic80",
+            "amount": 1.85,
+            "target": "mash"
+          }
+        ]
+      },
+      "boil": {
+        "minutes": 90,
+        "watts": 2500
+      },
+      "targets": {
+        "og": 1.0637298023433341,
+        "fg": 1.0127459604686668,
+        "ibu": 11.41771865640048,
+        "ebc": 8.908233058224013,
+        "abv": 7.628849752710087
+      }
+    }
+  },
+  {
+    "name": "больше — пачки дрожжей вверх, граммы дрожжей пропорционально",
+    "recipe": {
+      "batch": {
+        "volume": 20,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 4,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Cascade",
+          "alpha": 6,
+          "amount": 30.4,
+          "use": "whirlpool",
+          "minutes": 20
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "US-05",
+          "form": "dry",
+          "amount": 1,
+          "unit": "pkg",
+          "attenuation": 78
+        },
+        {
+          "name": "Nottingham",
+          "form": "dry",
+          "amount": 11,
+          "unit": "g",
+          "attenuation": 78
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "to": {
+      "volume": 27,
+      "efficiency": 70
+    },
+    "expected": {
+      "batch": {
+        "volume": 27,
+        "efficiency": 70
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5.786,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Cascade",
+          "alpha": 6,
+          "amount": 41.0,
+          "use": "whirlpool",
+          "minutes": 20
+        }
+      ],
+      "yeasts": [
+        {
+          "name": "US-05",
+          "form": "dry",
+          "amount": 2,
+          "unit": "pkg",
+          "attenuation": 78
+        },
+        {
+          "name": "Nottingham",
+          "form": "dry",
+          "amount": 14.9,
+          "unit": "g",
+          "attenuation": 78
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "targets": {
+        "og": 1.0461593769583544,
+        "fg": 1.010155062930838,
+        "ibu": 0,
+        "ebc": 8.895414346479473,
+        "abv": 4.781454381077671
+      }
+    }
+  },
+  {
+    "name": "то же оборудование — копия без изменений",
+    "recipe": {
+      "batch": {
+        "volume": 30,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 7.3333,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 52.25,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "to": {
+      "volume": 30,
+      "efficiency": 75
+    },
+    "expected": {
+      "batch": {
+        "volume": 30,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 7.3333,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 52.25,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "targets": {
+        "og": 1.0563509738680916,
+        "fg": 1.014087743467023,
+        "ibu": 49.328729983516205,
+        "ebc": 9.735867369937086,
+        "abv": 5.714409817733188
+      }
+    }
+  },
+  {
+    "name": "у рецепта нет объёма — по объёму не пересчитывается",
+    "recipe": {
+      "batch": {
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 30,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "to": {
+      "volume": 20,
+      "efficiency": 70
+    },
+    "expected": {
+      "batch": {
+        "efficiency": 70,
+        "volume": 20
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5.357,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "hops": [
+        {
+          "name": "Magnum",
+          "alpha": 13,
+          "amount": 30.0,
+          "use": "boil",
+          "minutes": 60
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "targets": {
+        "og": 1.0576224518671629,
+        "fg": 1.0144056129667907,
+        "ibu": 42.00137036511433,
+        "ebc": 10.366069269849547,
+        "abv": 5.855538784979853
+      }
+    }
+  },
+  {
+    "name": "у оборудования нет объёма — объём рецепта, эффективность оборудования",
+    "recipe": {
+      "batch": {
+        "volume": 20,
+        "efficiency": 75
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 5,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      }
+    },
+    "to": {
+      "volume": null,
+      "efficiency": 60
+    },
+    "expected": {
+      "batch": {
+        "volume": 20,
+        "efficiency": 60
+      },
+      "fermentables": [
+        {
+          "name": "Pale Ale",
+          "kind": "grain",
+          "amount": 6.25,
+          "ebc": 6,
+          "use": "mash"
+        }
+      ],
+      "boil": {
+        "minutes": 60,
+        "watts": 2500
+      },
+      "targets": {
+        "og": 1.0576239789685165,
+        "fg": 1.0144059947421291,
+        "ibu": null,
+        "ebc": 11.5223444328454,
+        "abv": 5.855708636588395
+      }
+    }
+  }
+]

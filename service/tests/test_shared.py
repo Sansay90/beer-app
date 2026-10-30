@@ -1,5 +1,5 @@
-"""Общие примеры сервиса и интерфейса (shared/): обе реализации расчёта и программы пивоварни дают одно и то же.
-Интерфейс проверяет себя по тем же файлам (web/test/shared.test.ts)."""
+"""Общие примеры сервиса и интерфейса (shared/): обе реализации расчёта, программы пивоварни и пересчёта под
+оборудование дают одно и то же. Интерфейс проверяет себя по тем же файлам (web/test/shared.test.ts)."""
 import json
 from pathlib import Path
 
@@ -7,6 +7,7 @@ import pytest
 
 from app.recipes.calc import calc_recipe, targets
 from app.recipes.program import addition_slots, device_timers, program_steps
+from app.recipes.scale import scale_recipe
 
 SHARED = Path(__file__).resolve().parents[2] / "shared"
 
@@ -30,6 +31,27 @@ def test_program(case):
     assert [{k: s[k] for k in ("temp", "minutes", "watts", "boil")} for s in program_steps(r)] == expected["steps"]
     assert device_timers(r) == expected["timers"]
     assert [{"minutes": s["minutes"], "items": s["items"]} for s in addition_slots(r)] == expected["slots"]
+
+
+def same(got, expected, path=""):
+    """Глубокое сравнение: числа — приблизительно, остальное — точно."""
+    if isinstance(expected, dict):
+        assert isinstance(got, dict) and got.keys() == expected.keys(), path
+        for k, v in expected.items():
+            same(got[k], v, f"{path}.{k}")
+    elif isinstance(expected, list):
+        assert isinstance(got, list) and len(got) == len(expected), path
+        for i, v in enumerate(expected):
+            same(got[i], v, f"{path}[{i}]")
+    elif isinstance(expected, float):
+        assert got == pytest.approx(expected, rel=1e-9), path
+    else:
+        assert got == expected, path
+
+
+@pytest.mark.parametrize("case", cases("scale-cases.json"))
+def test_scale(case):
+    same(scale_recipe(case["recipe"], case["to"]["volume"], case["to"]["efficiency"]), case["expected"])
 
 
 def test_targets_are_the_saved_subset():

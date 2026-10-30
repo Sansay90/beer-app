@@ -3,14 +3,17 @@
 users ─┬─ sessions                  входы: cookie-токен — хэшем
        ├─ auth_tokens               одноразовые ссылки из писем: подтверждение почты, сброс пароля
        ├─ agents                    агенты у пивоварен; devices.agent_id — через какой на связи
+       ├─ equipment ── devices      оборудование пивовара: без подключения или пивоварня; одно — основное
        ├─ devices ─┬─ readings      температура во времени
        │           ├─ events        события пивоварни
-       │           └─ brews         варки: рецепт, начало, конец, исход
+       │           └─ brews         варки с пивоварни (и без неё — записанные вручную)
+       ├─ brews ── brew_entries     журнал варки: замеры, вехи и заметки пивовара
        ├─ recipes ─┬─ recipe_photos      рецепт — JSONB; фото пива
        │           ├─ recipe_votes       лайки и дизлайки рецепта
        │           └─ comments ── comment_votes   обсуждение: комментарии и ответы, голоса за них
        ├─ favorites ── recipes      избранное: чужие и свои рецепты, сохранённые без копии
-       └─ notifications ── comments уведомления на сайте: комментарий к моему рецепту, ответ мне
+       └─ notifications ─┬─ comments   уведомления на сайте: комментарий к моему рецепту, ответ мне,
+                         └─ brews      напоминание о брожении
 """
 import uuid
 from datetime import UTC, datetime
@@ -68,6 +71,7 @@ class User(SQLModel, table=True):
     email_verified_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     role: str = Field(default="user", sa_column_kwargs={"server_default": "user"})    # user | admin (access.py)
     push_comments: bool = Field(default=True, sa_column_kwargs={"server_default": "true"})  # push о комментариях
+    push_brews: bool = Field(default=True, sa_column_kwargs={"server_default": "true"})     # push о брожении
     created_at: datetime = ts()
 
 
@@ -151,16 +155,19 @@ class CommentVote(SQLModel, table=True):
 
 
 class Notification(SQLModel, table=True):
-    """Уведомление на сайте (notifications/feed.py): kind — comment (к моему рецепту) или reply (ответ мне).
-    Уходит вместе с комментарием, рецептом или тем, кто написал."""
+    """Уведомление на сайте (notifications/feed.py): kind — comment (к моему рецепту), reply (ответ мне) —
+    с actor, recipe и comment; brew — напоминание о брожении (brewery/reminders.py) — с brew и data
+    (заголовок, текст). Уходит вместе с комментарием, рецептом, варкой или тем, кто написал."""
     __tablename__ = "notifications"
     __table_args__ = (Index("ix_notifications_user_created", "user_id", "created_at"),)
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id", index=False)                # кому; индекс — вместе со временем
     kind: str
-    actor_id: uuid.UUID = fk("users.id")                            # кто написал
-    recipe_id: uuid.UUID = fk("recipes.id")
-    comment_id: uuid.UUID = fk("comments.id")
+    actor_id: uuid.UUID | None = fk("users.id", nullable=True, ondelete="CASCADE")   # кто написал
+    recipe_id: uuid.UUID | None = fk("recipes.id", nullable=True, ondelete="CASCADE")
+    comment_id: uuid.UUID | None = fk("comments.id", nullable=True, ondelete="CASCADE")
+    brew_id: uuid.UUID | None = fk("brews.id", nullable=True, ondelete="CASCADE")
+    data: dict[str, Any] | None = Field(default=None, sa_type=JSONB)  # напоминание: title, text
     created_at: datetime = ts()
     read_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
@@ -199,23 +206,62 @@ class Device(SQLModel, table=True):
     name: str
     model: str | None = None                       # DP 109 power_model — сообщает агент
     limits: dict[str, Any] | None = Field(default=None, sa_type=JSONB)      # schemas.Limits — сообщает агент
-    equipment: dict[str, Any] | None = Field(default=None, sa_type=JSONB)   # профиль оборудования (schemas.Equipment)
+    created_at: datetime = ts()
+
+
+class Equipment(SQLModel, table=True):
+    """Оборудование пивовара (brewery/equipment.py): manual — без подключения (кастрюля, котёл, любая система),
+    easybrew — пивоварня, которой управляют с сайта (device_id — когда агент её завёл). Основное (main) —
+    объём, эффективность и испарение для новых рецептов и расчётов; у пользователя одно основное."""
+    __tablename__ = "equipment"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = fk("users.id")
+    name: str
+    kind: str = "manual"
+    device_id: uuid.UUID | None = fk("devices.id", nullable=True, ondelete="SET NULL")
+    volume: float | None = None                       # л после кипячения — партия новых рецептов
+    efficiency: float = 75.0                          # % — для новых рецептов
+    evaporation: float = 3.0                          # л/ч кипячения без крышки — для расчёта воды
+    kettle: float | None = None                       # л до краёв — предупредить, если варка не влезает
+    main: bool = False
     created_at: datetime = ts()
 
 
 class Brew(SQLModel, table=True):
-    """Варка: от запуска программы рецепта до её конца."""
+    """Варка — партия пива (brewery/logbook.py). С пивоварни (source = device) — от запуска программы рецепта
+    до её конца, с температурой и событиями; записанная вручную (manual) — без пивоварни. Убрали пивоварню —
+    варки остаются. Журнал пивовара — brew_entries."""
     __tablename__ = "brews"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = fk("users.id")
-    device_id: uuid.UUID = fk("devices.id")
+    device_id: uuid.UUID | None = fk("devices.id", nullable=True, ondelete="SET NULL")
+    source: str = Field(default="device", sa_column_kwargs={"server_default": "device"})   # device | manual
     recipe_id: uuid.UUID | None = fk("recipes.id", nullable=True, ondelete="SET NULL")
+    equipment_id: uuid.UUID | None = fk("equipment.id", nullable=True, ondelete="SET NULL")   # на чём варили
     name: str
-    recipe: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)   # рецепт, как был загружен
-    status: str = "running"                           # running | finished | stopped
+    recipe: dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)   # рецепт, как был загружен в пивоварню
+    snapshot: dict[str, Any] | None = Field(default=None, sa_type=JSONB)  # рецепт партии: под оборудование на момент
+    plan: dict[str, Any] | None = Field(default=None, sa_type=JSONB)      # задумано по рецепту партии: OG, FG, брожение
+    reminded: list[str] = Field(default_factory=list, sa_type=JSONB,     # о чём из плана брожения уже напомнили
+                                sa_column_kwargs={"server_default": "[]"})
+    status: str = "running"                           # running | finished | stopped (программа; без пивоварни — день)
     energy_wh: float = Field(default=0.0, sa_column_kwargs={"server_default": "0"})   # оценка расхода ТЭНа
     started_at: datetime = ts(index=True)
     ended_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    # варочный день позади (дрожжи, «закончить», брошен — brewday.py): дальше брожение; None — день идёт
+    day_ended_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+
+
+class BrewEntry(SQLModel, table=True):
+    """Запись журнала варки (brewery/logbook.py): замер (value — SG, pH, л или °C, по kind), веха или заметка."""
+    __tablename__ = "brew_entries"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    brew_id: uuid.UUID = fk("brews.id")
+    at: datetime = ts()                               # когда это было — пивовар может указать задним числом
+    kind: str
+    value: float | None = None
+    text: str | None = None
+    created_at: datetime = ts()
 
 
 class Event(SQLModel, table=True):

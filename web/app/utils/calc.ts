@@ -38,7 +38,7 @@ const inWort = (f: Fermentable) => f.use !== 'fermentation'
 /** Сахар сбраживается целиком; остальное — на степень сбраживания дрожжей. */
 const fullyFermentable = (f: Fermentable) => f.kind === 'sugar'
 /** Затирается — тогда работает эффективность; сахар и экстракт растворяются целиком. */
-const mashed = (f: Fermentable) => (f.use ?? 'mash') === 'mash' && (f.kind ?? 'grain') !== 'sugar' && f.kind !== 'extract'
+export const mashed = (f: Fermentable) => (f.use ?? 'mash') === 'mash' && (f.kind ?? 'grain') !== 'sugar' && f.kind !== 'extract'
 
 function efficiencyOf(r: Source) {
   return r.batch?.efficiency ?? DEFAULT_EFFICIENCY

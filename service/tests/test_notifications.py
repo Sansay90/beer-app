@@ -22,14 +22,6 @@ def published(people, recipe):
     return rid
 
 
-@pytest.fixture
-def pushes(service):
-    """Push не уходит наружу, а копится здесь: (кому, уведомление)."""
-    sent = []
-    service.state.pusher.notify = lambda user_id, note: sent.append((str(user_id), note))
-    return sent
-
-
 def unread(client):
     return client.ok("GET", "/notifications/unread")["count"]
 
@@ -96,7 +88,7 @@ def test_push_follows_setting(service, people, published, recipe, pushes):
     author, reader, _ = people
     rid = published
     assert service.client().get("/notifications")[0] == 401
-    assert author.ok("GET", "/notifications/settings") == {"pushComments": True}
+    assert author.ok("GET", "/notifications/settings") == {"pushComments": True, "pushBrews": True}
 
     c = reader.ok("POST", f"/recipes/{rid}/comments", {"text": "Какой зазор валков?"})
     [(to, note)] = pushes
@@ -104,6 +96,7 @@ def test_push_follows_setting(service, people, published, recipe, pushes):
     assert note["title"] == f"Новый комментарий к рецепту «{recipe['name']}»"
     assert note["body"] == "reader: Какой зазор валков?" and note["url"] == f"/recipes/{rid}#c-{c['id']}"
 
-    assert author.ok("PUT", "/notifications/settings", {"pushComments": False}) == {"pushComments": False}
+    assert author.ok("PUT", "/notifications/settings", {"pushComments": False}) == {"pushComments": False,
+                                                                                    "pushBrews": True}
     reader.ok("POST", f"/recipes/{rid}/comments", {"text": "Ещё вопрос"})
     assert len(pushes) == 1 and unread(author) == 2                          # на сайте — всё равно

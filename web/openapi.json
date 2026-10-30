@@ -942,49 +942,6 @@
         }
       }
     },
-    "/api/recipes/{rid}/upload": {
-      "post": {
-        "tags": [
-          "рецепты"
-        ],
-        "summary": "Загрузить рецепт в пивоварню",
-        "description": "Свой или опубликованный: варить можно и по чужому рецепту.",
-        "operationId": "upload_api_recipes__rid__upload_post",
-        "parameters": [
-          {
-            "name": "rid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Rid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Ok"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/recipes/{rid}/comments": {
       "get": {
         "tags": [
@@ -1639,7 +1596,7 @@
         "tags": [
           "состояние"
         ],
-        "summary": "SSE: `state` — Snapshot, `event` — BrewEvent",
+        "summary": "SSE: `state` — Snapshot, `event` — BrewEvent, `brew` — {id} варки, которая изменилась, `notice` — новое уведомление",
         "operationId": "stream_api_stream_get",
         "responses": {
           "200": {
@@ -1985,10 +1942,10 @@
     "/api/brews": {
       "get": {
         "tags": [
-          "история"
+          "варки"
         ],
-        "summary": "Варки, новые первыми",
-        "description": "recipe — только варки по этому рецепту.",
+        "summary": "Свои варки, новые первыми",
+        "description": "recipe — только варки по этому рецепту, phase — только в этой фазе (brewday — варочный день идёт).",
         "operationId": "list_brews_api_brews_get",
         "parameters": [
           {
@@ -2005,6 +1962,39 @@
                 }
               ],
               "title": "Recipe"
+            }
+          },
+          {
+            "name": "phase",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "brewday",
+                    "fermenting",
+                    "packaged"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Phase"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 200,
+              "title": "Limit"
             }
           }
         ],
@@ -2034,15 +2024,299 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Сварить — новая партия по рецепту",
+        "description": "По рецепту, который виден: свой или опубликованный. Партия получает рецепт, пересчитанный под объём и эффективность оборудования (snapshot), и план по нему.",
+        "operationId": "create_brew_api_brews_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/brews/{bid}": {
       "get": {
         "tags": [
-          "история"
+          "варки"
         ],
-        "summary": "Варка: рецепт, температура [время, °C, цель] и события",
+        "summary": "Варка: рецепт партии, план, шаги варочного дня, записи журнала и события пивоварни",
         "operationId": "get_brew_api_brews__bid__get",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Изменить день или оборудование",
+        "description": "Только у записанной вручную; не указанное — как было.",
+        "operationId": "edit_brew_api_brews__bid__patch",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrewEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Удалить варку",
+        "description": "С журналом, температурой и событиями; идущую на пивоварне — нельзя.",
+        "operationId": "delete_brew_api_brews__bid__delete",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews/{bid}/readings": {
+      "get": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Температура варки с пивоварни: [unix-время, °C, цель °C]",
+        "operationId": "get_readings_api_brews__bid__readings_get",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "title": "Response Get Readings Api Brews  Bid  Readings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews/{bid}/upload": {
+      "post": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Загрузить программу партии в пивоварню",
+        "description": "Программа рецепта партии с её id: запущенная, она идёт варкой в эту партию.",
+        "operationId": "upload_brew_api_brews__bid__upload_post",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews/{bid}/finish": {
+      "post": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Закончить варочный день",
+        "description": "Дальше брожение. Пока идёт программа пивоварни — нельзя (409): день ведёт она.",
+        "operationId": "finish_brew_api_brews__bid__finish_post",
         "parameters": [
           {
             "name": "bid",
@@ -2078,13 +2352,211 @@
         }
       }
     },
+    "/api/brews/{bid}/entries": {
+      "post": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Запись в журнал варки",
+        "description": "Замер (value: плотность — SG, pH, объём — л, температура — °C), веха или заметка (text).",
+        "operationId": "add_entry_api_brews__bid__entries_post",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrewEntryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewEntryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brews/{bid}/entries/{eid}": {
+      "patch": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Изменить запись",
+        "operationId": "edit_entry_api_brews__bid__entries__eid__patch",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          },
+          {
+            "name": "eid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrewEntryEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrewEntryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "варки"
+        ],
+        "summary": "Удалить запись",
+        "operationId": "delete_entry_api_brews__bid__entries__eid__delete",
+        "parameters": [
+          {
+            "name": "bid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bid"
+            }
+          },
+          {
+            "name": "eid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/equipment": {
       "get": {
         "tags": [
           "оборудование"
         ],
-        "summary": "Профиль оборудования",
-        "operationId": "get_equipment_api_equipment_get",
+        "summary": "Оборудование",
+        "description": "Основное первым.",
+        "operationId": "list_equipment_api_equipment_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Equipment"
+                  },
+                  "type": "array",
+                  "title": "Response List Equipment Api Equipment Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Добавить оборудование",
+        "description": "Первое — основное; не больше 10.",
+        "operationId": "create_equipment_api_equipment_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipmentNew"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2095,25 +2567,131 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
-      },
+      }
+    },
+    "/api/equipment/{eid}": {
       "put": {
         "tags": [
           "оборудование"
         ],
-        "summary": "Сохранить профиль оборудования",
-        "operationId": "put_equipment_api_equipment_put",
+        "summary": "Изменить оборудование",
+        "operationId": "update_equipment_api_equipment__eid__put",
+        "parameters": [
+          {
+            "name": "eid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eid"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Equipment"
+                "$ref": "#/components/schemas/EquipmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipment"
+                }
               }
             }
           },
-          "required": true
-        },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Удалить оборудование",
+        "description": "Пивоварню, привязанную к сайту, — нельзя (409).",
+        "operationId": "delete_equipment_api_equipment__eid__delete",
+        "parameters": [
+          {
+            "name": "eid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/equipment/{eid}/main": {
+      "put": {
+        "tags": [
+          "оборудование"
+        ],
+        "summary": "Сделать основным",
+        "operationId": "make_main_equipment_api_equipment__eid__main_put",
+        "parameters": [
+          {
+            "name": "eid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2266,7 +2844,7 @@
           "уведомления"
         ],
         "summary": "Уведомления",
-        "description": "Новые первыми, последние 50: комментарии к вашим рецептам и ответы на ваши комментарии.",
+        "description": "Новые первыми, последние 50: комментарии к вашим рецептам, ответы на ваши комментарии и напоминания о брожении.",
         "operationId": "list_notifications_api_notifications_get",
         "responses": {
           "200": {
@@ -2373,12 +2951,13 @@
           "уведомления"
         ],
         "summary": "Изменить настройки уведомлений",
+        "description": "Не указанное — как было.",
         "operationId": "put_settings_api_notifications_settings_put",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NoticeSettings"
+                "$ref": "#/components/schemas/NoticeSettingsEdit"
               }
             }
           },
@@ -2633,6 +3212,18 @@
             ],
             "title": "Efficiency",
             "description": "эффективность, %: экстракт в сусле после кипячения / экстракт засыпи"
+          },
+          "evaporation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaporation",
+            "description": "испарение оборудования, л/ч — у рецепта партии: по нему вода на варку"
           }
         },
         "type": "object",
@@ -2656,6 +3247,138 @@
         ],
         "title": "Boil"
       },
+      "BrewDayAddition": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes",
+            "description": "минут до конца кипячения"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "«Magnum 26 г, Чиллер»"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes",
+          "label"
+        ],
+        "title": "BrewDayAddition"
+      },
+      "BrewDayStep": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "prepare",
+              "heat",
+              "mash_in",
+              "rest",
+              "sparge",
+              "boil",
+              "chill",
+              "pitch"
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "temp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes",
+            "description": "пауза или кипячение — сколько держать; таймер"
+          },
+          "measures": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "first_wort",
+                "preboil_gravity",
+                "og",
+                "gravity",
+                "fg",
+                "ph",
+                "preboil_volume",
+                "postboil_volume",
+                "fermenter_volume",
+                "mash_temp",
+                "temp",
+                "pitch",
+                "dry_hop",
+                "cold_crash",
+                "package",
+                "note",
+                "stage",
+                "step"
+              ]
+            },
+            "type": "array",
+            "title": "Measures",
+            "description": "замеры, которые делают на этом шаге",
+            "default": []
+          },
+          "additions": {
+            "items": {
+              "$ref": "#/components/schemas/BrewDayAddition"
+            },
+            "type": "array",
+            "title": "Additions",
+            "description": "закладки на кипячении, от ранних к поздним",
+            "default": []
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At",
+            "description": "когда начат по факту (последний переход к нему), unix-время"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "key",
+          "kind",
+          "name"
+        ],
+        "title": "BrewDayStep",
+        "description": "Шаг варочного дня из рецепта партии (brewday.py)."
+      },
       "BrewDetail": {
         "properties": {
           "id": {
@@ -2673,7 +3396,24 @@
               "finished",
               "stopped"
             ],
-            "title": "Status"
+            "title": "Status",
+            "description": "исход программы пивоварни: running — идёт; у партии без пивоварни — идёт ли варочный день"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "brewday",
+              "fermenting",
+              "packaged"
+            ],
+            "title": "Phase",
+            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито"
+          },
+          "manual": {
+            "type": "boolean",
+            "title": "Manual",
+            "description": "записана вручную, без пивоварни",
+            "default": false
           },
           "recipeId": {
             "anyOf": [
@@ -2686,6 +3426,17 @@
             ],
             "title": "Recipeid",
             "description": "рецепт библиотеки; None — рецепт из Smart Life или удалён"
+          },
+          "equipment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EquipmentRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "на чём варили"
           },
           "startedAt": {
             "type": "number",
@@ -2708,6 +3459,86 @@
             "title": "Energywh",
             "description": "оценка расхода электричества ТЭНом, Вт·ч (±20–30 %)"
           },
+          "og": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Og",
+            "description": "начальная плотность по факту (последний замер OG), SG"
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fg",
+            "description": "конечная плотность по факту (последний замер FG), SG"
+          },
+          "abv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abv",
+            "description": "крепость по факту, % об."
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "объём в ферментере по факту, л"
+          },
+          "fermentStart": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fermentstart",
+            "description": "начало брожения: задача дрожжей, иначе конец варочного дня, если в плане есть брожение; unix-время"
+          },
+          "packagedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packagedat",
+            "description": "розлив — брожение позади; unix-время"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/BrewEntryOut"
+            },
+            "type": "array",
+            "title": "Entries",
+            "default": []
+          },
           "recipe": {
             "anyOf": [
               {
@@ -2719,33 +3550,42 @@
             ],
             "description": "рецепт, как он был в пивоварне на момент варки"
           },
-          "readings": {
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "рецепт партии: пересчитан под оборудование на момент варки; правка оригинала его не меняет. У варок до снимков — None"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrewPlan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "что задумано: показатели и брожение рецепта партии"
+          },
+          "brewDay": {
             "items": {
-              "prefixItems": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              ],
-              "type": "array",
-              "maxItems": 3,
-              "minItems": 3
+              "$ref": "#/components/schemas/BrewDayStep"
             },
             "type": "array",
-            "title": "Readings",
-            "description": "[unix-время, °C, цель °C]"
+            "title": "Brewday",
+            "description": "шаги варочного дня из рецепта партии",
+            "default": []
+          },
+          "currentStep": {
+            "type": "integer",
+            "title": "Currentstep",
+            "description": "текущий шаг: последний по времени переход — запись step или шаг программы пивоварни по её событиям; дрожжи заданы — последний",
+            "default": 0
           },
           "events": {
             "items": {
@@ -2760,12 +3600,214 @@
           "id",
           "name",
           "status",
+          "phase",
           "startedAt",
           "energyWh",
-          "readings",
           "events"
         ],
         "title": "BrewDetail"
+      },
+      "BrewEdit": {
+        "properties": {
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "equipmentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipmentid"
+          }
+        },
+        "type": "object",
+        "title": "BrewEdit"
+      },
+      "BrewEntryEdit": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At",
+            "description": "не указано — прежнее"
+          }
+        },
+        "type": "object",
+        "title": "BrewEntryEdit"
+      },
+      "BrewEntryIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "first_wort",
+              "preboil_gravity",
+              "og",
+              "gravity",
+              "fg",
+              "ph",
+              "preboil_volume",
+              "postboil_volume",
+              "fermenter_volume",
+              "mash_temp",
+              "temp",
+              "pitch",
+              "dry_hop",
+              "cold_crash",
+              "package",
+              "note",
+              "stage",
+              "step"
+            ],
+            "title": "Kind"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At",
+            "description": "не указано — сейчас"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "BrewEntryIn"
+      },
+      "BrewEntryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "at": {
+            "type": "number",
+            "title": "At",
+            "description": "когда это было, unix-время"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "first_wort",
+              "preboil_gravity",
+              "og",
+              "gravity",
+              "fg",
+              "ph",
+              "preboil_volume",
+              "postboil_volume",
+              "fermenter_volume",
+              "mash_temp",
+              "temp",
+              "pitch",
+              "dry_hop",
+              "cold_crash",
+              "package",
+              "note",
+              "stage",
+              "step"
+            ],
+            "title": "Kind"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "замер: плотность — SG, pH, объём — л, температура — °C; переход к шагу варочного дня — его номер с нуля; переход к этапу — его номер в плане с нуля: первый начинается с задачей дрожжей, поэтому 1 и дальше"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "kind"
+        ],
+        "title": "BrewEntryOut"
       },
       "BrewEvent": {
         "properties": {
@@ -2834,6 +3876,136 @@
         ],
         "title": "BrewEvent"
       },
+      "BrewIn": {
+        "properties": {
+          "recipeId": {
+            "type": "string",
+            "title": "Recipeid"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startedat",
+            "description": "день варки, unix-время; не указан — сейчас"
+          },
+          "equipmentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipmentid",
+            "description": "на чём варят; не указано — основное оборудование. Рецепт партии пересчитывается под его объём и эффективность"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recipeId"
+        ],
+        "title": "BrewIn"
+      },
+      "BrewPlan": {
+        "properties": {
+          "og": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Og"
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fg"
+          },
+          "abv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abv"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л после кипячения"
+          },
+          "efficiency": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Efficiency"
+          },
+          "fermentation": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FermentStage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fermentation",
+            "description": "этапы брожения"
+          },
+          "dryHops": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DryHopDay"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dryhops",
+            "description": "сухое охмеление по дням брожения"
+          }
+        },
+        "type": "object",
+        "title": "BrewPlan",
+        "description": "Что задумано по рецепту на момент варки."
+      },
       "BrewSummary": {
         "properties": {
           "id": {
@@ -2851,7 +4023,24 @@
               "finished",
               "stopped"
             ],
-            "title": "Status"
+            "title": "Status",
+            "description": "исход программы пивоварни: running — идёт; у партии без пивоварни — идёт ли варочный день"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "brewday",
+              "fermenting",
+              "packaged"
+            ],
+            "title": "Phase",
+            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито"
+          },
+          "manual": {
+            "type": "boolean",
+            "title": "Manual",
+            "description": "записана вручную, без пивоварни",
+            "default": false
           },
           "recipeId": {
             "anyOf": [
@@ -2864,6 +4053,17 @@
             ],
             "title": "Recipeid",
             "description": "рецепт библиотеки; None — рецепт из Smart Life или удалён"
+          },
+          "equipment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EquipmentRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "на чём варили"
           },
           "startedAt": {
             "type": "number",
@@ -2885,6 +4085,84 @@
             "type": "number",
             "title": "Energywh",
             "description": "оценка расхода электричества ТЭНом, Вт·ч (±20–30 %)"
+          },
+          "og": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Og",
+            "description": "начальная плотность по факту (последний замер OG), SG"
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fg",
+            "description": "конечная плотность по факту (последний замер FG), SG"
+          },
+          "abv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abv",
+            "description": "крепость по факту, % об."
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "объём в ферментере по факту, л"
+          },
+          "fermentStart": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fermentstart",
+            "description": "начало брожения: задача дрожжей, иначе конец варочного дня, если в плане есть брожение; unix-время"
+          },
+          "packagedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packagedat",
+            "description": "розлив — брожение позади; unix-время"
+          },
+          "entries": {
+            "type": "integer",
+            "title": "Entries",
+            "description": "записей в журнале",
+            "default": 0
           }
         },
         "type": "object",
@@ -2892,6 +4170,7 @@
           "id",
           "name",
           "status",
+          "phase",
           "startedAt",
           "energyWh"
         ],
@@ -3105,6 +4384,18 @@
             ],
             "title": "Id"
           },
+          "brewId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brewid",
+            "description": "партия, под которую загружена программа («Сварить»)"
+          },
           "steps": {
             "items": {
               "$ref": "#/components/schemas/DeviceStep"
@@ -3228,6 +4519,35 @@
         ],
         "title": "DeviceStep"
       },
+      "DryHopDay": {
+        "properties": {
+          "day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day",
+            "description": "день брожения; None — не указан"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "«Citra 100 г»"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DryHopDay"
+      },
       "EmailIn": {
         "properties": {
           "email": {
@@ -3265,6 +4585,25 @@
       },
       "Equipment": {
         "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Name"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2000.0,
+                "minimum": 0.5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л после кипячения — партия новых рецептов"
+          },
           "efficiency": {
             "type": "number",
             "maximum": 100.0,
@@ -3278,13 +4617,231 @@
             "maximum": 20.0,
             "minimum": 0.0,
             "title": "Evaporation",
-            "description": "испарение при кипячении, л/ч",
+            "description": "испарение при кипячении без крышки, л/ч",
             "default": 3.0
+          },
+          "kettle": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kettle",
+            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "easybrew"
+            ],
+            "title": "Kind",
+            "description": "manual — без подключения, easybrew — Easy Brew Connect",
+            "default": "manual"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "connected": {
+            "type": "boolean",
+            "title": "Connected",
+            "description": "пивоварня привязана к сайту (агент её завёл)"
+          },
+          "main": {
+            "type": "boolean",
+            "title": "Main",
+            "description": "основное — для новых рецептов и расчётов"
           }
         },
         "type": "object",
-        "title": "Equipment",
-        "description": "Профиль оборудования пивоварни: эффективность — значение новых рецептов, по испарению считается\nпромывочная вода."
+        "required": [
+          "name",
+          "id",
+          "connected",
+          "main"
+        ],
+        "title": "Equipment"
+      },
+      "EquipmentIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Name"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2000.0,
+                "minimum": 0.5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л после кипячения — партия новых рецептов"
+          },
+          "efficiency": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Efficiency",
+            "description": "эффективность для новых рецептов, %",
+            "default": 75
+          },
+          "evaporation": {
+            "type": "number",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Evaporation",
+            "description": "испарение при кипячении без крышки, л/ч",
+            "default": 3.0
+          },
+          "kettle": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kettle",
+            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "EquipmentIn",
+        "description": "Оборудование: объём и эффективность — для новых рецептов, по испарению считается промывочная вода."
+      },
+      "EquipmentNew": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Name"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2000.0,
+                "minimum": 0.5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume",
+            "description": "л после кипячения — партия новых рецептов"
+          },
+          "efficiency": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Efficiency",
+            "description": "эффективность для новых рецептов, %",
+            "default": 75
+          },
+          "evaporation": {
+            "type": "number",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Evaporation",
+            "description": "испарение при кипячении без крышки, л/ч",
+            "default": 3.0
+          },
+          "kettle": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kettle",
+            "description": "объём котла до краёв, л — предупредить, если варка не влезает"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "easybrew"
+            ],
+            "title": "Kind",
+            "description": "manual — без подключения, easybrew — Easy Brew Connect",
+            "default": "manual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "EquipmentNew"
+      },
+      "EquipmentRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "EquipmentRef",
+        "description": "Оборудование, на котором варили."
+      },
+      "FermentStage": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "temp": {
+            "type": "number",
+            "title": "Temp"
+          },
+          "days": {
+            "type": "number",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temp",
+          "days"
+        ],
+        "title": "FermentStage"
       },
       "Fermentable": {
         "properties": {
@@ -3735,6 +5292,24 @@
         ],
         "title": "NameIn"
       },
+      "NoticeBrew": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NoticeBrew"
+      },
       "NoticeRecipe": {
         "properties": {
           "id": {
@@ -3759,13 +5334,47 @@
             "type": "boolean",
             "title": "Pushcomments",
             "description": "push на устройства о комментариях и ответах"
+          },
+          "pushBrews": {
+            "type": "boolean",
+            "title": "Pushbrews",
+            "description": "push на устройства — напоминания о брожении"
           }
         },
         "type": "object",
         "required": [
-          "pushComments"
+          "pushComments",
+          "pushBrews"
         ],
         "title": "NoticeSettings"
+      },
+      "NoticeSettingsEdit": {
+        "properties": {
+          "pushComments": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pushcomments"
+          },
+          "pushBrews": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pushbrews"
+          }
+        },
+        "type": "object",
+        "title": "NoticeSettingsEdit"
       },
       "NotificationOut": {
         "properties": {
@@ -3777,10 +5386,11 @@
             "type": "string",
             "enum": [
               "comment",
-              "reply"
+              "reply",
+              "brew"
             ],
             "title": "Kind",
-            "description": "comment — к вашему рецепту, reply — ответ вам"
+            "description": "comment — к вашему рецепту, reply — ответ вам, brew — напоминание о брожении"
           },
           "createdAt": {
             "type": "number",
@@ -3791,21 +5401,65 @@
             "title": "Read"
           },
           "actor": {
-            "$ref": "#/components/schemas/Author",
-            "description": "кто написал"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Author"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "кто написал (комментарий, ответ)"
           },
           "recipe": {
-            "$ref": "#/components/schemas/NoticeRecipe"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NoticeRecipe"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "commentId": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Commentid",
             "description": "комментарий на странице рецепта — якорь #c-{commentId}"
+          },
+          "brew": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NoticeBrew"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "варка (напоминание)"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "напоминание: что пора сделать"
           },
           "text": {
             "type": "string",
             "title": "Text",
-            "description": "начало комментария"
+            "description": "начало комментария или подробности напоминания"
           }
         },
         "type": "object",
@@ -3814,9 +5468,6 @@
           "kind",
           "createdAt",
           "read",
-          "actor",
-          "recipe",
-          "commentId",
           "text"
         ],
         "title": "NotificationOut"
@@ -4532,6 +6183,18 @@
           "online": {
             "type": "boolean",
             "title": "Online"
+          },
+          "brewId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brewid",
+            "description": "идущая варка пивоварни — её партия"
           },
           "power": {
             "type": "boolean",

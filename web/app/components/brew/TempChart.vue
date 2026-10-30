@@ -1,14 +1,15 @@
 <script setup lang="ts">
+// Температура и цель шага за всю варку на пивоварне (страница партии): факт линией, цель ступенькой, подсказка
+// при наведении — время, температура, цель.
 import uPlot from 'uplot'
+import type { HistoryPoint } from '~/types'
 
-const brewery = useBreweryStore()
+const props = defineProps<{ points: HistoryPoint[] }>()
 const colorMode = useColorMode()
 const el = useTemplateRef<HTMLDivElement>('plot')
-const span = ref(60)                     // минут на графике
 const HEIGHT = 260
 let chart: uPlot | null = null
 
-// подсказка при наведении: время, температура, цель
 const tip = reactive({ show: false, left: 0, top: 0, time: '', temp: '', target: '' })
 
 function onCursor(u: uPlot) {
@@ -29,36 +30,13 @@ function onCursor(u: uPlot) {
   tip.target = target == null ? '' : `цель ${fmtTemp(target)} °C`
 }
 
-const spans = [
-  { label: '30 мин', value: 30 }, { label: '1 ч', value: 60 },
-  { label: '3 ч', value: 180 }, { label: '6 ч', value: 360 },
-]
-
-/** CSS-переменная цвета (oklch и т. п.) → rgba(): canvas понимает не все форматы. */
-function rgba(cssVar: string, alpha = 1) {
-  const probe = document.createElement('span')
-  probe.style.color = `var(${cssVar})`
-  document.body.appendChild(probe)
-  const color = getComputedStyle(probe).color
-  probe.remove()
-  const ctx = document.createElement('canvas').getContext('2d')!
-  ctx.fillStyle = color
-  ctx.fillRect(0, 0, 1, 1)
-  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-function data(): uPlot.AlignedData {
-  const cutoff = Date.now() / 1000 - span.value * 60
-  const pts = brewery.history.filter(p => p[0] >= cutoff)
-  return [pts.map(p => p[0]), pts.map(p => p[1]), pts.map(p => p[2])]
-}
+const data = (): uPlot.AlignedData => [props.points.map(p => p[0]), props.points.map(p => p[1]), props.points.map(p => p[2])]
 
 function build() {
   if (!el.value) return
   chart?.destroy()
-  const grid = { stroke: rgba('--ui-border', 0.7), width: 1 }
-  const axis = { stroke: rgba('--ui-text-dimmed'), grid, ticks: { show: false }, font: '12px Inter, system-ui' }
+  const grid = { stroke: cssColor('--ui-border', 0.7), width: 1 }
+  const axis = { stroke: cssColor('--ui-text-dimmed'), grid, ticks: { show: false }, font: '12px Inter, system-ui' }
   chart = new uPlot({
     width: el.value.clientWidth,
     height: HEIGHT,
@@ -67,32 +45,32 @@ function build() {
       x: true,
       y: false,
       drag: { x: false, y: false },
-      points: { size: 9, width: 2, fill: rgba('--ui-bg'), stroke: rgba('--ui-primary') },
+      points: { size: 9, width: 2, fill: cssColor('--ui-bg'), stroke: cssColor('--ui-primary') },
     },
     hooks: { setCursor: [onCursor] },
     scales: {
-      x: { time: true, range: () => [Date.now() / 1000 - span.value * 60, Date.now() / 1000] },
+      x: { time: true },
       y: { range: (_u, min, max) => [Math.floor(Math.min(min, 15) / 10) * 10, Math.ceil(Math.max(max, 40) / 10) * 10 + 5] },
     },
     axes: [
-      { ...axis, values: (_u, ticks) => ticks.map(t => new Date(t * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })) },
+      { ...axis, values: (_u, ticks) => ticks.map(t => fmtTime(t)) },
       { ...axis, size: 44, values: (_u, ticks) => ticks.map(t => `${t}°`) },
     ],
     series: [
       {},
       {
-        stroke: rgba('--ui-primary'),
+        stroke: cssColor('--ui-primary'),
         width: 2.5,
         points: { show: false },
         fill: (u) => {
           const g = u.ctx.createLinearGradient(0, u.bbox.top, 0, u.bbox.top + u.bbox.height)
-          g.addColorStop(0, rgba('--ui-primary', 0.28))
-          g.addColorStop(1, rgba('--ui-primary', 0))
+          g.addColorStop(0, cssColor('--ui-primary', 0.28))
+          g.addColorStop(1, cssColor('--ui-primary', 0))
           return g
         },
       },
       // цель — ступенькой: меняется скачком на смене шага
-      { stroke: rgba('--ui-text-muted', 0.8), width: 1.5, dash: [6, 6], points: { show: false }, paths: uPlot.paths.stepped!({ align: 1 }) },
+      { stroke: cssColor('--ui-text-muted', 0.8), width: 1.5, dash: [6, 6], points: { show: false }, paths: uPlot.paths.stepped!({ align: 1 }) },
     ],
   }, data(), el.value)
 }
@@ -100,7 +78,7 @@ function build() {
 onMounted(build)
 onBeforeUnmount(() => chart?.destroy())
 useResizeObserver(el, () => el.value && chart?.setSize({ width: el.value.clientWidth, height: HEIGHT }))
-watch([() => brewery.history, span], () => chart?.setData(data()))
+watch(() => props.points, () => chart?.setData(data()))
 watch(() => colorMode.value, () => nextTick(build))
 </script>
 
@@ -112,17 +90,6 @@ watch(() => colorMode.value, () => nextTick(build))
         <span class="inline-block h-0.5 w-4 rounded bg-primary" /> факт
         <span class="ml-2 inline-block w-4 border-t border-dashed border-muted" /> цель
       </span>
-      <span class="flex-1" />
-      <UFieldGroup size="xs">
-        <UButton
-          v-for="s in spans"
-          :key="s.value"
-          :label="s.label"
-          color="neutral"
-          :variant="span === s.value ? 'subtle' : 'ghost'"
-          @click="span = s.value"
-        />
-      </UFieldGroup>
     </div>
     <div class="relative mt-4" @mouseleave="tip.show = false">
       <div ref="plot" class="w-full" />
@@ -136,6 +103,5 @@ watch(() => colorMode.value, () => nextTick(build))
         <div v-if="tip.target" class="num text-dimmed">{{ tip.target }}</div>
       </div>
     </div>
-    <p v-if="brewery.history.length < 2" class="text-sm text-muted">График наполнится по мере прихода данных.</p>
   </UCard>
 </template>

@@ -1,7 +1,14 @@
 <script setup lang="ts">
+// «Варка»: идёт партия (варочный день — на пивоварне или без неё) — сразу на её страницу. Иначе — «Сварить»:
+// рецепт → партия, и варка живёт там. Состояние и управление пивоварней без партии — у оборудования (настройки).
 definePageMeta({ auth: 'user', teaser: 'brew', title: 'Варка' })
 
-const brewery = useBreweryStore()
+const creating = ref(false)
+const { list: equipment } = useEquipment()
+const paired = computed(() => equipment.value.some(e => e.connected))
+
+const { brew: running, status } = useCurrentBrew()
+watch(running, (b) => { if (b) navigateTo(`/brews/${b.id}`, { replace: true }) }, { immediate: true })
 </script>
 
 <template>
@@ -12,45 +19,40 @@ const brewery = useBreweryStore()
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UBadge
-            v-if="brewery.snapshot?.deviceRecipe?.name"
-            color="neutral"
-            variant="subtle"
-            icon="i-lucide-book-open"
-            :label="brewery.snapshot.deviceRecipe.name"
-            class="hidden sm:inline-flex"
-          />
-          <UBadge :color="brewery.status.tone" variant="soft" :label="brewery.status.label" />
+          <UButton label="Сварить" icon="i-lucide-flame" @click="creating = true" />
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <!-- shrink-0: тело панели — флекс-колонка с прокруткой, а overflow-hidden у плашки иначе разрешает её сплющить -->
-      <UAlert
-        v-if="!brewery.connected"
-        class="shrink-0"
-        color="error"
-        variant="subtle"
-        icon="i-lucide-server"
-        title="Нет связи с сервисом"
-        description="Переподключаемся сами. Если не выходит долго — обновите страницу."
-      />
-
-      <!-- на широком экране — две независимые колонки, на узком — одна, по важности -->
-      <div class="flex flex-col gap-4 sm:gap-6 xl:grid xl:grid-cols-12 xl:items-start">
-        <div class="contents xl:col-span-8 xl:flex xl:flex-col xl:gap-6">
-          <BrewNowCard class="order-1 xl:order-none" />
-          <BrewProgramCard class="order-4 xl:order-none" />
-          <BrewTempChart class="order-6 xl:order-none" />
-        </div>
-        <div class="contents xl:col-span-4 xl:flex xl:flex-col xl:gap-6">
-          <BrewNextCard class="order-2 xl:order-none" />
-          <BrewAdditionsCard class="order-3 xl:order-none" />
-          <BrewControlsCard class="order-5 xl:order-none" />
-          <BrewEventsCard class="order-7 xl:order-none" />
-        </div>
+      <USkeleton v-if="running || status === 'pending'" class="mx-auto h-64 w-full max-w-3xl" />
+      <div v-else class="mx-auto w-full max-w-3xl">
+        <UCard :ui="{ body: 'p-6 sm:p-8' }">
+          <div class="flex items-start gap-4">
+            <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
+              <UIcon name="i-lucide-flame" class="size-7" />
+            </span>
+            <div>
+              <h2 class="text-2xl font-semibold text-highlighted">Сейчас ничего не варится</h2>
+              <p class="mt-1 text-base text-muted">
+                Выберите рецепт и нажмите «Сварить»: партия получит рецепт под ваше оборудование, а варочный день —
+                шаги, замеры, потом брожение и напоминания — будет на её странице.
+              </p>
+            </div>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <UButton label="Сварить" icon="i-lucide-flame" size="lg" @click="creating = true" />
+            <UButton label="Рецепты" icon="i-lucide-book-open" size="lg" color="neutral" variant="outline" to="/recipes" />
+            <UButton label="Мои варки" icon="i-lucide-notebook-pen" size="lg" color="neutral" variant="outline" to="/brews" />
+            <UButton label="Оборудование" icon="i-lucide-cooking-pot" size="lg" color="neutral" variant="ghost" to="/settings/brewery" />
+          </div>
+          <p v-if="!paired" class="mt-6 text-sm text-muted">
+            Есть Easy Brew Connect? С подключённой пивоварней у партии будут температура вживую, шаги программы
+            и напоминания о закладках хмеля.
+          </p>
+        </UCard>
       </div>
+      <BrewStartModal v-model:open="creating" />
     </template>
   </UDashboardPanel>
 </template>

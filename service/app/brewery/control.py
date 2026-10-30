@@ -49,19 +49,6 @@ class Brewery:
         if program_steps(recipe):
             check_program(build_program("", recipe), self.limits())
 
-    def loaded(self, recipe_id):
-        """Этот рецепт загружен в пивоварню."""
-        return ((self.snapshot().get("deviceRecipe") or {}).get("id")) == recipe_id
-
-    async def recipe_changed(self, recipe_id, recipe):
-        """Рецепт поправили: если он в пивоварне — агенту свежие названия шагов и закладок."""
-        if self.loaded(recipe_id):
-            await self.hub.notify(self.device_id, {"type": "program", "program": build_program(recipe_id, recipe)})
-
-    async def recipe_deleted(self, recipe_id):
-        if self.loaded(recipe_id):
-            await self.hub.notify(self.device_id, {"type": "forget", "forget": recipe_id})
-
 
 def user_device(user: CurrentUser, devices: DevicesDep) -> uuid.UUID | None:
     return devices.current(user.id)

@@ -9,13 +9,10 @@
 import asyncio
 import itertools
 import logging
-from types import SimpleNamespace
 
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from ..errors import AppError, Forbidden, NotFound
-from ..recipes.program import build_program
-from ..recipes.store import RecipeStore
+from ..errors import AppError, Forbidden
 from . import agents
 
 log = logging.getLogger("brewapp.hub")
@@ -174,8 +171,7 @@ class Hub:
                 await old.ws.close()
             except Exception:
                 pass
-        await ws.send_json({"type": "welcome", "deviceId": str(device_id),
-                            **await self._active(agent, hello.get("activeRecipeId"))})
+        await ws.send_json({"type": "welcome", "deviceId": str(device_id)})
         await asyncio.to_thread(agents.touch, agent.id)
         log.info("агент «%s» на связи", agent.name)
         try:
@@ -202,18 +198,6 @@ class Hub:
                 self._emit(device_id, {"type": "state", "data": self.snapshot(device_id)})
             await asyncio.to_thread(agents.touch, agent.id)
             log.info("агент «%s» отключился", agent.name)
-
-    async def _active(self, agent, recipe_id):
-        """Свежая программа рецепта, загруженного в пивоварню (его могли поправить, пока агента не было),
-        или forget — рецепт удалили."""
-        if not recipe_id:
-            return {}
-        try:
-            # глазами владельца пивоварни: свой рецепт или опубликованный чужой
-            recipe = await asyncio.to_thread(RecipeStore(SimpleNamespace(id=agent.user_id)).get, recipe_id)
-        except NotFound:
-            return {"forget": recipe_id}
-        return {"program": build_program(recipe_id, recipe)}
 
     async def _handle(self, link, msg):
         kind, d = msg.get("type"), link.device_id

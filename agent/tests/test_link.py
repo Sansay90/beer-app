@@ -11,7 +11,7 @@ from agent.link import Link
 class StubController:
     def __init__(self):
         self._listeners = []
-        self.applied, self.forgotten, self.calls = [], [], []
+        self.calls = []
 
     def subscribe(self, fn):
         self._listeners.append(fn)
@@ -21,19 +21,13 @@ class StubController:
             fn(msg)
 
     def hello(self):
-        return {"model": "14", "limits": {"maxSteps": 9}, "brewId": None, "activeRecipeId": "r1"}
+        return {"model": "14", "limits": {"maxSteps": 9}, "brewId": None}
 
     def snapshot(self):
         return {"online": True}
 
     def tick(self):
         pass
-
-    def apply_program(self, program):
-        self.applied.append(program)
-
-    def forget(self, recipe_id):
-        self.forgotten.append(recipe_id)
 
     def cmd_power(self, on):
         self.calls.append(("power", on))
@@ -45,8 +39,8 @@ class StubController:
 class FakeService:
     """Сервис глазами агента: принимает hello, отвечает welcome, подтверждает записи, если ack включён."""
 
-    def __init__(self, welcome=None):
-        self.welcome = {"type": "welcome", "deviceId": "d1", **(welcome or {})}
+    def __init__(self):
+        self.welcome = {"type": "welcome", "deviceId": "d1"}
         self.hellos, self.received, self.connections = [], [], []
         self.ack = True
 
@@ -85,15 +79,14 @@ def run(scenario, service):
     asyncio.run(main())
 
 
-def test_hello_and_welcome_program():
-    service = FakeService({"program": {"recipeId": "r1", "name": "Свежее имя"}})
+def test_hello_and_welcome():
+    service = FakeService()
 
     async def scenario(ctl, link):
-        await until(lambda: ctl.applied)
+        await until(lambda: service.hellos)
         hello = service.hellos[0]
         assert hello["type"] == "hello" and hello["device"] == {"tuyaId": "t1", "name": "Пивоварня"}
-        assert hello["activeRecipeId"] == "r1" and hello["brews"] == [] and hello["session"]
-        assert ctl.applied == [{"recipeId": "r1", "name": "Свежее имя"}]
+        assert hello["model"] == "14" and hello["brews"] == [] and hello["session"]
         await until(lambda: any(m["type"] == "state" for m in service.received))   # свежее состояние — сразу
     run(scenario, service)
 
@@ -131,6 +124,4 @@ def test_commands():
         assert results[7] == {"type": "result", "id": 7, "ok": True}
         assert results[8]["ok"] is False and results[8]["status"] == 400
         assert ctl.calls == [("power", True)]
-        await ws.send(json.dumps({"type": "forget", "forget": "r1"}))
-        await until(lambda: ctl.forgotten == ["r1"])
     run(scenario, service)

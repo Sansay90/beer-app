@@ -17,6 +17,12 @@ KIND_LABELS = {"hop": "Хмель", "spice": "Специи", "fining": "Осве
 UNIT_LABELS = {"g": "г", "kg": "кг", "ml": "мл", "pcs": "шт", "pkg": "пак."}
 
 
+def ru_num(v, digits=None):
+    """Число для текстов по-русски: 3,5; digits — округлить и убрать хвостовые нули (13,4 из 13,40)."""
+    s = f"{v:g}" if digits is None else f"{round(v, digits):.{digits}f}".rstrip("0").rstrip(".")
+    return s.replace(".", ",")
+
+
 def program_steps(recipe):
     """Шаги программы для пивоварни и экрана: паузы затирания, затем кипячение."""
     steps = [{"name": s.get("name"), "temp": s["temp"], "minutes": s["minutes"], "watts": s["watts"], "boil": False}
@@ -75,9 +81,11 @@ def addition_slots(recipe):
             for m in minutes]
 
 
-def build_program(recipe_id, recipe):
-    """Программа для агента (agent/README.md, «Протокол»): шаги, минуты таймеров пивоварни и что класть по каждому."""
-    return {"recipeId": str(recipe_id), "name": recipe.get("name") or "", "steps": program_steps(recipe),
+def build_program(recipe_id, recipe, brew_id=None):
+    """Программа для агента (agent/README.md, «Протокол»): шаги, минуты таймеров пивоварни и что класть по каждому.
+    brew_id — партия («Сварить»): запущенная программа пойдёт варкой в неё."""
+    return {"recipeId": str(recipe_id), "brewId": str(brew_id) if brew_id else None,
+            "name": recipe.get("name") or "", "steps": program_steps(recipe),
             "timers": device_timers(recipe), "slots": addition_slots(recipe)}
 
 
@@ -130,7 +138,7 @@ def addition_label(items):
     for a in items:
         name = (a.get("name") or "").strip() or KIND_LABELS.get(a.get("kind"), "Закладка")
         amount = a.get("amount")
-        part = f"{name} {amount:g} {UNIT_LABELS.get(a.get('unit'), 'г')}" if amount else name
+        part = f"{name} {ru_num(amount)} {UNIT_LABELS.get(a.get('unit'), 'г')}" if amount else name
         if a.get("whirlpool"):
             part += f" (вирпул {a['whirlpool']} мин)"
         parts.append(part)

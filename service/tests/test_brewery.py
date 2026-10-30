@@ -57,18 +57,43 @@ def test_command_errors(service, brewer, agents):
     assert status == 404 and err["detail"] == "такой закладки не ждём"
 
 
+def test_batch_brewed_on_the_brewery(service, brewer, agents, recipe):
+    """«Сварить» на подключённой пивоварне: программа партии уходит с её id, запущенная — идёт варкой в партию,
+    второй варки не появляется."""
+    agent = online(service, brewer, agents)
+    fake = agent.brewery
+    rid = brewer.ok("POST", "/recipes", recipe)["id"]
+    batch = brewer.ok("POST", "/brews", {"recipeId": rid})
+    assert batch["status"] == "running" and batch["manual"] and batch["equipment"]["name"] == "Имитация"
+
+    brewer.ok("POST", f"/brews/{batch['id']}/upload")
+    assert eventually(lambda: (brewer.get("/state")[1]["deviceRecipe"] or {}).get("brewId") == batch["id"])
+    brewer.ok("POST", "/recipe/start")
+    fake.push({"104": 2, "144": 1, "6": 2, "10": 250})
+    assert eventually(lambda: brewer.get("/state")[1]["brewId"] == batch["id"])
+    fake.push({"1": False, "104": 0, "144": 0})                             # выключили на первом шаге — прервана
+    done = eventually(lambda: (b := brewer.get(f"/brews/{batch['id']}")[1])["status"] == "stopped" and b)
+    assert done["manual"] is False and done["recipe"]["id"] == rid and done["snapshot"]["name"] == recipe["name"]
+    assert [b["id"] for b in brewer.ok("GET", "/brews")] == [batch["id"]]
+    # выключение пивоварни — не конец партии: день идёт с того шага, где она остановилась, доводят рукой
+    assert done["phase"] == "brewday" and done["brewDay"][done["currentStep"]]["kind"] == "heat"
+    assert brewer.ok("POST", f"/brews/{batch['id']}/finish")["phase"] == "fermenting"
+    assert brewer.post(f"/brews/{batch['id']}/upload")[0] == 409            # день позади — программа не нужна
+
+
 def test_brew(service, brewer, agents, recipe):
     agent = online(service, brewer, agents)
     fake = agent.brewery
     rid = brewer.ok("POST", "/recipes", recipe)["id"]
+    bid = brewer.ok("POST", "/brews", {"recipeId": rid})["id"]
 
-    brewer.ok("POST", f"/recipes/{rid}/upload")
+    brewer.ok("POST", f"/brews/{bid}/upload")
     assert any("128" in w for w in fake.writes)
     device_recipe = eventually(lambda: brewer.get("/state")[1]["deviceRecipe"])
     assert device_recipe["id"] == rid and device_recipe["steps"][0]["name"] == "Пауза 1"
 
-    brewer.ok("PUT", f"/recipes/{rid}", {**recipe, "name": "Переименован"})       # программа та же — имя новое
-    assert eventually(lambda: brewer.get("/state")[1]["deviceRecipe"]["name"] == "Переименован")
+    brewer.ok("PUT", f"/recipes/{rid}", {**recipe, "name": "Переименован"})       # программа партии — снимок
+    assert brewer.get("/state")[1]["deviceRecipe"]["name"] == recipe["name"]
 
     brewer.ok("POST", "/recipe/start")
     assert fake.writes[-3:] == [{"1": True}, {"101": 1}, {"2": True}]       # включить → режим «рецепт» → старт
@@ -87,17 +112,22 @@ def test_brew(service, brewer, agents, recipe):
     fake.push({"1": False, "104": 0, "144": 0})                             # конец программы
 
     brews = eventually(lambda: [b for b in brewer.get("/brews")[1] if b["status"] == "finished"])
-    assert len(brews) == 1 and brews[0]["recipeId"] == rid
-    detail = brewer.get(f"/brews/{brews[0]['id']}")[1]
+    assert len(brews) == 1 and brews[0]["id"] == bid and brews[0]["recipeId"] == rid
+    detail = brewer.get(f"/brews/{bid}")[1]
     kinds = [e["kind"] for e in detail["events"]]
     assert {"alert", "alertCleared", "step", "addition", "added", "end"} <= set(kinds)
-    assert [t for _, t, _ in detail["readings"]][:4] == [25.0, 26.0, 28.0, 30.0]
+    assert [t for _, t, _ in brewer.ok("GET", f"/brews/{bid}/readings")][:4] == [25.0, 26.0, 28.0, 30.0]
+    # программа закончилась — охлаждение и дрожжи впереди, шаги с временем по событиям пивоварни
+    step = detail["brewDay"][detail["currentStep"]]
+    assert detail["phase"] == "brewday" and step["kind"] == "chill" and step["at"] is not None
+    assert all(s["at"] is not None for s in detail["brewDay"] if s["kind"] in ("heat", "mash_in", "boil"))
+    assert detail["manual"] is False and detail["plan"] is None                  # у рецепта без засыпи плана нет
+    assert detail["equipment"]["name"] == "Имитация"                             # на оборудовании этой пивоварни
+    brewer.ok("POST", f"/brews/{brews[0]['id']}/entries", {"kind": "og", "value": 1.048})   # журнал — и у неё
+    assert brewer.get("/brews")[1][0]["og"] == 1.048
     assert len(brewer.get("/events")[1]) >= 6
     assert brewer.get(f"/brews?recipe={rid}")[1][0]["id"] == brews[0]["id"]
     assert brewer.get("/brews?recipe=not-an-id")[1] == []
-
-    brewer.ok("DELETE", f"/recipes/{rid}")                                  # пивоварня забывает удалённый рецепт
-    assert eventually(lambda: (brewer.get("/state")[1]["deviceRecipe"] or {}).get("id") is None)
 
     agent.stop()
     assert eventually(lambda: brewer.get("/state")[1]["online"] is False)
@@ -113,12 +143,15 @@ def test_other_users_brewery_is_invisible(service, brewer, agents):
     assert other.get("/brews")[1] == []
 
 
-def test_equipment(service, brewer, agents):
-    assert brewer.get("/equipment")[1] == {"efficiency": 75, "evaporation": 3.0}
-    assert brewer.put("/equipment", {"efficiency": 83, "evaporation": 3.5})[0] == 409    # пивоварни ещё нет
+def test_brewery_becomes_equipment(service, brewer, agents):
+    assert brewer.get("/equipment")[1] == []
     online(service, brewer, agents)
-    brewer.ok("PUT", "/equipment", {"efficiency": 83, "evaporation": 3.5})
-    assert brewer.get("/equipment")[1] == {"efficiency": 83, "evaporation": 3.5}
+    [e] = brewer.ok("GET", "/equipment")                                  # заведённая агентом — оборудование
+    assert e["kind"] == "easybrew" and e["connected"] and e["main"] and e["name"] == "Имитация"
+    assert brewer.delete(f"/equipment/{e['id']}")[0] == 409                # привязанную — не удалить
+    saved = brewer.ok("PUT", f"/equipment/{e['id']}", {"name": "Easy Brew 40", "volume": 30, "efficiency": 83,
+                                                       "evaporation": 3.5})
+    assert saved["name"] == "Easy Brew 40" and saved["efficiency"] == 83 and saved["connected"]
 
 
 def test_foreign_brewery_rejected(service, brewer, agents, caplog):
@@ -149,7 +182,8 @@ def test_brews_of_published_recipe_counted_for_all(service, brewer, agents, reci
     author.ok("PUT", f"/recipes/{rid}/visibility", {"visibility": "public"})
 
     agent = online(service, brewer, agents)
-    brewer.ok("POST", f"/recipes/{rid}/upload")
+    bid = brewer.ok("POST", "/brews", {"recipeId": rid})["id"]
+    brewer.ok("POST", f"/brews/{bid}/upload")
     brewer.ok("POST", "/recipe/start")
     agent.brewery.push({"104": 2, "144": 1, "6": 2, "10": 250})
     brews = eventually(lambda: brewer.get("/brews")[1])

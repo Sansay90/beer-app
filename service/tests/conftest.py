@@ -117,3 +117,11 @@ def brewer(service):
 
 def new_agent_token(client, name="Тест"):
     return agent_tokens.create(uuid.UUID(client.me["id"]), name)
+
+
+@pytest.fixture
+def pushes(service):
+    """Push не уходит наружу, а копится здесь: (кому, уведомление)."""
+    sent = []
+    service.state.pusher.notify = lambda user_id, note: sent.append((str(user_id), note))
+    return sent

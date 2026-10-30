@@ -5,7 +5,7 @@ definePageMeta({ auth: 'user', teaser: 'settings', title: 'Настройки' }
 
 const TABS = [
   { label: 'Профиль', icon: 'i-lucide-user', to: '/settings', exact: true },
-  { label: 'Пивоварня', icon: 'i-lucide-plug', to: '/settings/brewery' },
+  { label: 'Оборудование', icon: 'i-lucide-cooking-pot', to: '/settings/brewery' },
   { label: 'Уведомления и вид', icon: 'i-lucide-bell', to: '/settings/notifications' },
 ]
 </script>

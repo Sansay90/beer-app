@@ -4,7 +4,8 @@
 один человек — одно уведомление, «ответ». О своих комментариях не сообщаем. Уведомление записывается в той же
 транзакции, что и комментарий; push уходит после неё — тем, у кого он не выключен (users.push_comments).
 Удалили комментарий — уходят и уведомления о нём. Рецепт сняли с публикации — его уведомления не видны тем,
-кому не виден он сам (access.py).
+кому не виден он сам (access.py). Напоминания о брожении (brew) пишет brewery/reminders.py — со ссылкой на варку;
+их push — по users.push_brews.
 """
 from sqlalchemy import func, or_
 from sqlmodel import delete, select, update
@@ -12,9 +13,9 @@ from sqlmodel import delete, select, update
 from ..access import PUBLIC
 from ..auth.profile import author
 from ..db import session
-from ..models import Comment, Notification, Recipe, User, parse_id, unix, utcnow
+from ..models import Brew, Comment, Notification, Recipe, User, parse_id, unix, utcnow
 
-COMMENT, REPLY = "comment", "reply"
+COMMENT, REPLY, BREW = "comment", "reply", "brew"
 LIST_MAX = 50
 EXCERPT = 140                        # сколько текста комментария показать в уведомлении
 
@@ -30,15 +31,17 @@ def recipe_path(recipe_id, comment_id):
 
 
 class Notices:
-    """Запись уведомлений об обсуждении. pusher — push на устройства (push/pusher.py; без ключа — выключен)."""
+    """Запись уведомлений об обсуждении. pusher — push на устройства (push/pusher.py; без ключа — выключен),
+    streams — открытым вкладкам «новое уведомление» (brewery/streams.py)."""
 
-    def __init__(self, pusher=None):
+    def __init__(self, pusher=None, streams=None):
         self.pusher = pusher
+        self.streams = streams
 
     def comment(self, s, c, recipe, replied_to=None):
         """Новый комментарий c к recipe; replied_to — комментарий, на который ответили (до переноса ответа в ветку).
-        Уведомления добавляются в сессию s и уходят в базу вместе с комментарием; вернуть отправку push —
-        вызвать после commit."""
+        Уведомления добавляются в сессию s и уходят в базу вместе с комментарием; вернуть отправку — вкладкам
+        и push — вызвать после commit."""
         to = {}
         if recipe.user_id != c.user_id:
             to[recipe.user_id] = COMMENT
@@ -50,6 +53,9 @@ class Notices:
         return lambda: self._push(to, actor_id, name, text, rid, cid)
 
     def _push(self, to, actor_id, name, text, rid, cid):
+        if self.streams is not None:
+            for uid in to:
+                self.streams.notice(uid)
         if not to or self.pusher is None:
             return
         with session() as s:
@@ -76,29 +82,37 @@ class Feed:
         self.user = user
 
     def _mine(self):
-        """Свои уведомления о рецептах, которые пользователю видны."""
+        """Свои уведомления: о варках — все, об обсуждении — о рецептах, которые пользователю видны."""
         return (Notification.user_id == self.user.id,
-                or_(Recipe.visibility == PUBLIC, Recipe.user_id == self.user.id))
+                or_(Notification.kind == BREW, Recipe.visibility == PUBLIC, Recipe.user_id == self.user.id))
 
     def list(self, limit=LIST_MAX):
         with session() as s:
             rows = s.exec(select(Notification, Recipe.data["name"].astext, Comment.text,
-                                 User.name, User.avatar_version, User.avatar.is_not(None))
-                          .join(Recipe, Recipe.id == Notification.recipe_id)
-                          .join(Comment, Comment.id == Notification.comment_id)
-                          .join(User, User.id == Notification.actor_id)
+                                 User.name, User.avatar_version, User.avatar.is_not(None), Brew.name)
+                          .outerjoin(Recipe, Recipe.id == Notification.recipe_id)
+                          .outerjoin(Comment, Comment.id == Notification.comment_id)
+                          .outerjoin(User, User.id == Notification.actor_id)
+                          .outerjoin(Brew, Brew.id == Notification.brew_id)
                           .where(*self._mine())
                           .order_by(Notification.created_at.desc()).limit(limit)).all()
-        return [{"id": str(n.id), "kind": n.kind, "createdAt": unix(n.created_at), "read": n.read_at is not None,
-                 "actor": author(n.actor_id, name, version, has),
-                 "recipe": {"id": str(n.recipe_id), "name": recipe_name or "Без названия"},
-                 "commentId": str(n.comment_id), "text": excerpt(text)}
-                for n, recipe_name, text, name, version, has in rows]
+        return [self._view(n, *rest) for n, *rest in rows]
+
+    @staticmethod
+    def _view(n, recipe_name, text, name, version, has, brew_name):
+        base = {"id": str(n.id), "kind": n.kind, "createdAt": unix(n.created_at), "read": n.read_at is not None}
+        if n.kind == BREW:
+            data = n.data or {}
+            return {**base, "brew": {"id": str(n.brew_id), "name": brew_name}, "title": data.get("title"),
+                    "text": data.get("text") or ""}
+        return {**base, "actor": author(n.actor_id, name, version, has),
+                "recipe": {"id": str(n.recipe_id), "name": recipe_name or "Без названия"},
+                "commentId": str(n.comment_id), "text": excerpt(text or "")}
 
     def unread(self):
         with session() as s:
             return s.exec(select(func.count()).select_from(Notification)
-                          .join(Recipe, Recipe.id == Notification.recipe_id)
+                          .outerjoin(Recipe, Recipe.id == Notification.recipe_id)
                           .where(*self._mine(), Notification.read_at.is_(None))).one()
 
     def read(self, ids=None):
@@ -112,12 +126,17 @@ class Feed:
 
     def settings(self):
         with session() as s:
-            return {"pushComments": s.get(User, self.user.id).push_comments}
+            u = s.get(User, self.user.id)
+            return {"pushComments": u.push_comments, "pushBrews": u.push_brews}
 
-    def set_settings(self, push_comments):
+    def set_settings(self, push_comments=None, push_brews=None):
+        """Не указанное — как было."""
         with session() as s:
             u = s.get(User, self.user.id)
-            u.push_comments = push_comments
+            if push_comments is not None:
+                u.push_comments = push_comments
+            if push_brews is not None:
+                u.push_brews = push_brews
             s.add(u)
             s.commit()
-            return {"pushComments": u.push_comments}
+            return {"pushComments": u.push_comments, "pushBrews": u.push_brews}

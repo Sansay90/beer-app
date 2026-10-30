@@ -122,7 +122,6 @@ class Link:
         if self._dropped:
             log.warning("пока не было связи, потеряно записей: %d", self._dropped)
             self._dropped = 0
-        self._apply(welcome)
         self._sent = 0                                                      # неподтверждённое — заново
         self._state = {"type": "state", "data": self.ctl.snapshot()}        # свежее состояние — сразу
         self._wake.set()
@@ -136,17 +135,8 @@ class Link:
                     task = asyncio.create_task(self._command(ws, msg))
                     self._tasks.add(task)
                     task.add_done_callback(self._tasks.discard)
-                else:
-                    self._apply(msg)
         finally:
             sender.cancel()
-
-    def _apply(self, msg):
-        """Сервис о рецепте, загруженном в пивоварню: его поправили (program) или удалили (forget)."""
-        if msg.get("program"):
-            self.ctl.apply_program(msg["program"])
-        if msg.get("forget"):
-            self.ctl.forget(msg["forget"])
 
     async def _send(self, ws):
         try:

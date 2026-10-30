@@ -11,7 +11,7 @@ const ICONS = [
   'bean', 'candy', 'beaker', 'droplet', 'microscope', 'thermometer-snowflake', 'notebook-pen', 'tag', 'search-x',
   'arrow-up-down', 'calculator', 'bookmark', 'bookmark-check', 'chevrons-up-down', 'user', 'thumbs-up', 'thumbs-down', 'message-circle', 'reply',
   'circle-user', 'log-out', 'log-in', 'mail-check', 'mail-warning', 'link-2-off', 'globe', 'lock', 'lock-keyhole',
-  'eye-off', 'shield', 'users', 'camera', 'bell',
+  'eye-off', 'shield', 'users', 'camera', 'calendar', 'cooking-pot', 'star',
   // Nuxt UI
   'arrow-left', 'arrow-right', 'arrow-up-right', 'check', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up',
   'chevrons-left', 'chevrons-right', 'circle-alert', 'circle-x', 'copy-check', 'ellipsis', 'eye', 'eye-off',
@@ -46,6 +46,8 @@ export default defineNuxtConfig({
     '/settings': { ssr: false },
     '/settings/**': { ssr: false },
     '/notifications': { ssr: false },
+    '/brews': { ssr: false },
+    '/brews/**': { ssr: false },
     '/admin/**': { ssr: false },
     '/recipes/new': { ssr: false },
     '/recipes/*/edit': { ssr: false },

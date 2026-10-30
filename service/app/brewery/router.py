@@ -1,20 +1,32 @@
-"""Пивоварня пользователя: состояние и поток SSE, команды, история варок, профиль оборудования;
-WebSocket для агентов (hub.py)."""
+"""Пивоварня пользователя: состояние и поток SSE, команды; журнал варок (партии, записи, варочный день);
+оборудование; WebSocket для агентов (hub.py)."""
 import asyncio
 import json
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Request, WebSocket
+from fastapi import APIRouter, Depends, Query, Request, WebSocket
 from fastapi.responses import StreamingResponse
 
 from ..auth.dependencies import CurrentUser
-from ..deps import DevicesDep, HubDep, JournalDep, StreamsDep
+from ..deps import BrewDayDep, HubDep, JournalDep, StreamsDep
+from ..errors import Invalid
+from ..recipes.program import build_program
 from ..schemas import Ok
 from .control import UserBrewery, ViewerBrewery
+from .equipment import EquipmentStore
+from .logbook import Logbook
 from .schemas import (
     BrewDetail,
+    BrewEdit,
+    BrewEntryEdit,
+    BrewEntryIn,
+    BrewEntryOut,
     BrewEvent,
+    BrewIn,
     BrewSummary,
     Equipment,
+    EquipmentIn,
+    EquipmentNew,
     FlowLevel,
     Limits,
     ManualMode,
@@ -63,7 +75,8 @@ def get_limits(brewery: ViewerBrewery):
 
 
 @router.get("/stream", tags=["состояние"], response_class=StreamingResponse,
-            summary="SSE: `state` — Snapshot, `event` — BrewEvent",
+            summary="SSE: `state` — Snapshot, `event` — BrewEvent, `brew` — {id} варки, которая изменилась, "
+                    "`notice` — новое уведомление",
             responses={200: {"content": {"text/event-stream": {}}}})
 async def stream(request: Request, user: CurrentUser, brewery: UserBrewery, streams: StreamsDep):
     async def events():
@@ -136,26 +149,123 @@ async def start_recipe(brewery: UserBrewery):
     return await brewery.run("startRecipe")
 
 
-# ── история варок ─────────────────────────────────────────────────────────────
-@router.get("/brews", response_model=list[BrewSummary], tags=["история"], summary="Варки, новые первыми")
-def list_brews(user: CurrentUser, journal: JournalDep, recipe: str | None = None):
-    """recipe — только варки по этому рецепту."""
-    return journal.brews(user.id, recipe)
+# ── журнал варок ──────────────────────────────────────────────────────────────
+def user_logbook(user: CurrentUser) -> Logbook:
+    return Logbook(user)
 
 
-@router.get("/brews/{bid}", response_model=BrewDetail, tags=["история"],
-            summary="Варка: рецепт, температура [время, °C, цель] и события")
-def get_brew(bid: str, user: CurrentUser, journal: JournalDep):
-    return journal.brew(user.id, bid)
+UserLogbook = Annotated[Logbook, Depends(user_logbook)]
+
+
+@router.get("/brews", response_model=list[BrewSummary], tags=["варки"], summary="Свои варки, новые первыми")
+def list_brews(logbook: UserLogbook, recipe: str | None = None,
+               phase: Literal["brewday", "fermenting", "packaged"] | None = None,
+               limit: Annotated[int, Query(ge=1, le=200)] = 200):
+    """recipe — только варки по этому рецепту, phase — только в этой фазе (brewday — варочный день идёт)."""
+    return logbook.list(recipe, phase, limit)
+
+
+@router.post("/brews", response_model=BrewDetail, tags=["варки"], summary="Сварить — новая партия по рецепту",
+             description="По рецепту, который виден: свой или опубликованный. Партия получает рецепт, "
+                         "пересчитанный под объём и эффективность оборудования (snapshot), и план по нему.")
+def create_brew(body: BrewIn, logbook: UserLogbook):
+    return logbook.create(body.recipeId, body.startedAt, body.equipmentId)
+
+
+@router.get("/brews/{bid}", response_model=BrewDetail, tags=["варки"],
+            summary="Варка: рецепт партии, план, шаги варочного дня, записи журнала и события пивоварни")
+def get_brew(bid: str, logbook: UserLogbook):
+    return logbook.get(bid)
+
+
+@router.get("/brews/{bid}/readings", response_model=list[tuple[float, float, float | None]], tags=["варки"],
+            summary="Температура варки с пивоварни: [unix-время, °C, цель °C]")
+def get_readings(bid: str, logbook: UserLogbook):
+    return logbook.readings(bid)
+
+
+@router.patch("/brews/{bid}", response_model=BrewDetail, tags=["варки"], summary="Изменить день или оборудование",
+              description="Только у записанной вручную; не указанное — как было.")
+def edit_brew(bid: str, body: BrewEdit, logbook: UserLogbook):
+    return logbook.update(bid, body.startedAt, body.equipmentId)
+
+
+@router.post("/brews/{bid}/upload", response_model=Ok, tags=["варки"], summary="Загрузить программу партии в пивоварню",
+             description="Программа рецепта партии с её id: запущенная, она идёт варкой в эту партию.")
+async def upload_brew(bid: str, logbook: UserLogbook, brewery: UserBrewery):
+    recipe_id, snapshot = await asyncio.to_thread(logbook.snapshot, bid)
+    if not snapshot:
+        raise Invalid("у этой варки нет рецепта партии")
+    await asyncio.to_thread(brewery.check, snapshot)
+    return await brewery.run("upload", program=build_program(recipe_id or "", snapshot, bid))
+
+
+@router.post("/brews/{bid}/finish", response_model=BrewDetail, tags=["варки"], summary="Закончить варочный день",
+             description="Дальше брожение. Пока идёт программа пивоварни — нельзя (409): день ведёт она.")
+def finish_brew(bid: str, logbook: UserLogbook):
+    return logbook.finish(bid)
+
+
+@router.delete("/brews/{bid}", response_model=Ok, tags=["варки"], summary="Удалить варку",
+               description="С журналом, температурой и событиями; идущую на пивоварне — нельзя.")
+def delete_brew(bid: str, logbook: UserLogbook):
+    logbook.delete(bid)
+    return Ok()
+
+
+@router.post("/brews/{bid}/entries", response_model=BrewEntryOut, tags=["варки"], summary="Запись в журнал варки",
+             description="Замер (value: плотность — SG, pH, объём — л, температура — °C), веха или заметка (text).")
+async def add_entry(bid: str, body: BrewEntryIn, logbook: UserLogbook, brewday: BrewDayDep):
+    entry = await asyncio.to_thread(logbook.add_entry, bid, body.kind, body.value, body.text, body.at)
+    if body.kind == "step":                      # закладка «в начале» и прочее, чему пора сразу, — не ждать проверки
+        await asyncio.to_thread(brewday.tick, None, bid)
+    return entry
+
+
+@router.patch("/brews/{bid}/entries/{eid}", response_model=BrewEntryOut, tags=["варки"], summary="Изменить запись")
+def edit_entry(bid: str, eid: str, body: BrewEntryEdit, logbook: UserLogbook):
+    return logbook.edit_entry(bid, eid, body.value, body.text, body.at)
+
+
+@router.delete("/brews/{bid}/entries/{eid}", response_model=Ok, tags=["варки"], summary="Удалить запись")
+def delete_entry(bid: str, eid: str, logbook: UserLogbook):
+    logbook.remove_entry(bid, eid)
+    return Ok()
 
 
 # ── оборудование ──────────────────────────────────────────────────────────────
-@router.get("/equipment", response_model=Equipment, tags=["оборудование"], summary="Профиль оборудования")
-def get_equipment(brewery: UserBrewery, devices: DevicesDep):
-    return Equipment.model_validate(devices.equipment(brewery.device_id))
+def user_equipment(user: CurrentUser) -> EquipmentStore:
+    return EquipmentStore(user)
 
 
-@router.put("/equipment", response_model=Equipment, tags=["оборудование"], summary="Сохранить профиль оборудования")
-def put_equipment(body: Equipment, brewery: UserBrewery, devices: DevicesDep):
-    devices.set_equipment(brewery.device_id, body.model_dump())
-    return body
+UserEquipment = Annotated[EquipmentStore, Depends(user_equipment)]
+
+
+@router.get("/equipment", response_model=list[Equipment], tags=["оборудование"], summary="Оборудование",
+            description="Основное первым.")
+def list_equipment(equipment: UserEquipment):
+    return equipment.list()
+
+
+@router.post("/equipment", response_model=Equipment, tags=["оборудование"], summary="Добавить оборудование",
+             description="Первое — основное; не больше 10.")
+def create_equipment(body: EquipmentNew, equipment: UserEquipment):
+    return equipment.create(body.name, body.kind, body.volume, body.efficiency, body.evaporation, body.kettle)
+
+
+@router.put("/equipment/{eid}", response_model=Equipment, tags=["оборудование"], summary="Изменить оборудование")
+def update_equipment(eid: str, body: EquipmentIn, equipment: UserEquipment):
+    return equipment.update(eid, body.name, body.volume, body.efficiency, body.evaporation, body.kettle)
+
+
+@router.put("/equipment/{eid}/main", response_model=Equipment, tags=["оборудование"],
+            summary="Сделать основным")
+def make_main_equipment(eid: str, equipment: UserEquipment):
+    return equipment.make_main(eid)
+
+
+@router.delete("/equipment/{eid}", response_model=Ok, tags=["оборудование"], summary="Удалить оборудование",
+               description="Пивоварню, привязанную к сайту, — нельзя (409).")
+def delete_equipment(eid: str, equipment: UserEquipment):
+    equipment.delete(eid)
+    return Ok()

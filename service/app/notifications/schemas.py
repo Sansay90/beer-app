@@ -11,15 +11,23 @@ class NoticeRecipe(BaseModel):
     name: str
 
 
+class NoticeBrew(BaseModel):
+    id: str
+    name: str
+
+
 class NotificationOut(BaseModel):
     id: str
-    kind: Literal["comment", "reply"] = Field(description="comment — к вашему рецепту, reply — ответ вам")
+    kind: Literal["comment", "reply", "brew"] = Field(
+        description="comment — к вашему рецепту, reply — ответ вам, brew — напоминание о брожении")
     createdAt: float
     read: bool
-    actor: Author = Field(description="кто написал")
-    recipe: NoticeRecipe
-    commentId: str = Field(description="комментарий на странице рецепта — якорь #c-{commentId}")
-    text: str = Field(description="начало комментария")
+    actor: Author | None = Field(None, description="кто написал (комментарий, ответ)")
+    recipe: NoticeRecipe | None = None
+    commentId: str | None = Field(None, description="комментарий на странице рецепта — якорь #c-{commentId}")
+    brew: NoticeBrew | None = Field(None, description="варка (напоминание)")
+    title: str | None = Field(None, description="напоминание: что пора сделать")
+    text: str = Field(description="начало комментария или подробности напоминания")
 
 
 class Unread(BaseModel):
@@ -32,3 +40,9 @@ class ReadIn(BaseModel):
 
 class NoticeSettings(BaseModel):
     pushComments: bool = Field(description="push на устройства о комментариях и ответах")
+    pushBrews: bool = Field(description="push на устройства — напоминания о брожении")
+
+
+class NoticeSettingsEdit(BaseModel):
+    pushComments: bool | None = None
+    pushBrews: bool | None = None

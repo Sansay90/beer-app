@@ -103,10 +103,3 @@ def to_steps(program):
         raise ValueError("в рецепте нет программы: ни пауз, ни кипячения")
     return steps
 
-
-def same_program(program, raw):
-    """Программа совпадает с той, что лежит в пивоварне (DP 128), — шаги, мощности и таймеры закладок."""
-    try:
-        return bool(raw) and to_steps(program) == decode(raw)
-    except ValueError:
-        return False

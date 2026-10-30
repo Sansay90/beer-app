@@ -16,14 +16,12 @@ const plotH = H - PAD.top - PAD.bottom
 const model = computed(() => {
   const steps = props.steps.filter(s => s.minutes > 0)
   if (!steps.length) return null
-  const temps = steps.map(s => (s.boil ? 100 : s.temp))
-  const tMin = Math.max(0, Math.floor((Math.min(...temps) - 8) / 10) * 10)
-  const tMax = 100
+  const scale = axisScale(steps.map(s => (s.boil ? 100 : s.temp)), { step: 10, margin: 8, max: 100 })
   const total = steps.reduce((a, s) => a + s.minutes, 0)
   const ramp = Math.max(4, total * 0.04)
   const span = total + ramp * (steps.length - 1)
   const x = (m: number) => PAD.left + (m / span) * plotW
-  const y = (t: number) => PAD.top + ((tMax - t) / (tMax - tMin)) * plotH
+  const y = scaleY(scale, PAD.top, plotH)
 
   let m = 0
   const segs: { x1: number; x2: number; y: number; temp: number; minutes: number; boil: boolean }[] = []
@@ -48,8 +46,7 @@ const model = computed(() => {
   })
   const baseY = PAD.top + plotH
   const area = `${line} L${segs[segs.length - 1]!.x2},${baseY} L${segs[0]!.x1},${baseY} Z`
-  const ticks = [tMin, Math.round((tMin + tMax) / 2 / 10) * 10, tMax].filter((v, i, a) => a.indexOf(v) === i)
-  return { segs, slots, line, area, ticks, y, baseY }
+  return { segs, slots, line, area, ticks: scale.ticks, y, baseY }
 })
 
 // подсказка под точкой (кипячение — всегда у верхнего края); у краёв прижимается внутрь графика
@@ -57,11 +54,8 @@ const active = ref<number | null>(null)
 const tip = computed(() => {
   const slot = active.value == null ? null : model.value?.slots[active.value]
   if (!slot) return null
-  const x = slot.cx / W
   return {
-    left: `${x * 100}%`,
-    top: `${(slot.cy / H) * 100}%`,
-    shift: x < 0.25 ? '-12px' : x > 0.75 ? 'calc(-100% + 12px)' : '-50%',
+    ...tipPlace(slot.cx, slot.cy, W, H),
     when: whenInBoil(slot.minutes, slot.boil),
     items: slot.items.map(a => ({ ...additionKind(a), name: additionName(a), amount: additionAmount(a), note: additionNote(a) })),
   }
@@ -78,12 +72,7 @@ const tip = computed(() => {
         </linearGradient>
       </defs>
 
-      <g class="text-dimmed" fill="currentColor" font-size="11">
-        <template v-for="t in model.ticks" :key="t">
-          <line :x1="PAD.left" :x2="W - PAD.right" :y1="model.y(t)" :y2="model.y(t)" stroke="var(--ui-border)" stroke-dasharray="3 4" />
-          <text :x="PAD.left - 8" :y="model.y(t) + 4" text-anchor="end">{{ t }}°</text>
-        </template>
-      </g>
+      <ChartGrid :ticks="model.ticks" :y="model.y" :x1="PAD.left" :x2="W - PAD.right" />
 
       <path :d="model.area" fill="url(#profile-fill)" />
       <path :d="model.line" fill="none" stroke="var(--ui-primary)" stroke-width="2.5" stroke-linejoin="round" />
@@ -117,11 +106,7 @@ const tip = computed(() => {
         />
       </g>
     </svg>
-    <div
-      v-if="tip"
-      class="pointer-events-none absolute z-10 whitespace-nowrap rounded-lg bg-elevated px-3 py-2 text-xs shadow-lg ring ring-default"
-      :style="{ left: tip.left, top: tip.top, transform: `translate(${tip.shift}, 14px)` }"
-    >
+    <ChartTip v-if="tip" :place="tip">
       <div class="num mb-1.5 text-muted">{{ tip.when }}</div>
       <div v-for="(item, k) in tip.items" :key="k" class="flex items-center gap-2 py-0.5">
         <UIcon :name="item.icon" class="size-4 shrink-0" :class="item.tint" />
@@ -129,6 +114,6 @@ const tip = computed(() => {
         <span v-if="item.amount" class="num ml-auto pl-3 text-muted">{{ item.amount }}</span>
         <span v-if="item.note" class="num text-muted">· {{ item.note }}</span>
       </div>
-    </div>
+    </ChartTip>
   </div>
 </template>

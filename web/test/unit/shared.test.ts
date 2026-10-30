@@ -3,9 +3,11 @@
 import { describe, expect, it } from 'vitest'
 import calcCases from '../../../shared/calc-cases.json'
 import programCases from '../../../shared/program-cases.json'
+import scaleCases from '../../../shared/scale-cases.json'
 import type { Recipe } from '~/types'
 import { calcRecipe } from '~/utils/calc'
 import { boilGroups, deviceTimers, programOf } from '~/utils/recipe'
+import { scaleRecipe } from '~/utils/scale'
 
 interface Case<E> { name: string; recipe: unknown; expected: E }
 
@@ -38,5 +40,29 @@ describe('программа пивоварни — как у сервиса (sh
     // в JSON у сервиса нет undefined: отсутствующее количество (у оборудования) приходит как null
     const groups = boilGroups(r).map(g => ({ ...g, items: g.items.map(i => ({ ...i, amount: i.amount ?? null })) }))
     expect(groups).toEqual(c.expected.slots)
+  })
+})
+
+/** Глубокое сравнение: числа — приблизительно, остальное — точно; у сервиса в JSON нет undefined — его нет и здесь. */
+function same(got: unknown, expected: unknown, path = '') {
+  if (Array.isArray(expected)) {
+    expect(Array.isArray(got), path).toBe(true)
+    expect((got as unknown[]).length, path).toBe(expected.length)
+    expected.forEach((v, i) => same((got as unknown[])[i], v, `${path}[${i}]`))
+  } else if (expected && typeof expected === 'object') {
+    const g = got as Record<string, unknown>
+    expect(Object.keys(g).sort(), path).toEqual(Object.keys(expected).sort())
+    for (const [k, v] of Object.entries(expected)) same(g[k], v, `${path}.${k}`)
+  } else if (typeof expected === 'number' && !Number.isInteger(expected)) {
+    expect(got, path).toBeCloseTo(expected, 9)
+  } else {
+    expect(got, path).toBe(expected)
+  }
+}
+
+describe('пересчёт под оборудование — как у сервиса (shared/scale-cases.json)', () => {
+  it.each(cases<Recipe>(scaleCases))('%s', (_, c) => {
+    const to = (c as unknown as { to: { volume: number | null; efficiency: number | null } }).to
+    same(scaleRecipe(c.recipe as Recipe, to), c.expected)
   })
 })

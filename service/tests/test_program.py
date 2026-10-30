@@ -45,7 +45,7 @@ def test_boil_items_and_timers():
 
 def test_slots():
     slots = {s["minutes"]: s["label"] for s in addition_slots(RECIPE)}
-    assert slots == {60: "Saaz 30 г", 15: "Saaz 20 г, Ирландский мох 5 г", 10: "Чиллер", 5: "Сахар 0.5 кг",
+    assert slots == {60: "Saaz 30 г", 15: "Saaz 20 г, Ирландский мох 5 г", 10: "Чиллер", 5: "Сахар 0,5 кг",
                      0: "Saaz 40 г (вирпул 20 мин)"}
     program = build_program("r1", RECIPE)
     assert program["recipeId"] == "r1" and program["name"] == "Пилс" and program["timers"] == [15, 10, 5]

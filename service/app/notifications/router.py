@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from ..auth.dependencies import CurrentUser
 from ..schemas import Ok
 from .feed import Feed
-from .schemas import NoticeSettings, NotificationOut, ReadIn, Unread
+from .schemas import NoticeSettings, NoticeSettingsEdit, NotificationOut, ReadIn, Unread
 
 router = APIRouter(prefix="/notifications", tags=["уведомления"])
 
@@ -19,7 +19,8 @@ UserFeed = Annotated[Feed, Depends(user_feed)]
 
 
 @router.get("", response_model=list[NotificationOut], summary="Уведомления",
-            description="Новые первыми, последние 50: комментарии к вашим рецептам и ответы на ваши комментарии.")
+            description="Новые первыми, последние 50: комментарии к вашим рецептам, ответы на ваши комментарии "
+                        "и напоминания о брожении.")
 def list_notifications(feed: UserFeed):
     return feed.list()
 
@@ -40,6 +41,7 @@ def get_settings(feed: UserFeed):
     return feed.settings()
 
 
-@router.put("/settings", response_model=NoticeSettings, summary="Изменить настройки уведомлений")
-def put_settings(body: NoticeSettings, feed: UserFeed):
-    return feed.set_settings(body.pushComments)
+@router.put("/settings", response_model=NoticeSettings, summary="Изменить настройки уведомлений",
+            description="Не указанное — как было.")
+def put_settings(body: NoticeSettingsEdit, feed: UserFeed):
+    return feed.set_settings(body.pushComments, body.pushBrews)

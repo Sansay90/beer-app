@@ -55,3 +55,12 @@ h1, h2, h3 {
   50% { opacity: 0.35; }
 }
 .soft-pulse { animation: soft-pulse 1.6s ease-in-out infinite; }
+
+/* зовёт нажать: кнопка шага, который ждёт пивовара, — кольцо расходится и гаснет */
+@keyframes call-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ui-primary) 55%, transparent); }
+  70% { box-shadow: 0 0 0 12px color-mix(in oklab, var(--ui-primary) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ui-primary) 0%, transparent); }
+}
+.call-pulse { animation: call-pulse 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .call-pulse, .soft-pulse { animation: none; } }

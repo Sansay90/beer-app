@@ -70,6 +70,20 @@ def test_start_recipe_sequence(idle, brewery):
     assert brewery.writes[-3:] == [{"1": True}, {"101": 1}, {"2": True}]
 
 
+def test_program_names_the_brew(idle, brewery, recorder):
+    """Программа от «Сварить» несёт brewId — первый запуск идёт в эту партию, повторный — новой варкой."""
+    upload(idle, {**PROGRAM, "brewId": "batch-1"})
+    assert idle.snapshot()["deviceRecipe"]["brewId"] == "batch-1"
+    assert idle.cmd_start_recipe().result(timeout=2)["ok"]
+    brewery.push({"104": 2, "144": 1, "6": 2, "10": 640})
+    assert recorder.of("brewStarted")[-1]["id"] == "batch-1" and idle.snapshot()["brewId"] == "batch-1"
+
+    brewery.push({"1": False, "104": 0, "144": 0})                       # конец программы
+    assert idle.cmd_start_recipe().result(timeout=2)["ok"]              # та же программа ещё раз — новая варка
+    brewery.push({"104": 2, "144": 1, "6": 2, "10": 640})
+    assert recorder.of("brewStarted")[-1]["id"] != "batch-1"
+
+
 def test_manual_validation(idle, brewery):
     with pytest.raises(ValueError, match="уставка"):
         idle.cmd_manual(10, 5, 1000)
@@ -153,12 +167,3 @@ def test_restart_after_brew_ended(brewery, tmp_path, recorder):
                                                "at": recorder.of("brewFinished")[-1]["at"], "energyWh": 5.0}
     assert memory.get("brew") is None
 
-
-def test_program_renamed_and_forgotten(idle):
-    upload(idle)
-    idle.apply_program({**PROGRAM, "name": "Новое имя"})
-    assert idle.snapshot()["deviceRecipe"]["name"] == "Новое имя"
-    idle.apply_program({**PROGRAM, "timers": [1]})       # другая программа — в пивоварне всё ещё старая
-    assert idle.snapshot()["deviceRecipe"]["name"] == "Новое имя"
-    idle.forget("r1")
-    assert idle.snapshot()["deviceRecipe"]["id"] is None

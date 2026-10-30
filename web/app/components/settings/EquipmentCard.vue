@@ -1,55 +1,84 @@
 <script setup lang="ts">
+// Оборудование пивовара: основное — первым (его объём и эффективность — в новые рецепты, испарение — в расчёт
+// воды), у каждого — вид и цифры; добавить, изменить, сделать основным, удалить. Пивоварню, подключённую к сайту,
+// не удалить; Easy Brew, ещё не подключённая, — с объяснением, как подключить.
 import type { Equipment } from '~/types'
 
 const { $api } = useNuxtApp()
-const { data: equipment, error } = useEquipment()
-const { exec, pending } = useCommand()
+const { list, error, refresh } = useEquipment()
+const confirm = useConfirm()
+const { exec } = useCommand()
 useErrorToast(error)
 
-const FIELDS: { key: keyof Equipment; label: string; unit: string; step: number; description: string }[] = [
-  { key: 'efficiency', label: 'Эффективность', unit: '%', step: 1, description: 'Для новых рецептов.' },
-  { key: 'evaporation', label: 'Испарение', unit: 'л/ч', step: 0.1, description: 'За час кипячения без крышки.' },
-]
-
-// форма — копия сохранённого профиля, пока человек её не трогал
-const form = ref<Equipment | null>(null)
-const changed = computed(() => !!form.value && JSON.stringify(form.value) !== JSON.stringify(equipment.value))
-
-function reset() {
-  form.value = equipment.value ? { ...equipment.value } : null
+const editing = ref<Equipment | null>(null)
+const modal = ref(false)
+function add() {
+  editing.value = null
+  modal.value = true
 }
-watch(equipment, reset, { immediate: true })
-
-async function save() {
-  const saved = form.value && await exec(() => $api('/api/equipment', { method: 'PUT', body: form.value! }), 'Профиль оборудования сохранён')
-  if (saved) equipment.value = saved          // общий по ключу: новые цифры видят и рецепты
+function edit(e: Equipment) {
+  editing.value = e
+  modal.value = true
 }
+
+const num = (v: number) => fmtNumber(v, 1)
+const facts = (e: Equipment) => [e.volume != null && `${num(e.volume)} л`, `${num(e.efficiency)} %`, `${num(e.evaporation)} л/ч`,
+  e.kettle != null && `котёл ${num(e.kettle)} л`].filter(Boolean).join(' · ')
+const kindLabel = (e: Equipment) => (e.kind === 'manual' ? 'без подключения' : e.connected ? 'Easy Brew · подключена' : 'Easy Brew · не подключена')
+
+async function makeMain(e: Equipment) {
+  if (await exec(() => $api('/api/equipment/{eid}/main', { method: 'PUT', path: { eid: e.id } }), `«${e.name}» — основное`)) await refresh()
+}
+
+async function remove(e: Equipment) {
+  if (!await confirm({ title: `Удалить «${e.name}»?`, description: 'Варки на нём останутся в журнале.', confirmLabel: 'Удалить', confirmIcon: 'i-lucide-trash-2', color: 'error' })) return
+  if (await exec(() => $api('/api/equipment/{eid}', { method: 'DELETE', path: { eid: e.id } }))) await refresh()
+}
+
+const menu = (e: Equipment) => [[
+  { label: 'Изменить', icon: 'i-lucide-pencil', onSelect: () => edit(e) },
+  ...(e.main ? [] : [{ label: 'Сделать основным', icon: 'i-lucide-star', onSelect: () => makeMain(e) }]),
+  ...(e.connected ? [] : [{ label: 'Удалить', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => remove(e) }]),
+]]
 </script>
 
 <template>
   <UCard>
     <template #header>
-      <div class="font-semibold text-highlighted">Оборудование</div>
-      <div class="text-sm text-muted">Эффективность подставляется в новые рецепты, по испарению считается промывочная вода. Не знаете своих цифр — оставьте средние и поправьте после пары варок.</div>
-    </template>
-    <div v-if="form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-      <UFormField v-for="f in FIELDS" :key="f.key" :label="f.label" :hint="f.unit" :description="f.description">
-        <UInputNumber
-          v-model="form[f.key]"
-          :min="0"
-          :step="f.step"
-          :step-snapping="false"
-          :format-options="{ maximumFractionDigits: 2 }"
-          placeholder="—"
-          class="w-full"
-        />
-      </UFormField>
-    </div>
-    <template #footer>
-      <div class="flex justify-end gap-2">
-        <UButton color="neutral" variant="ghost" label="Сбросить" :disabled="!changed" @click="reset" />
-        <UButton icon="i-lucide-save" label="Сохранить" :loading="pending" :disabled="!changed" @click="save" />
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div class="font-semibold text-highlighted">Оборудование</div>
+          <div class="text-sm text-muted">На чём вы варите. Основное подставляется в новые рецепты, по испарению считается промывочная вода.</div>
+        </div>
+        <UButton label="Добавить" icon="i-lucide-plus" @click="add" />
       </div>
     </template>
+
+    <ul v-if="list.length" class="-my-2 divide-y divide-default">
+      <li v-for="e in list" :key="e.id" class="flex items-start gap-4 py-4">
+        <span class="grid size-11 shrink-0 place-items-center rounded-lg" :class="e.main ? 'bg-primary/15 text-primary' : 'bg-elevated text-muted'">
+          <UIcon :name="e.kind === 'manual' ? 'i-lucide-cooking-pot' : 'i-lucide-plug'" class="size-6" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-base font-semibold text-highlighted">{{ e.name }}</span>
+            <UBadge v-if="e.main" label="основное" color="primary" variant="subtle" size="sm" />
+          </div>
+          <div class="num mt-0.5 text-sm text-muted">{{ kindLabel(e) }} · {{ facts(e) }}</div>
+          <p v-if="e.kind === 'easybrew' && !e.connected" class="mt-1.5 text-sm text-toned">
+            Чтобы управлять пивоварней с сайта, рядом с ней должна работать программа-агент. Подключение в пару шагов прямо отсюда скоро появится — пока его настраивает администратор сервиса.
+          </p>
+        </div>
+        <UDropdownMenu :items="menu(e)">
+          <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" :aria-label="`Действия: ${e.name}`" />
+        </UDropdownMenu>
+      </li>
+    </ul>
+    <div v-else class="flex flex-col items-start gap-3">
+      <p class="text-base text-muted">Оборудования пока нет. Добавьте, на чём варите, — кастрюлю, котёл или пивоварню: рецепты возьмут ваш объём и эффективность.</p>
+      <UButton label="Добавить оборудование" icon="i-lucide-plus" variant="soft" @click="add" />
+    </div>
+
+    <SettingsEquipmentModal v-model:open="modal" :item="editing" @saved="refresh()" />
   </UCard>
 </template>

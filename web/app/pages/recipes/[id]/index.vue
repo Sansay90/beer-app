@@ -2,6 +2,7 @@
 // Рецепт: свой или опубликованный. Рендерится на сервере — для превью ссылок и поисковиков; вошедшему — по его cookie.
 // Разделы — components/recipe/view/, действия в шапке — view/Actions.vue.
 const route = useRoute()
+const auth = useAuthStore()
 
 const id = computed(() => route.params.id as string)
 const { data: recipe, error } = await useRecipe(id)
@@ -60,7 +61,7 @@ useSeoMeta({
           <RecipeViewYeasts v-if="recipe.yeasts?.length" :items="recipe.yeasts" />
           <RecipeViewMiscs v-if="recipe.miscs?.length" :items="recipe.miscs" />
           <RecipeViewProgram :recipe="recipe" />
-          <RecipeViewFermentation v-if="recipe.fermentation?.length" :items="recipe.fermentation" />
+          <RecipeViewFermentation v-if="recipe.fermentation?.length" :items="recipe.fermentation" :hops="recipe.hops" />
           <!-- якорь: на него ведёт «N комментариев» в шапке рецепта -->
           <RecipeViewComments id="comments" :recipe-id="id" class="scroll-mt-6" />
         </div>
@@ -71,7 +72,8 @@ useSeoMeta({
             <RecipeStyleRanges :bjcp="style" :custom="!!recipe.style && !recipe.style.code" :og="calc?.og" :fg="calc?.fg" :ibu="calc?.ibu" :ebc="calc?.ebc" />
           </UCard>
           <RecipeViewBatch :recipe="recipe" />
-          <RecipeViewBrews v-if="recipe.meta.canEdit" :recipe-id="id" />
+          <!-- свои варки по рецепту — каждому вошедшему: и автору, и тому, кто варит по чужому -->
+          <RecipeViewBrews v-if="auth.user" :recipe-id="id" :recipe="recipe" />
         </aside>
       </div>
     </template>

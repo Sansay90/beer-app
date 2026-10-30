@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Действия с рецептом в шапке: избранное, правка, загрузка в пивоварню, копия, публикация, удаление.
+// Действия с рецептом в шапке: «Сварить» (главное; гостю — панель входа, после входа окно откроется само),
+// избранное, правка, копия, публикация, удаление. В пивоварню программа уходит вместе с партией — из «Сварить».
 // Что можно — решает сервис (meta.canEdit, meta.canModerate), здесь только кнопки.
 import type { RecipeDetail, Visibility } from '~/types'
 
@@ -7,37 +8,31 @@ const props = defineProps<{ recipe: RecipeDetail; recipeId: string }>()
 
 const { $api } = useNuxtApp()
 const auth = useAuthStore()
-const brewery = useBreweryStore()
-const { exec, pending } = useCommand()
-const { exec: execVisibility, pending: visibilityPending } = useCommand()   // своя загрузка — не крутить «В пивоварню»
+const { exec } = useCommand()
+const { exec: execVisibility, pending: visibilityPending } = useCommand()
 const confirm = useConfirm()
 const favorite = useFavorite()
+const drawer = useAuthDrawer()
 
-const meta = computed(() => props.recipe.meta)
-const inDevice = computed(() => brewery.snapshot?.deviceRecipe?.id === props.recipeId)
-const programActive = computed(() => brewery.phase.running || brewery.phase.paused)
-const hasProgram = computed(() => programOf(props.recipe).length > 0)
-
-const uploadHint = computed(() => {
-  if (!hasProgram.value) return 'В рецепте нет программы — добавьте паузы или кипячение'
-  if (!brewery.online) return 'Пивоварня не в сети'
-  if (programActive.value) return 'Программа идёт — заменить рецепт можно после её окончания'
-  return 'Записать программу рецепта в пивоварню'
+// «Сварить»: вошедшему — окно, гостю — вход; вошёл — окно открывается само
+const starting = ref(false)
+const wantStart = ref(false)
+function start() {
+  if (auth.user) {
+    starting.value = true
+    return
+  }
+  wantStart.value = true
+  drawer.show('login')
+}
+watch(() => auth.user, (u) => {
+  if (u && wantStart.value) {
+    wantStart.value = false
+    starting.value = true
+  }
 })
 
-async function upload() {
-  const current = brewery.snapshot?.deviceRecipe
-  const ok = await confirm({
-    title: 'Загрузить в пивоварню?',
-    description: current
-      ? `${current.name ? `«${current.name}»` : 'Текущая программа'} будет заменена на «${props.recipe.name}».`
-      : `В пивоварню запишется «${props.recipe.name}».`,
-    confirmLabel: 'Загрузить',
-    confirmIcon: 'i-lucide-upload',
-  })
-  if (ok) await exec(() => $api('/api/recipes/{rid}/upload', { method: 'POST', path: { rid: props.recipeId } }), 'Рецепт загружен в пивоварню')
-}
-
+const meta = computed(() => props.recipe.meta)
 async function setVisibility(visibility: Visibility) {
   // публиковать — с подтверждённой почтой: сразу сказать и предложить письмо, а не ждать отказа сервиса
   if (visibility === 'public' && !auth.user?.emailVerified) {
@@ -72,7 +67,7 @@ async function remove() {
   const ok = await confirm({
     title: 'Удалить рецепт?',
     description: meta.value.canEdit
-      ? `«${props.recipe.name}» будет удалён без возможности восстановления. История варок останется.`
+      ? `«${props.recipe.name}» будет удалён без возможности восстановления. Варки по нему останутся в «Моих варках».`
       : `«${props.recipe.name}» автора ${brewerName(meta.value.author)} будет удалён без возможности восстановления.`,
     confirmLabel: 'Удалить',
     confirmIcon: 'i-lucide-trash-2',
@@ -100,7 +95,7 @@ const menu = computed(() => {
 </script>
 
 <template>
-  <!-- признаки рецепта — вместе, в верхней строке: видимость своего, «в пивоварне», избранное. Как у избранного:
+  <!-- признаки рецепта — вместе, в верхней строке: видимость своего, избранное. Как у избранного:
        пока нет — действие («Опубликовать»), есть — состояние («Опубликован»), клик — обратно -->
   <UButton
     v-if="meta.canEdit"
@@ -113,7 +108,6 @@ const menu = computed(() => {
     :loading="visibilityPending"
     @click="setVisibility(meta.visibility === 'public' ? 'private' : 'public')"
   />
-  <UBadge v-if="inDevice" color="success" variant="subtle" size="lg" icon="i-lucide-check" label="в пивоварне" class="hidden h-8 sm:inline-flex" />
   <UButton
     :icon="meta.favorite ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
     :label="meta.favorite ? 'В избранном' : 'В избранное'"
@@ -124,15 +118,8 @@ const menu = computed(() => {
     @click="favorite.toggle(recipeId, !meta.favorite)"
   />
   <UButton v-if="meta.canEdit" icon="i-lucide-pencil" label="Изменить" color="neutral" variant="outline" :to="`/recipes/${recipeId}/edit`" />
-  <UTooltip v-if="auth.user" :text="uploadHint">
-    <UButton
-      icon="i-lucide-upload"
-      label="В пивоварню"
-      :loading="pending"
-      :disabled="!hasProgram || !brewery.online || programActive"
-      @click="upload"
-    />
-  </UTooltip>
+  <UButton icon="i-lucide-flame" label="Сварить" @click="start" />
+  <BrewStartModal v-model:open="starting" :recipe-id="recipeId" :recipe="recipe" />
   <UDropdownMenu :items="menu" :content="{ align: 'end' }">
     <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" aria-label="Ещё" />
   </UDropdownMenu>

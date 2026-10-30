@@ -8,6 +8,7 @@ from sqlmodel import delete, select
 from ..access import PRIVATE, PUBLIC, VISIBILITIES, can_edit, can_moderate, can_publish, can_view
 from ..auth.profile import author as author_of
 from ..auth.profile import by_nick
+from ..brewery.logbook import brews_total
 from ..db import session
 from ..errors import Conflict, Forbidden, Invalid, NotFound
 from ..models import Brew, Favorite, Recipe, RecipePhoto, RecipeVote, User, parse_id, unix, utcnow
@@ -19,14 +20,6 @@ def excerpt(text, limit=220):
     """Первый абзац описания одной строкой: карточка всё равно обрежет до двух строк."""
     text = " ".join(re.split(r"\n\s*\n", (text or "").strip())[0].split())
     return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
-
-
-def brews_total(s, ids):
-    """{id рецепта: сколько раз его варили все пивовары} — варки через пивоварню; кто варил, не раскрывается."""
-    if not ids:
-        return {}
-    return dict(s.exec(select(Brew.recipe_id, func.count()).where(Brew.recipe_id.in_(ids))
-                       .group_by(Brew.recipe_id)).all())
 
 
 class RecipeStore:

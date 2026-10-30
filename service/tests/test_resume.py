@@ -9,7 +9,8 @@ from .test_brewery import IDLE
 
 def start_brew(brewer, agent, recipe):
     rid = brewer.ok("POST", "/recipes", recipe)["id"]
-    brewer.ok("POST", f"/recipes/{rid}/upload")
+    bid = brewer.ok("POST", "/brews", {"recipeId": rid})["id"]
+    brewer.ok("POST", f"/brews/{bid}/upload")
     brewer.ok("POST", "/recipe/start")
     agent.brewery.push({"104": 2, "144": 1, "6": 2, "10": 250})
     brews = eventually(lambda: brewer.get("/brews")[1])
@@ -18,7 +19,7 @@ def start_brew(brewer, agent, recipe):
 
 
 def readings(brewer, brew_id):
-    return [t for _, t, _ in brewer.get(f"/brews/{brew_id}")[1]["readings"]]
+    return [t for _, t, _ in brewer.get(f"/brews/{brew_id}/readings")[1]]
 
 
 def online_agent(brewer, agents, **kw):
@@ -90,5 +91,5 @@ def test_brew_finished_while_service_down(service, brewer, agents, recipe):
 
     brew = eventually(lambda: (b := brewer.get(f"/brews/{brew_id}")[1])["status"] != "running" and b)
     assert brew["status"] == "finished"                     # завершена, а не прервана
-    assert any(e["kind"] == "end" for e in brew["events"]) and 100.0 in [t for _, t, _ in brew["readings"]]
+    assert any(e["kind"] == "end" for e in brew["events"]) and 100.0 in readings(brewer, brew_id)
     assert len(brewer.get("/brews")[1]) == 1

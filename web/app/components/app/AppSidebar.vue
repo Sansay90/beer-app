@@ -30,14 +30,14 @@ const recipes = computed(() => {
     children: [sub('Все рецепты', 'all'), sub('Мои рецепты', 'mine'), sub('Избранное', 'favorites')],
   }
 })
-// состояние пивоварни — меткой у «Варки»: о ней и речь (гостю пивоварни нет)
-const status = computed(() => {
-  if (!auth.user) return undefined
-  if (!brewery.connected) return { label: 'нет связи', color: 'error' as const }
-  if (!brewery.online) return { label: 'не в сети', color: 'neutral' as const }
-  if (brewery.phase.running) return { label: 'идёт варка', color: 'primary' as const }
-  return { label: 'на связи', color: 'success' as const }
-})
+// метка у «Варки» — только когда пивоварня варит: состояние самой пивоварни — у оборудования и на странице партии
+const status = computed(() => (auth.user && brewery.phase.running
+  ? { label: 'идёт варка', color: 'primary' as const }
+  : undefined))
+// «Варка» ведёт прямо на идущую партию: через главную вышел бы лишний круг с перерисовкой страницы
+const { brew: current, refresh: refreshCurrent } = useCurrentBrew()
+const changed = useBrewChanged()
+if (import.meta.client) watch([() => route.path, changed], () => { if (auth.user) refreshCurrent() })
 // уведомления — вошедшему, с числом непрочитанных: при входе, переходах, возвращении на вкладку и раз в минуту
 const notices = useNotifications()
 const visibility = useDocumentVisibility()
@@ -47,7 +47,10 @@ const unread = computed(() => notices.unread.value
   && { label: notices.unread.value > 99 ? '99+' : String(notices.unread.value), color: 'primary' as const, variant: 'solid' as const })
 
 const nav = computed(() => [
-  { label: 'Варка', icon: 'i-lucide-flame', to: '/', badge: status.value && { ...status.value, variant: 'subtle' as const }, onSelect: close },
+  // страница партии — это и есть «Варка»; «Мои варки» — только список
+  { label: 'Варка', icon: 'i-lucide-flame', to: current.value ? `/brews/${current.value.id}` : '/', active: route.path === '/' || /^\/brews\/[^/]+$/.test(route.path), badge: status.value && { ...status.value, variant: 'subtle' as const }, onSelect: close },
+  // журнал варок — и с пивоварни, и без неё
+  ...(auth.user ? [{ label: 'Мои варки', icon: 'i-lucide-notebook-pen', to: '/brews', active: route.path === '/brews', onSelect: close }] : []),
   recipes.value,
   ...(auth.user ? [{ label: 'Уведомления', icon: 'i-lucide-bell', to: '/notifications', badge: unread.value || undefined, onSelect: close }] : []),
   ...(auth.isAdmin ? [{ label: 'Пользователи', icon: 'i-lucide-users', to: '/admin/users', onSelect: close }] : []),

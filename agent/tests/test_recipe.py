@@ -3,7 +3,7 @@ import base64
 
 import pytest
 
-from agent.recipe import BLOCK_SIZE, BOIL_TEMP, MAX_STEPS, Step, decode, encode, same_program, to_steps
+from agent.recipe import BLOCK_SIZE, BOIL_TEMP, MAX_STEPS, Step, decode, encode, to_steps
 
 PROGRAM = {
     "recipeId": "r1", "name": "Пилс",
@@ -37,14 +37,6 @@ def test_encode_layout():
 def test_roundtrip():
     steps = to_steps(PROGRAM)
     assert decode(encode(steps, 2500)) == steps
-
-
-def test_same_program():
-    raw = encode(to_steps(PROGRAM), 2500)
-    assert same_program(PROGRAM, raw)
-    assert not same_program({**PROGRAM, "timers": [60, 15]}, raw)
-    assert not same_program(PROGRAM, None)
-    assert not same_program({"steps": []}, raw)
 
 
 @pytest.mark.parametrize(("steps", "error"), [

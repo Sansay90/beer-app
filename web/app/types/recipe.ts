@@ -22,7 +22,7 @@ export interface WaterDraft {
 export interface RecipeDraft {
   name: string
   style: StyleRef | null
-  batch: Row<Batch>                     // показатели (OG, IBU…) не хранятся в форме — считаются (utils/calc.ts)
+  batch: Row<Omit<Batch, 'evaporation'>>   // испарение — у рецепта партии, не у рецепта; показатели (OG, IBU…) не хранятся в форме — считаются (utils/calc.ts)
   fermentables: FermentableRow[]
   hops: HopRow[]
   miscs: MiscRow[]

@@ -4,7 +4,7 @@ export function fmtNumber(v: number | null | undefined, digits = 0, unit = '') {
 }
 
 /** Ровно digits знаков после запятой: fixed(65, 1) → «65,0». */
-function fixed(v: number, digits: number) {
+export function fixed(v: number, digits: number) {
   return v.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
@@ -38,6 +38,28 @@ export function fmtMinutes(min: number) {
   const m = min % 60
   if (!h) return `${m} мин`
   return m ? `${h} ч ${m} мин` : `${h} ч`
+}
+
+/** unix-время → «14:05». */
+export function fmtTime(epoch: number) {
+  return new Date(epoch * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+}
+
+/** unix-время → «5 окт.». */
+export function fmtDay(epoch: number) {
+  return new Date(epoch * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+}
+
+/** Крепость: 7 → «7,0 %». */
+export function fmtAbv(v: number) {
+  return `${fixed(v, 1)} %`
+}
+
+/** unix-время → значение поля ввода в местном времени: «2026-10-28» (date) или «2026-10-28T14:05» (datetime-local). */
+export function localInput(epoch: number, withTime = false) {
+  const d = new Date(epoch * 1000)
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, withTime ? 16 : 10)
 }
 
 export function fmtClock(epoch: number) {

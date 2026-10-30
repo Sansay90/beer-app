@@ -6,13 +6,12 @@ from starlette.concurrency import run_in_threadpool
 
 from ..auth.dependencies import CurrentUser, Viewer
 from ..brewery.control import UserBrewery
-from ..deps import LimitsDep, PusherDep
+from ..deps import LimitsDep, PusherDep, StreamsDep
 from ..notifications.feed import Notices
 from ..schemas import Ok
 from . import photos as photo
 from .calc import targets
 from .discussion import Discussion
-from .program import build_program
 from .schemas import (
     CommentEdit,
     CommentIn,
@@ -44,12 +43,12 @@ ViewerRecipes = Annotated[RecipeStore, Depends(viewer_recipes)]
 UserRecipes = Annotated[RecipeStore, Depends(user_recipes)]
 
 
-def viewer_discussion(viewer: Viewer, pusher: PusherDep) -> Discussion:
-    return Discussion(viewer, Notices(pusher))
+def viewer_discussion(viewer: Viewer, pusher: PusherDep, streams: StreamsDep) -> Discussion:
+    return Discussion(viewer, Notices(pusher, streams))
 
 
-def user_discussion(user: CurrentUser, pusher: PusherDep) -> Discussion:
-    return Discussion(user, Notices(pusher))
+def user_discussion(user: CurrentUser, pusher: PusherDep, streams: StreamsDep) -> Discussion:
+    return Discussion(user, Notices(pusher, streams))
 
 
 ViewerDiscussion = Annotated[Discussion, Depends(viewer_discussion)]
@@ -77,9 +76,7 @@ async def save(recipes, brewery, rid, body):
     # показатели — посчитанные сервисом по ингредиентам, присланные не сохраняются
     recipe["targets"] = {k: v for k, v in targets(recipe).items() if v is not None}
     await run_in_threadpool(brewery.check, recipe)          # до записи: пивоварня должна принять программу
-    saved_id = await run_in_threadpool(recipes.save, rid, recipe)
-    await brewery.recipe_changed(saved_id, recipe)
-    return {"id": saved_id}
+    return {"id": await run_in_threadpool(recipes.save, rid, recipe)}
 
 
 @router.post("/recipes", response_model=SavedRecipe, summary="Создать рецепт")
@@ -93,9 +90,8 @@ async def update_recipe(rid: str, body: Recipe, recipes: UserRecipes, brewery: U
 
 
 @router.delete("/recipes/{rid}", response_model=Ok)
-async def delete_recipe(rid: str, recipes: UserRecipes, brewery: UserBrewery):
+async def delete_recipe(rid: str, recipes: UserRecipes):
     await run_in_threadpool(recipes.delete, rid)
-    await brewery.recipe_deleted(rid)
     return Ok()
 
 
@@ -118,14 +114,6 @@ def add_favorite(rid: str, recipes: UserRecipes):
 def remove_favorite(rid: str, recipes: UserRecipes):
     recipes.set_favorite(rid, False)
     return Ok()
-
-
-@router.post("/recipes/{rid}/upload", response_model=Ok, summary="Загрузить рецепт в пивоварню",
-             description="Свой или опубликованный: варить можно и по чужому рецепту.")
-async def upload(rid: str, recipes: UserRecipes, brewery: UserBrewery):
-    recipe = await run_in_threadpool(recipes.get, rid)
-    await run_in_threadpool(brewery.check, recipe)
-    return await brewery.run("upload", program=build_program(rid, recipe))
 
 
 # ── обсуждение и голоса ───────────────────────────────────────────────────────

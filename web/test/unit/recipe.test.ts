@@ -8,9 +8,9 @@ import {
 import { draft, hop, LIMITS, malt } from './fixtures'
 
 describe('новый рецепт', () => {
-  it('эффективность — из профиля оборудования, мощность — потолок модели', () => {
-    const d = blankRecipe(LIMITS, { efficiency: 82, evaporation: 3 })
-    expect(d.batch).toEqual({ volume: null, efficiency: 82 })
+  it('объём и эффективность — из основного оборудования, мощность — потолок модели', () => {
+    const d = blankRecipe(LIMITS, { volume: 23, efficiency: 82 })
+    expect(d.batch).toEqual({ volume: 23, efficiency: 82 })
     expect(d.mash.map(s => [s.temp, s.minutes, s.watts])).toEqual([[66, 60, 2500], [78, 10, 2500]])
     expect(d.boil).toEqual({ minutes: 60, watts: 2500 })
     expect(validateRecipe(d, LIMITS)).toEqual([])

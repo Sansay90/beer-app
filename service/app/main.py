@@ -15,9 +15,11 @@ from .auth.admin import router as admin_router
 from .auth.brewers import router as brewers_router
 from .auth.router import router as auth_router
 from .auth.throttle import AuthLimits
+from .brewery.brewday import BrewDayTimers
 from .brewery.devices import DeviceStore
 from .brewery.hub import Hub
 from .brewery.journal import Journal
+from .brewery.reminders import Reminders
 from .brewery.router import router as brewery_router
 from .brewery.streams import Streams
 from .config import Settings
@@ -38,18 +40,24 @@ async def lifespan(app: FastAPI):
     db.configure(settings.database_url)
     await asyncio.to_thread(db.migrate)
 
-    state.journal = Journal()
+    state.streams = Streams(asyncio.get_running_loop())
+    state.journal = Journal(on_brew=state.streams.brew)
     state.devices = DeviceStore()
     state.hub = Hub(state.devices, state.journal)
-    state.streams = Streams()
     # сообщения пивоварни — открытым вкладкам её владельца
     state.hub.subscribe(lambda device_id, msg: state.streams.publish(state.hub.owner(device_id), msg))
     state.pusher = Pusher(settings.vapid_private_key, settings.vapid_subject)
     state.pusher.watch(state.hub)
+    state.reminders = Reminders(state.pusher, state.streams)
+    state.brewday = BrewDayTimers(state.pusher, state.streams)
 
     state.journal.start()
     state.pusher.start()
+    state.reminders.start()
+    state.brewday.start()
     yield
+    await asyncio.to_thread(state.reminders.stop)
+    await asyncio.to_thread(state.brewday.stop)
     await asyncio.to_thread(state.pusher.stop)
     await asyncio.to_thread(state.journal.stop)
 

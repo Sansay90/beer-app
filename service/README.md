@@ -6,7 +6,7 @@
 
 - состояние и события пивоварни — потоком **SSE** `GET /api/stream` (`event: state` — снимок, `event: event` — событие варки);
 - команды — обычными `POST` (`/api/power`, `/api/manual`, `/api/recipe/start`, …): сервис передаёт их агенту и ждёт его ответа;
-- рецепты — `GET/POST /api/recipes`, `GET/PUT/DELETE /api/recipes/{id}`, публикация — `PUT /api/recipes/{id}/visibility`, загрузка в пивоварню — `POST /api/recipes/{id}/upload`;
+- рецепты — `GET/POST /api/recipes`, `GET/PUT/DELETE /api/recipes/{id}`, публикация — `PUT /api/recipes/{id}/visibility`, программа партии в пивоварню — `POST /api/brews/{id}/upload`;
 - фото пива — `GET/POST /api/recipes/{id}/photos`, картинка — `GET /api/photos/{id}` (`?thumb=true` — превью 480 px);
 - историю варок — `GET /api/brews`, `GET /api/brews/{id}`;
 - вход — `/api/auth/*`, пользователи и роли — `/api/admin/*`, уведомления — `/api/push/*`.

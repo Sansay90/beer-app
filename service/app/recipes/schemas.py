@@ -38,6 +38,8 @@ class Batch(BaseModel):
     volume: float | None = Field(None, description="л сусла после кипячения — к нему считаются OG, IBU и цвет")
     efficiency: float | None = Field(None, description="эффективность, %: экстракт в сусле после кипячения "
                                                          "/ экстракт засыпи")
+    evaporation: float | None = Field(None, description="испарение оборудования, л/ч — у рецепта партии: по нему "
+                                                          "вода на варку")
 
 
 class Targets(BaseModel):

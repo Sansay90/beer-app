@@ -6,6 +6,7 @@ from fastapi import Depends
 from starlette.requests import HTTPConnection
 
 from .auth.throttle import AuthLimits
+from .brewery.brewday import BrewDayTimers
 from .brewery.devices import DeviceStore
 from .brewery.hub import Hub
 from .brewery.journal import Journal
@@ -47,6 +48,10 @@ def get_pusher(conn: HTTPConnection) -> Pusher:
     return conn.app.state.pusher
 
 
+def get_brewday(conn: HTTPConnection) -> BrewDayTimers:
+    return conn.app.state.brewday
+
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 MailerDep = Annotated[Mailer, Depends(get_mailer)]
 LimitsDep = Annotated[AuthLimits, Depends(get_limits)]
@@ -55,3 +60,4 @@ JournalDep = Annotated[Journal, Depends(get_journal)]
 DevicesDep = Annotated[DeviceStore, Depends(get_devices)]
 StreamsDep = Annotated[Streams, Depends(get_streams)]
 PusherDep = Annotated[Pusher, Depends(get_pusher)]
+BrewDayDep = Annotated[BrewDayTimers, Depends(get_brewday)]
