@@ -47,7 +47,8 @@ def target_of(target, plan_og, og):
 
 
 def gravity_text(sg):
-    return f"{ru_num(round(sg, 3))} ({ru_num(round(plato_from_sg(sg), 1))} °P)"
+    """«1,024 (6,0 °P)» — знаков всегда столько же, сколько на сайте (fmtGravity): 6,0, а не 6."""
+    return f"{sg:.3f} ({plato_from_sg(sg):.1f} °P)".replace(".", ",")
 
 
 def until_of(st):
@@ -55,7 +56,7 @@ def until_of(st):
 
 
 def condition_text(st, target=None):
-    """Условие этапа для текста: «до 1,024 (6 °P)» (цель партии, если дана), «до конечной плотности», «3 дн.»."""
+    """Условие этапа для текста: «до 1,024 (6,0 °P)» (цель партии, если дана), «до конечной плотности», «3 дн.»."""
     until = until_of(st)
     if until == "gravity":
         return f"до {gravity_text(target if target is not None else st['gravity'])}"

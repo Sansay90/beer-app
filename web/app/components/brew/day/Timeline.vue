@@ -149,7 +149,7 @@ const measureLabel = (m: EntryKind) => {
         <div class="flex min-w-0 flex-wrap items-center gap-3">
           <span class="text-lg font-semibold" :class="brew.packagedAt || ended ? 'text-highlighted' : 'text-muted'">Розлив</span>
           <span class="num text-sm text-dimmed">
-            <template v-if="brew.packagedAt">{{ fmtDay(brew.packagedAt) }}</template><template v-else-if="!brewing && ferment.stages.length">~{{ fmtDay(ferment.end) }}</template>
+            <template v-if="brew.packagedAt">{{ fmtDay(brew.packagedAt) }}</template><template v-else-if="!brewing && ferment.stages.length">{{ ferment.estimated ? '~' : '' }}{{ fmtDay(ferment.end) }}</template>
           </span>
           <UButton
             v-if="!brew.packagedAt && !brewing"

@@ -222,7 +222,7 @@ export function fermentPlan(plan: PlanIn | null | undefined, start: number, now:
   const end = last ? last.to : start
   return { stages, dryHops, days: (end - start) / DAY, end, current, og,
     finished: !!packagedAt || last?.state === 'done',
-    estimated: stages.some(s => s.until !== 'days'), next: !packagedAt && current + 1 < stages.length ? current + 1 : null }
+    estimated: stages.some(s => s.until !== 'days' && s.state !== 'done'), next: !packagedAt && current + 1 < stages.length ? current + 1 : null }
 }
 export type FermentPlanView = ReturnType<typeof fermentPlan>
 

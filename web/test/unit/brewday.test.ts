@@ -92,6 +92,15 @@ describe('что приготовить', () => {
     ])
   })
 
+  it('в затор — с солями и хмель, и прочее «в затор»; хмель на первое сусло — на промывке', () => {
+    const r = { ...recipe,
+      hops: [{ name: 'Hallertau', amount: 20, use: 'first_wort' }, { name: 'Magnum', amount: 10, use: 'mash' }, { name: 'Citra', amount: 30, use: 'boil' }],
+      miscs: [{ kind: 'fining', name: 'Brewtan B', amount: 0.5, unit: 'g', use: 'mash' }, { kind: 'fining', name: 'Мох', amount: 5, unit: 'g', use: 'boil' }],
+    } as unknown as Recipe
+    expect(stepDetails(STEPS[0]!, r)[0]).toBe('Затор: 12 л — хлорид кальция 2,4 г, Magnum 10 г, Brewtan B 0,5 г')
+    expect(stepDetails(STEPS[5]!, r)).toEqual(['промывочная вода 14,2 л', 'до кипячения 23 л', 'на первое сусло: Hallertau 20 г'])
+  })
+
   it('промывка — объёмы по испарению оборудования из рецепта партии; на прочих шагах — ничего', () => {
     expect(stepDetails(STEPS[5]!, recipe)).toEqual(['промывочная вода 14,2 л', 'до кипячения 23 л'])
     expect(stepDetails(STEPS[3]!, recipe)).toEqual([])

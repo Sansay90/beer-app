@@ -6,7 +6,7 @@
 // Остаток таймера считает «Сейчас» (stepRemaining): ему нужны секунды, остальной странице — нет.
 import type { BrewDayStep, BrewDetail, BrewEntry, Recipe, Snapshot } from '~/types'
 import type { Phase } from '~/utils/brew'
-import { unitLabel } from '~/utils/additions'
+import { additionAmount, additionName, unitLabel } from '~/utils/additions'
 import { fmtMinutes, fmtNumber, fmtTemp, SEP } from '~/utils/format'
 import { WATER_AGENTS, waterAmount, waterVolumes } from '~/utils/water'
 
@@ -37,21 +37,33 @@ export function breweryStep(steps: BrewDayStep[], s: Snapshot | null, phase: Pha
 
 const litres = (v: number | null) => (v == null ? '—' : fmtNumber(v, 1, ' л'))
 
-/** Что приготовить на шаге: на подготовке — вода с солями, засыпь по солодам, дрожжи; на промывке — объёмы. */
+/** «Brewtan B 0,5 г», «Hallertau 20 г» — хмель и прочее рецепта с этим применением. */
+function usedAt(r: Recipe, hopUse: string, miscUse: string | null) {
+  return [
+    ...(r.hops ?? []).filter(h => h.use === hopUse).map(h => ({ kind: 'hop' as const, name: h.name, amount: h.amount, unit: 'g' as const })),
+    ...(r.miscs ?? []).filter(m => miscUse != null && m.use === miscUse),
+  ].map(a => [additionName(a), additionAmount(a)].filter(Boolean).join(' '))
+}
+
+/** Что приготовить на шаге: на подготовке — вода с солями и тем, что идёт в затор (хмель, Brewtan B…), засыпь по
+ *  солодам, дрожжи; на промывке — объёмы и хмель на первое сусло. */
 export function stepDetails(step: Pick<BrewDayStep, 'kind'>, r: Recipe | null | undefined): string[] {
   if (!r || (step.kind !== 'prepare' && step.kind !== 'sparge')) return []
   const v = waterVolumes(r, r.batch?.evaporation)
   if (step.kind === 'sparge') {
-    return [v.sparge != null && `промывочная вода ${litres(v.sparge)}`, v.preBoil != null && `до кипячения ${litres(v.preBoil)}`]
+    const firstWort = usedAt(r, 'first_wort', null)
+    return [v.sparge != null && `промывочная вода ${litres(v.sparge)}`, v.preBoil != null && `до кипячения ${litres(v.preBoil)}`,
+      firstWort.length > 0 && `на первое сусло: ${firstWort.join(', ')}`]
       .filter(Boolean) as string[]
   }
   const out: string[] = []
   const salts = r.water?.additions ?? []
   for (const [target, label, l] of [['mash', 'Затор', v.mash], ['sparge', 'Промывка', v.sparge]] as const) {
     const mine = salts.filter(a => (a.target ?? 'mash') === target)
-    if (l == null && !mine.length) continue
     const parts = mine.map(a => [(a.agent === 'other' ? a.name || 'добавка' : WATER_AGENTS[a.agent].label).toLowerCase(),
       waterAmount(a.agent, a.amount)].filter(Boolean).join(' '))
+    if (target === 'mash') parts.push(...usedAt(r, 'mash', 'mash'))
+    if (l == null && !parts.length) continue
     out.push(`${label}: ${litres(l)}${parts.length ? ` — ${parts.join(', ')}` : ''}`)
   }
   const grains = (r.fermentables ?? []).filter(f => (f.use ?? 'mash') === 'mash' && f.amount)
