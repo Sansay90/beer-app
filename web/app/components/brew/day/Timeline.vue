@@ -9,7 +9,7 @@ import type { BrewDayView, StepState } from '~/utils/brewday'
 import type { EntryKind } from '~/utils/brewlog'
 
 const props = defineProps<{ brew: BrewDetail; view: BrewDayView; now: number }>()
-const emit = defineEmits<{ measure: [kind: EntryKind]; stage: [index: number]; entry: [kind: 'dry_hop' | 'package'] }>()
+const emit = defineEmits<{ measure: [kind: EntryKind]; stage: [index: number]; entry: [kind: 'dry_hop' | 'package', text?: string] }>()
 const prefs = usePreferencesStore()
 
 // брожение — от задачи дрожжей (её нет — от дня варки); варочный день ещё идёт — всё впереди, без дат
@@ -17,19 +17,27 @@ const brewing = computed(() => props.view.active)
 const start = computed(() => props.brew.fermentStart ?? props.brew.startedAt)
 const ferment = computed(() => fermentPlan(props.brew.plan, start.value, brewing.value ? start.value - 1 : props.now,
   props.brew.packagedAt, props.brew.entries))
-const ended = computed(() => !brewing.value && ferment.value.stages.length > 0 && ferment.value.end <= props.now)
-// этапы и сухое охмеление — по порядку во времени: охмеление на 3-й день стоит между этапами, а не после всех;
-// заложенное — по записям «сухое охмеление» по порядку
-const rows = computed(() => {
-  const hopped = props.brew.entries.filter(e => e.kind === 'dry_hop').sort((a, b) => a.at - b.at)
-  return [
-    ...ferment.value.stages.map((st, i) => ({ kind: 'stage' as const, i, at: st.from, state: st.state, st })),
-    ...ferment.value.dryHops.map((d, i) => ({
-      kind: 'dry' as const, i, at: d.at ?? ferment.value.end, d,
-      state: (hopped[i] ? 'done' : d.state) as StepState, doneAt: hopped[i]?.at ?? null,
-    })),
-  ].sort((a, b) => a.at - b.at || (a.kind === 'stage' ? -1 : 1))
+// розлив — «сейчас», когда план пройден (у последнего этапа по плотности — когда его условие наступило и перешли)
+const ended = computed(() => !brewing.value && ferment.value.stages.length > 0 && ferment.value.finished)
+const dryLabel = (items: string[]) => items.join(', ')
+// заложенное: запись «сухое охмеление» несёт состав закладки («Заложил» пишет его); старые записи без состава —
+// по порядку оставшимся
+const hoppedAt = computed(() => {
+  const left = props.brew.entries.filter(e => e.kind === 'dry_hop').sort((a, b) => a.at - b.at)
+  const done = ferment.value.dryHops.map((d) => {
+    const k = left.findIndex(e => e.text === dryLabel(d.items))
+    return k < 0 ? null : left.splice(k, 1)[0]!.at
+  })
+  return done.map(at => at ?? left.shift()?.at ?? null)
 })
+// этапы и сухое охмеление — по порядку во времени: охмеление на 3-й день стоит между этапами, а не после всех
+const rows = computed(() => [
+  ...ferment.value.stages.map((st, i) => ({ kind: 'stage' as const, i, at: st.from, state: st.state, st })),
+  ...ferment.value.dryHops.map((d, i) => ({
+    kind: 'dry' as const, i, at: d.at ?? ferment.value.end, d,
+    state: (hoppedAt.value[i] != null ? 'done' : d.state) as StepState, doneAt: hoppedAt.value[i] ?? null,
+  })),
+].sort((a, b) => a.at - b.at || (a.kind === 'stage' ? -1 : 1)))
 const measures = computed(() => lastMeasures(props.brew.entries))
 
 const ROW = 'relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 py-3'
@@ -99,8 +107,8 @@ const measureLabel = (m: EntryKind) => {
         <div v-if="r.kind === 'stage'" class="min-w-0">
           <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <span class="text-lg font-semibold" :class="r.state === 'next' ? 'text-muted' : 'text-highlighted'">{{ r.st.name }}</span>
-            <span class="num text-base text-muted">{{ fmtNumber(r.st.temp, 1) }} °C · {{ fmtNumber(r.st.days, 1) }} дн.</span>
-            <span v-if="!brewing" class="num text-sm text-dimmed">{{ fmtDay(r.st.from) }} – {{ fmtDay(r.st.to) }}<template v-if="r.st.manual"> · начат по факту</template></span>
+            <span class="num text-base text-muted">{{ fmtNumber(r.st.temp, 1) }} °C · {{ stageCondition({ until: r.st.until, gravity: r.st.target, days: r.st.days }, prefs.gravityUnit) }}</span>
+            <span v-if="!brewing" class="num text-sm text-dimmed">{{ fmtDay(r.st.from) }} – {{ r.st.until !== 'days' && r.st.state !== 'done' ? '~' : '' }}{{ fmtDay(r.st.to) }}<template v-if="r.st.manual"> · начат по факту</template></span>
           </div>
           <!-- следующий этап можно начать раньше плана; первый начинается с задачи дрожжей -->
           <UButton
@@ -119,7 +127,7 @@ const measureLabel = (m: EntryKind) => {
             <span class="text-lg font-semibold" :class="r.state === 'next' ? 'text-muted' : 'text-highlighted'">Сухое охмеление</span>
             <span class="text-base text-muted">{{ r.d.items.join(', ') }}</span>
             <span class="num text-sm text-dimmed">
-              {{ r.d.day != null ? `${r.d.day}-й день` : 'день не указан' }}<template v-if="r.doneAt != null"> · {{ fmtDay(r.doneAt) }}</template><template v-else-if="r.d.at != null && !brewing"> · {{ fmtDay(r.d.at) }}</template>
+              {{ dryHopWhen(r.d, prefs.gravityUnit) }}<template v-if="r.doneAt != null"> · {{ fmtDay(r.doneAt) }}</template><template v-else-if="r.d.at != null && !r.d.estimated && !brewing"> · {{ fmtDay(r.d.at) }}</template>
             </span>
           </div>
           <UButton
@@ -130,7 +138,7 @@ const measureLabel = (m: EntryKind) => {
             :variant="r.state === 'now' ? 'solid' : 'outline'"
             size="sm"
             class="mt-2"
-            @click="emit('entry', 'dry_hop')"
+            @click="emit('entry', 'dry_hop', dryLabel(r.d.items))"
           />
         </div>
       </li>

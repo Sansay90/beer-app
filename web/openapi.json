@@ -4479,7 +4479,19 @@
               }
             ],
             "title": "Day",
-            "description": "день брожения; None — не указан"
+            "description": "день брожения; при gravity — примерный; None — не указан"
+          },
+          "gravity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gravity",
+            "description": "при какой плотности, SG; в партии — от фактической OG"
           },
           "items": {
             "items": {
@@ -5193,7 +5205,31 @@
           },
           "days": {
             "type": "number",
-            "title": "Days"
+            "title": "Days",
+            "description": "until = days — сколько держать; gravity и fg — примерно сколько дней"
+          },
+          "until": {
+            "type": "string",
+            "enum": [
+              "gravity",
+              "fg",
+              "days"
+            ],
+            "title": "Until",
+            "description": "когда к следующему: плотность дошла до цели, плотность перестала падать, прошли дни",
+            "default": "days"
+          },
+          "gravity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gravity",
+            "description": "until = gravity: цель по рецепту, SG; в партии — от фактической OG"
           }
         },
         "type": "object",
@@ -5289,7 +5325,33 @@
           },
           "days": {
             "type": "number",
-            "title": "Days"
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "days — сколько держать; gravity и fg — примерно сколько дней"
+          },
+          "until": {
+            "type": "string",
+            "enum": [
+              "gravity",
+              "fg",
+              "days"
+            ],
+            "title": "Until",
+            "default": "days"
+          },
+          "gravity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.2,
+                "minimum": 0.98
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gravity",
+            "description": "until = gravity: до какой плотности, SG"
           }
         },
         "type": "object",
@@ -5297,7 +5359,8 @@
           "temp",
           "days"
         ],
-        "title": "FermentationStep"
+        "title": "FermentationStep",
+        "description": "Этап брожения: температура и когда переходить к следующему (until). gravity — плотность дошла до цели\n(в партии цель — от фактической OG, та же доля сбраживания); fg — плотность перестала падать (конечная);\ndays — выдержка столько дней. У gravity и fg дни — примерная подсказка: для графика, дат и напоминания\nзамерить; у days — само условие. Без until — days (рецепты до плотностей)."
       },
       "FlowLevel": {
         "properties": {
@@ -5390,7 +5453,21 @@
               }
             ],
             "title": "Day",
-            "description": "сухое охмеление — день брожения"
+            "description": "сухое охмеление — день брожения; при gravity — примерный"
+          },
+          "gravity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.2,
+                "minimum": 0.98
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gravity",
+            "description": "сухое охмеление — при какой плотности брожения, SG; в партии — от фактической OG"
           }
         },
         "type": "object",

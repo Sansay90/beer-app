@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest'
 import calcCases from '../../../shared/calc-cases.json'
 import programCases from '../../../shared/program-cases.json'
 import scaleCases from '../../../shared/scale-cases.json'
+import fermentCases from '../../../shared/ferment-cases.json'
 import type { Recipe } from '~/types'
+import { fermentAdvice, fermentCalm, fermentPlan } from '~/utils/brewlog'
 import { calcRecipe } from '~/utils/calc'
 import { boilGroups, deviceTimers, programOf } from '~/utils/recipe'
 import { scaleRecipe } from '~/utils/scale'
@@ -64,5 +66,28 @@ describe('пересчёт под оборудование — как у сер�
   it.each(cases<Recipe>(scaleCases))('%s', (_, c) => {
     const to = (c as unknown as { to: { volume: number | null; efficiency: number | null } }).to
     same(scaleRecipe(c.recipe as Recipe, to), c.expected)
+  })
+})
+
+interface FermentCase {
+  name: string
+  plan: Parameters<typeof fermentPlan>[0]
+  start: number
+  now: number
+  entries: { kind: 'stage' | 'og' | 'gravity'; at: number; value: number | null }[]
+  expected: unknown
+}
+
+describe('расписание брожения — как у сервиса (shared/ferment-cases.json)', () => {
+  it.each((fermentCases as unknown as FermentCase[]).map(c => [c.name, c] as const))('%s', (_, c) => {
+    const p = fermentPlan(c.plan, c.start, c.now, null, c.entries)
+    const advice = fermentAdvice(p, c.plan, c.entries)
+    const calm = fermentCalm(p, c.plan, c.entries)
+    same({
+      current: p.current,
+      stages: p.stages.map(s => ({ from: s.from, to: s.to, target: s.target })),
+      advice: advice && { stage: advice.stage, why: advice.why, value: advice.value, at: advice.at },
+      calm: calm && { value: calm.value, at: calm.at },
+    }, c.expected)
   })
 })

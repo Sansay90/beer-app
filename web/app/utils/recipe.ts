@@ -30,7 +30,7 @@ const MISC_DEFAULTS: Partial<Record<AdditionKind, Pick<MiscRow, 'use' | 'minutes
 }
 
 export const newFermentable = (): FermentableRow => ({ name: '', kind: 'grain', amount: null, ebc: null, use: 'mash', minutes: null })
-export const newHop = (minutes: number | null): HopRow => ({ name: '', alpha: null, amount: null, use: 'boil', minutes, day: null })
+export const newHop = (minutes: number | null): HopRow => ({ name: '', alpha: null, amount: null, use: 'boil', minutes, day: null, gravity: null })
 export const newMisc = (kind: MiscRow['kind']): MiscRow => ({
   name: '', kind, amount: null, unit: 'g', use: 'boil', minutes: null, ...MISC_DEFAULTS[kind],
 })
@@ -40,7 +40,8 @@ export const blankWater = (): WaterDraft => ({
   ratio: 3, source: { ca: 0, mg: 0, na: 0, cl: 0, so4: 0, hco3: 0 }, additions: [],
 })
 export const mashStep = (watts: number, temp = 66, minutes = 60, name = ''): MashRow => ({ name, temp, minutes, watts })
-export const fermentationStep = (temp = 18, days = 7, name = ''): FermentationRow => ({ name, temp, days })
+export const fermentationStep = (temp = 18, days = 7, name = '', until: FermentationRow['until'] = 'days'): FermentationRow =>
+  ({ name, temp, days, until, gravity: null })
 
 /** Новый рецепт: объём партии и эффективность — из основного оборудования (нет — объём задаёт пивовар). */
 export function blankRecipe(limits: Limits, equipment: Pick<Equipment, 'volume' | 'efficiency'> | null): RecipeDraft {
@@ -74,7 +75,7 @@ export function toDraft(r: Recipe): RecipeDraft {
     })),
     hops: (r.hops ?? []).map(h => ({
       name: h.name ?? '', alpha: h.alpha ?? null, amount: h.amount ?? null, use: h.use ?? 'boil',
-      minutes: h.minutes ?? null, day: h.day ?? null,
+      minutes: h.minutes ?? null, day: h.day ?? null, gravity: h.gravity ?? null,
     })),
     miscs: (r.miscs ?? []).map(m => ({
       name: m.name ?? '', kind: m.kind ?? 'adjunct', amount: m.amount ?? null, unit: m.unit ?? 'g',
@@ -93,7 +94,7 @@ export function toDraft(r: Recipe): RecipeDraft {
     },
     mash: (r.mash ?? []).map(s => ({ ...s, name: s.name ?? '' })),
     boil: r.boil ?? null,
-    fermentation: (r.fermentation ?? []).map(s => ({ ...s, name: s.name ?? '' })),
+    fermentation: (r.fermentation ?? []).map(s => ({ ...s, name: s.name ?? '', until: s.until ?? 'days', gravity: s.gravity ?? null })),
     notes: r.notes ?? '',
   }
 }
@@ -115,6 +116,7 @@ export function toRecipe(d: RecipeDraft): Recipe {
       .map(f => ({ ...f, name: f.name.trim(), minutes: f.use === 'boil' ? f.minutes : null })),
     hops: d.hops.filter(h => !blank(h)).map(h => ({
       ...h, name: h.name.trim(), minutes: timed(h.use) ? h.minutes : null, day: h.use === 'dry_hop' ? h.day : null,
+      gravity: h.use === 'dry_hop' ? h.gravity : null,
     })),
     miscs: d.miscs.filter(m => !blank(m) || m.kind === 'equipment').map(m => ({
       ...m, name: m.name.trim(), amount: ADDITION_KINDS[m.kind].measured ? m.amount : null,
@@ -129,7 +131,7 @@ export function toRecipe(d: RecipeDraft): Recipe {
     },
     mash: d.mash.map(s => ({ ...s, name: s.name.trim() || null })),
     boil: d.boil,
-    fermentation: d.fermentation.map(s => ({ ...s, name: s.name.trim() || null })),
+    fermentation: d.fermentation.map(s => ({ ...s, name: s.name.trim() || null, days: s.days ?? 0, gravity: s.until === 'gravity' ? s.gravity : null })),
     notes: d.notes.trim(),
   }
 }
@@ -246,6 +248,11 @@ export function validateRecipe(d: RecipeDraft, l: Limits): string[] {
   }
   unnamed(d.fermentables.filter(f => !blank(f)), 'Засыпь')
   unnamed(d.hops.filter(h => !blank(h)), 'Хмель')
+  d.fermentation.forEach((s, i) => {
+    const name = s.name.trim() || `Этап ${i + 1}`
+    if (s.until === 'gravity' && s.gravity == null) out.push(`Брожение: у этапа «${name}» — до какой плотности`)
+    if (s.until === 'days' && !s.days) out.push(`Брожение: у выдержки «${name}» — сколько дней`)
+  })
   return out
 }
 

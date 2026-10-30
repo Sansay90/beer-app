@@ -5,7 +5,7 @@ const rows = defineModel<HopRow[]>({ required: true })
 const props = defineProps<{ boilMinutes: number | null; volume: number | null }>()
 
 const USES = options(HOP_USES)
-const GRID = 'sm:grid sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_17rem_2rem]'
+const GRID = 'sm:grid sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_21rem_2rem]'
 
 const total = computed(() => rows.value.reduce((a, h) => a + (h.amount ?? 0), 0))
 const summary = computed(() => {
@@ -40,7 +40,7 @@ function add() {
         </UInput>
         <UInputNumber v-model="h.alpha" :min="0" :max="30" :step="0.1" :step-snapping="false" :format-options="{ maximumFractionDigits: 1 }" :increment="false" :decrement="false" placeholder="—" size="sm" class="w-18 sm:w-auto" aria-label="Альфа-кислоты, %" />
         <UInputNumber v-model="h.amount" :min="0" :step="1" :step-snapping="false" :format-options="{ maximumFractionDigits: 1 }" :increment="false" :decrement="false" placeholder="—" size="sm" class="w-18 sm:w-auto" aria-label="Масса, г" />
-        <RecipeEditorWhen v-model:use="h.use" v-model:minutes="h.minutes" v-model:day="h.day" :items="USES" class="w-68 sm:w-auto" />
+        <RecipeEditorWhen v-model:use="h.use" v-model:minutes="h.minutes" v-model:day="h.day" v-model:gravity="h.gravity" :items="USES" class="w-84 sm:w-auto" />
         <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" aria-label="Убрать" @click="rows.splice(i, 1)" />
       </div>
     </div>

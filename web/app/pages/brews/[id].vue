@@ -62,7 +62,7 @@ const figures = computed(() => {
 async function advanceStage(index: number) {
   if (await exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: id.value }, body: { kind: 'stage', value: index } }))) await refresh()
 }
-async function entry(kind: 'dry_hop' | 'package') {
+async function entry(kind: 'dry_hop' | 'package', text?: string) {
   // розлив без конечной плотности — крепость не посчитать; спросить
   if (kind === 'package' && brew.value && !lastMeasures(brew.value.entries).get('fg') && !await confirm({
     title: 'Конечная плотность не записана',
@@ -70,7 +70,8 @@ async function entry(kind: 'dry_hop' | 'package') {
     confirmLabel: 'Разлито без записи',
     confirmIcon: 'i-lucide-beer',
   })) return
-  if (await exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: id.value }, body: { kind } }))) await refresh()
+  // у сухого охмеления — состав закладки: по нему таймлайн отмечает именно её
+  if (await exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: id.value }, body: { kind, text } }))) await refresh()
 }
 
 // замер со шага — форма журнала с нужным видом

@@ -1,10 +1,14 @@
-"""Общие примеры сервиса и интерфейса (shared/): обе реализации расчёта, программы пивоварни и пересчёта под
-оборудование дают одно и то же. Интерфейс проверяет себя по тем же файлам (web/test/shared.test.ts)."""
+"""Общие примеры сервиса и интерфейса (shared/): обе реализации расчёта, программы пивоварни, пересчёта под
+оборудование и расписания брожения дают одно и то же. Интерфейс проверяет себя по тем же файлам
+(web/test/shared.test.ts)."""
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from app.brewery.reminders import Ferment
+from app.models import from_unix
 from app.recipes.calc import calc_recipe, targets
 from app.recipes.program import addition_slots, device_timers, program_steps
 from app.recipes.scale import scale_recipe
@@ -57,3 +61,21 @@ def test_scale(case):
 def test_targets_are_the_saved_subset():
     case = json.loads((SHARED / "calc-cases.json").read_text(encoding="utf-8"))[0]
     assert targets(case["recipe"]) == {k: case["expected"][k] for k in ("og", "fg", "ibu", "ebc", "abv")}
+
+
+@pytest.mark.parametrize("case", cases("ferment-cases.json"))
+def test_ferment(case):
+    entries = [SimpleNamespace(kind=e["kind"], at=from_unix(e["at"]), value=e["value"]) for e in case["entries"]]
+    got = Ferment(case["plan"], from_unix(case["start"]), entries, from_unix(case["now"])).view()
+    assert _close(got, case["expected"]), (got, case["expected"])
+
+
+def _close(got, expected):
+    """Глубокое сравнение: числа — приблизительно."""
+    if isinstance(expected, dict):
+        return got.keys() == expected.keys() and all(_close(got[k], v) for k, v in expected.items())
+    if isinstance(expected, list):
+        return len(got) == len(expected) and all(_close(g, e) for g, e in zip(got, expected, strict=True))
+    if isinstance(expected, float):
+        return got == pytest.approx(expected)
+    return got == expected

@@ -60,20 +60,28 @@ MARKS = ("pitch", "package")                 # первая такая веха 
 
 
 def dry_hops_of(data):
-    """Сухое охмеление рецепта по дням брожения: [{day, items: ["Citra 100 г", …]}]; без дня — в конце, day None."""
-    days = {}
+    """Сухое охмеление рецепта: [{day, gravity, items: ["Citra 100 г", …]}] — по плотности (день — примерный)
+    или по дню брожения. По дню (у плотности — примерному) — раньше выше; только по плотности — после них, выше
+    плотность — раньше; без дня и плотности — в конце. Отметки «заложил» сопоставляются по составу, не по месту."""
+    groups = {}
     for h in data.get("hops") or []:
         if h.get("use") == "dry_hop":
             amount = f" {ru_num(h['amount'])} г" if h.get("amount") else ""
-            days.setdefault(h.get("day"), []).append((h.get("name") or "Хмель") + amount)
-    return [{"day": d, "items": items} for d, items in sorted(days.items(), key=lambda x: (x[0] is None, x[0] or 0))]
+            groups.setdefault((h.get("gravity"), h.get("day")), []).append((h.get("name") or "Хмель") + amount)
+
+    def order(key):
+        gravity, day = key
+        return (day is None and gravity is None, day is None, day or 0, -(gravity or 0))
+    return [{"day": day, "gravity": gravity, "items": items}
+            for (gravity, day), items in sorted(groups.items(), key=lambda x: order(x[0]))]
 
 
 def plan_of(data):
     """План варки из рецепта (JSONB recipes.data): что задумано — для «факт против плана» и брожения."""
     t, b = data.get("targets") or {}, data.get("batch") or {}
-    stages = [{"name": st.get("name"), "temp": st.get("temp"), "days": st.get("days")}
-              for st in data.get("fermentation") or [] if st.get("days")]
+    stages = [{"name": st.get("name"), "temp": st.get("temp"), "days": st.get("days") or 0,
+               "until": st.get("until") or "days", "gravity": st.get("gravity")}
+              for st in data.get("fermentation") or [] if st.get("days") or (st.get("until") or "days") != "days"]
     plan = {"og": t.get("og"), "fg": t.get("fg"), "abv": t.get("abv") or abv_of(t.get("og"), t.get("fg")),
             "volume": b.get("volume"), "efficiency": b.get("efficiency"),
             "fermentation": stages or None, "dryHops": dry_hops_of(data) or None}

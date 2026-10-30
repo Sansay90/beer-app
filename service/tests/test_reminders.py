@@ -25,9 +25,10 @@ def ferment_recipe(recipe):
 def test_plan_start_and_package(brewer, ferment_recipe):
     rid = brewer.ok("POST", "/recipes", ferment_recipe)["id"]
     brew = brewer.ok("POST", "/brews", {"recipeId": rid})
-    assert brew["plan"]["fermentation"] == [{"name": "Основное", "temp": 18, "days": 7},
-                                            {"name": "Дображивание", "temp": 20, "days": 3}]
-    assert brew["plan"]["dryHops"] == [{"day": 4, "items": ["Citra 100 г", "Simcoe 50 г"]}]
+    assert brew["plan"]["fermentation"] == [
+        {"name": "Основное", "temp": 18, "days": 7, "until": "days", "gravity": None},   # без условия — по дням
+        {"name": "Дображивание", "temp": 20, "days": 3, "until": "days", "gravity": None}]
+    assert brew["plan"]["dryHops"] == [{"day": 4, "gravity": None, "items": ["Citra 100 г", "Simcoe 50 г"]}]
     assert brew["fermentStart"] is None and brew["packagedAt"] is None   # варочный день идёт — брожение впереди
     brew = brewer.ok("POST", f"/brews/{brew['id']}/finish")
     assert brew["fermentStart"] == brew["endedAt"]                        # задачи дрожжей нет — с конца варочного дня
@@ -140,3 +141,144 @@ def test_stable_gravity(service, brewer, three_stages, pushes):
     assert stable["title"] == "Похоже, брожение закончилось"
     assert stable["text"].endswith("можно переходить к этапу «Дображивание»")
     assert tick(at(t0 + 6 * DAY + 1200)) == 0                                   # один раз
+
+
+@pytest.fixture
+def lager(ferment_recipe):
+    """Лагер по плотности: 12 °C до 1,024, 14 °C до 1,018, пауза до FG, холодное — выдержка 2 дня;
+    сухое охмеление — при 1,020."""
+    return {**ferment_recipe, "batch": {"volume": 20, "efficiency": 75},
+            "hops": [*ferment_recipe["hops"][:-2],
+                     {"name": "Citra", "amount": 50, "use": "dry_hop", "day": 5, "gravity": 1.020}],
+            "fermentation": [{"name": "Основное", "temp": 12, "days": 5, "until": "gravity", "gravity": 1.024},
+                             {"name": "Подъём", "temp": 14, "days": 3, "until": "gravity", "gravity": 1.018},
+                             {"name": "Диацетиловая пауза", "temp": 16.5, "days": 4, "until": "fg"},
+                             {"name": "Холодное осветление", "temp": 4, "days": 2}]}
+
+
+def lager_brew(brewer, recipe, t0, og_shift=0.0):
+    """Варка лагера с задачей дрожжей в t0 и замером OG (план + og_shift); вернуть (id, OG по плану)."""
+    bid = pitched(brewer, recipe, t0)
+    plan_og = brewer.ok("GET", f"/brews/{bid}")["plan"]["og"]
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "og", "value": round(plan_og + og_shift, 4), "at": t0})
+    return bid, plan_og
+
+
+def measure(brewer, bid, t, sg, kind="gravity"):
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": kind, "value": sg, "at": t})
+
+
+def test_stages_by_gravity(service, brewer, lager, pushes):
+    """Этап кончается, когда плотность дошла до цели; «до FG» — когда плотность встала; дни — только прикидка."""
+    t0 = time.time() - 14 * DAY
+    bid, _ = lager_brew(brewer, lager, t0)
+    tick = service.state.reminders.tick
+    measure(brewer, bid, t0 + 3 * DAY, 1.032)
+    assert tick(at(t0 + 3 * DAY + 600)) == 0
+    measure(brewer, bid, t0 + 6 * DAY, 1.023)                                  # 5 дней прикидки прошли — по плотности
+    assert tick(at(t0 + 6 * DAY + 600)) == 1
+    [n] = brewer.ok("GET", "/notifications")
+    assert n["title"] == "Пора: Подъём" and n["text"].startswith("Плотность 1,023") and "14 °C, до 1,018" in n["text"]
+
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "stage", "value": 1, "at": t0 + 6 * DAY})
+    measure(brewer, bid, t0 + 8 * DAY, 1.0175)                                 # и подъём, и сухое охмеление
+    assert tick(at(t0 + 8 * DAY + 600)) == 2
+    titles = [n["title"] for n in brewer.ok("GET", "/notifications")]
+    assert "Пора: Диацетиловая пауза" in titles and "Сухое охмеление" in titles
+
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "stage", "value": 2, "at": t0 + 8 * DAY})
+    measure(brewer, bid, t0 + 9 * DAY, 1.012)
+    measure(brewer, bid, t0 + 10 * DAY, 1.012)
+    assert tick(at(t0 + 10 * DAY + 600)) == 0                                  # сутки — мало
+    measure(brewer, bid, t0 + 11 * DAY, 1.0115)
+    assert tick(at(t0 + 11 * DAY + 600)) == 1                                  # двое суток — конечная
+    fg = brewer.ok("GET", "/notifications")[0]
+    assert fg["title"] == "Пора: Холодное осветление" and "не меняется двое суток" in fg["text"]
+    assert tick(at(t0 + 11 * DAY + 1200)) == 0                                 # и без «похоже, закончилось» вдогонку
+
+
+def test_target_follows_actual_og(service, brewer, lager, pushes):
+    """Сварили плотнее плана — цель выше: та же доля сбраживания."""
+    t0 = time.time() - 14 * DAY
+    bid, plan_og = lager_brew(brewer, lager, t0, og_shift=0.004)
+    target = 1 + (1.024 - 1) * (plan_og + 0.004 - 1) / (plan_og - 1)
+    assert target > 1.025
+    measure(brewer, bid, t0 + 4 * DAY, round(target - 0.0003, 4))              # выше цели рецепта, ниже своей
+    assert service.state.reminders.tick(at(t0 + 4 * DAY + 600)) == 1
+    assert brewer.ok("GET", "/notifications")[0]["title"] == "Пора: Подъём"
+
+
+def test_slowdown_and_measure_reminders(service, brewer, lager, pushes):
+    """Цель не наступает, а брожение встало — пора всё равно; дни прошли без замеров — пора замерить."""
+    t0 = time.time() - 14 * DAY
+    bid, _ = lager_brew(brewer, lager, t0)
+    tick = service.state.reminders.tick
+    assert tick(at(t0 + 5 * DAY + 600)) == 1                                   # 5 дней прикидки, замеров нет
+    assert brewer.ok("GET", "/notifications")[0]["title"] == "Пора замерить плотность"
+    assert tick(at(t0 + 5 * DAY + 1200)) == 0                                  # раз в сутки
+    measure(brewer, bid, t0 + 6 * DAY, 1.0300)
+    measure(brewer, bid, t0 + 7 * DAY, 1.0290)                                 # −0,001 за сутки, цель 1,024 далеко
+    assert tick(at(t0 + 7 * DAY + 600)) == 1
+    slow = brewer.ok("GET", "/notifications")[0]
+    assert slow["title"] == "Пора: Подъём" and slow["text"].startswith("Брожение замедлилось")
+
+
+def test_no_late_stable_after_fg_stage(service, brewer, lager, pushes):
+    """Пауза началась после «до FG» — «похоже, закончилось» по замерам прошлого этапа вдогонку не приходит."""
+    t0 = time.time() - 14 * DAY
+    bid, _ = lager_brew(brewer, lager, t0)
+    for value, stage in ((1, 1), (2, 2)):
+        brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "stage", "value": value, "at": t0 + stage * DAY})
+    for day, sg in ((3, 1.012), (4, 1.012), (5, 1.0115)):
+        measure(brewer, bid, t0 + day * DAY, sg)
+    tick = service.state.reminders.tick
+    assert tick(at(t0 + 5 * DAY + 600)) == 1                                   # «до FG» — пора к холоду
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "stage", "value": 3, "at": t0 + 5 * DAY + 900})
+    assert tick(at(t0 + 5 * DAY + 1200)) == 0                                  # и без «можно разливать» в начале холода
+    assert [n["title"] for n in brewer.ok("GET", "/notifications")] == ["Пора: Холодное осветление"]
+
+
+def test_texts_use_batch_targets(service, brewer, lager, pushes):
+    """В уведомлении — цель партии (от фактической OG), а не рецепта."""
+    t0 = time.time() - 14 * DAY
+    bid, plan_og = lager_brew(brewer, lager, t0, og_shift=0.004)
+    measure(brewer, bid, t0 + 4 * DAY, 1.024)
+    assert service.state.reminders.tick(at(t0 + 4 * DAY + 600)) == 1
+    text = brewer.ok("GET", "/notifications")[0]["text"]
+    next_target = 1 + (1.018 - 1) * (plan_og + 0.004 - 1) / (plan_og - 1)
+    assert f"до {round(next_target, 3):.3f}".replace(".", ",") in text and "до 1,018" not in text
+
+
+def test_slowdown_counts_from_stage_start(service, brewer, lager, pushes):
+    """Второй этап «до плотности»: половина пути — от плотности на его начало, а не от OG."""
+    t0 = time.time() - 14 * DAY
+    bid, _ = lager_brew(brewer, lager, t0)
+    measure(brewer, bid, t0 + 4 * DAY, 1.0235)
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "stage", "value": 1, "at": t0 + 4 * DAY + 600})
+    tick = service.state.reminders.tick
+    tick(at(t0 + 4 * DAY + 1200))
+    measure(brewer, bid, t0 + 5 * DAY + 900, 1.022)                            # −0,0015 за сутки, до цели 1,018 далеко
+    assert tick(at(t0 + 5 * DAY + 1200)) == 0
+
+
+def test_dry_hop_by_gravity_asks_to_measure(service, brewer, three_stages, pushes):
+    """Сухое по плотности на плане из выдержек: в его примерный день без замеров — «пора замерить»."""
+    recipe = {**three_stages, "hops": [*three_stages["hops"],
+                                       {"name": "Citra", "amount": 50, "use": "dry_hop", "day": 3, "gravity": 1.020}]}
+    t0 = time.time() - 14 * DAY
+    bid = pitched(brewer, recipe, t0)
+    assert service.state.reminders.tick(at(t0 + 2 * DAY + 600)) == 1
+    [n] = brewer.ok("GET", "/notifications")
+    assert n["title"] == "Пора замерить плотность" and "Сухое охмеление (Citra 50 г)" in n["text"]
+    measure(brewer, bid, t0 + 3 * DAY, 1.019)
+    assert service.state.reminders.tick(at(t0 + 3 * DAY + 600)) == 1
+    assert brewer.ok("GET", "/notifications")[0]["title"] == "Сухое охмеление"
+
+
+def test_fermentation_stage_is_checked(brewer, ferment_recipe):
+    """«До плотности» без плотности и плотность вне разумного — 422; дни у этапа по плотности необязательны."""
+    stage = {"name": "Основное", "temp": 12, "until": "gravity"}
+    assert brewer.post("/recipes", {**ferment_recipe, "fermentation": [stage]})[0] == 422
+    assert brewer.post("/recipes", {**ferment_recipe, "fermentation": [{**stage, "gravity": 1.5}]})[0] == 422
+    rid = brewer.ok("POST", "/recipes", {**ferment_recipe, "fermentation": [{**stage, "gravity": 1.024}]})["id"]
+    assert brewer.ok("GET", f"/recipes/{rid}")["fermentation"][0]["days"] == 0

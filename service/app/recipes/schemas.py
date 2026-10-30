@@ -3,7 +3,7 @@
 Плотность — SG (1.048), цвет — EBC, объём — л, солод — кг, хмель — г."""
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..auth.schemas import Author
 
@@ -66,7 +66,9 @@ class Hop(BaseModel):
     amount: float | None = Field(None, description="г")
     use: Literal["mash", "first_wort", "boil", "whirlpool", "dry_hop"] = "boil"
     minutes: int | None = Field(None, description="кипячение — за сколько минут до конца; вирпул — сколько стоит")
-    day: int | None = Field(None, description="сухое охмеление — день брожения")
+    day: int | None = Field(None, description="сухое охмеление — день брожения; при gravity — примерный")
+    gravity: float | None = Field(None, ge=0.98, le=1.2, description="сухое охмеление — при какой плотности брожения, "
+                                                                   "SG; в партии — от фактической OG")
 
 
 class Misc(BaseModel):
@@ -129,9 +131,22 @@ class Boil(BaseModel):
 
 
 class FermentationStep(BaseModel):
+    """Этап брожения: температура и когда переходить к следующему (until). gravity — плотность дошла до цели
+    (в партии цель — от фактической OG, та же доля сбраживания); fg — плотность перестала падать (конечная);
+    days — выдержка столько дней. У gravity и fg дни — примерная подсказка: для графика, дат и напоминания
+    замерить; у days — само условие. Без until — days (рецепты до плотностей)."""
     name: str | None = None
     temp: float
-    days: float
+    days: float = Field(0, ge=0, description="days — сколько держать; gravity и fg — примерно сколько дней "
+                                             "(не указано — 0: без прикидки)")
+    until: Literal["gravity", "fg", "days"] = "days"
+    gravity: float | None = Field(None, ge=0.98, le=1.2, description="until = gravity: до какой плотности, SG")
+
+    @model_validator(mode="after")
+    def target_given(self):
+        if self.until == "gravity" and self.gravity is None:
+            raise ValueError("этап «до плотности» — укажите плотность")
+        return self
 
 
 class Recipe(BaseModel):

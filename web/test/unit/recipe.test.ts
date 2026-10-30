@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Recipe } from '~/types'
 import { calcRecipe, DEFAULT_EFFICIENCY } from '~/utils/calc'
 import {
-  blankRecipe, boilGroups, boilItems, deviceTimers, mashStep, newMisc, options, programMinutes, programOf, programSummary,
+  blankRecipe, boilGroups, boilItems, deviceTimers, fermentationStep, mashStep, newMisc, options, programMinutes, programOf, programSummary,
   share, toDraft, toRecipe, totalKg, validateRecipe, wattOptions, whenInBoil, whenLabel, HOP_USES,
 } from '~/utils/recipe'
 import { draft, hop, LIMITS, malt } from './fixtures'
@@ -242,5 +242,24 @@ describe('сводка', () => {
 
   it('варианты для выпадающего списка', () => {
     expect(options({ a: 'А', b: 'Б' })).toEqual([{ value: 'a', label: 'А' }, { value: 'b', label: 'Б' }])
+  })
+})
+
+describe('брожение в форме', () => {
+  const stage = (over: Partial<ReturnType<typeof fermentationStep>> = {}) => ({ ...fermentationStep(12, 5, 'Основное', 'gravity'), ...over })
+
+  it('«до плотности» — с плотностью, выдержка — с днями; у «до плотности» дни необязательны', () => {
+    expect(validateRecipe(draft({ fermentation: [stage()] }), LIMITS)).toEqual(['Брожение: у этапа «Основное» — до какой плотности'])
+    expect(validateRecipe(draft({ fermentation: [stage({ until: 'days', days: 0 })] }), LIMITS)).toEqual(['Брожение: у выдержки «Основное» — сколько дней'])
+    expect(validateRecipe(draft({ fermentation: [stage({ gravity: 1.024, days: 0 })] }), LIMITS)).toEqual([])
+  })
+
+  it('в API: плотность — только у «до плотности» и у сухого охмеления; стёртые дни — 0', () => {
+    const r = toRecipe(draft({
+      fermentation: [stage({ until: 'fg', gravity: 1.024 }), stage({ gravity: 1.018, days: undefined as unknown as number })],
+      hops: [hop(30, 4, 60, { gravity: 1.020 }), hop(50, 4, 7, { use: 'dry_hop', day: 4, gravity: 1.020 })],
+    }))
+    expect(r.fermentation!.map(s => [s.until, s.gravity, s.days])).toEqual([['fg', null, 5], ['gravity', 1.018, 0]])
+    expect(r.hops!.map(h => h.gravity)).toEqual([null, 1.02])
   })
 })

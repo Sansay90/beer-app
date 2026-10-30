@@ -141,11 +141,17 @@ class BrewSummary(BaseModel):
 class FermentStage(BaseModel):
     name: str | None = None
     temp: float
-    days: float
+    days: float = Field(description="until = days — сколько держать; gravity и fg — примерно сколько дней")
+    until: Literal["gravity", "fg", "days"] = Field("days", description="когда к следующему: плотность дошла "
+                                                                       "до цели, плотность перестала падать, "
+                                                                       "прошли дни")
+    gravity: float | None = Field(None, description="until = gravity: цель по рецепту, SG; в партии — от "
+                                                    "фактической OG")
 
 
 class DryHopDay(BaseModel):
-    day: int | None = Field(None, description="день брожения; None — не указан")
+    day: int | None = Field(None, description="день брожения; при gravity — примерный; None — не указан")
+    gravity: float | None = Field(None, description="при какой плотности, SG; в партии — от фактической OG")
     items: list[str] = Field(description="«Citra 100 г»")
 
 

@@ -1,0 +1,714 @@
+[
+  {
+    "name": "по дням: этап по факту сдвигает следующие",
+    "plan": {
+      "og": 1.048,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 18,
+          "days": 7
+        },
+        {
+          "name": "Дображивание",
+          "temp": 20,
+          "days": 3
+        },
+        {
+          "name": "Холодное",
+          "temp": 4,
+          "days": 3
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790518400,
+    "entries": [
+      {
+        "kind": "stage",
+        "at": 1790432000,
+        "value": 1
+      }
+    ],
+    "expected": {
+      "current": 1,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790432000.0,
+          "target": null
+        },
+        {
+          "from": 1790432000.0,
+          "to": 1790691200.0,
+          "target": null
+        },
+        {
+          "from": 1790691200.0,
+          "to": 1790950400.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  },
+  {
+    "name": "по дням: «похоже, закончилось» — по замерам идущего этапа",
+    "plan": {
+      "og": 1.048,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 18,
+          "days": 7
+        },
+        {
+          "name": "Дображивание",
+          "temp": 20,
+          "days": 3
+        },
+        {
+          "name": "Холодное",
+          "temp": 4,
+          "days": 3
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790561600.0,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790172800,
+        "value": 1.03
+      },
+      {
+        "kind": "gravity",
+        "at": 1790345600,
+        "value": 1.012
+      },
+      {
+        "kind": "gravity",
+        "at": 1790518400,
+        "value": 1.0115
+      }
+    ],
+    "expected": {
+      "current": 0,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790604800.0,
+          "target": null
+        },
+        {
+          "from": 1790604800.0,
+          "to": 1790864000.0,
+          "target": null
+        },
+        {
+          "from": 1790864000.0,
+          "to": 1791123200.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": {
+        "value": 1.0115,
+        "at": 1790518400.0
+      }
+    }
+  },
+  {
+    "name": "до плотности: цель от фактической OG, дошли",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790302400.0,
+    "entries": [
+      {
+        "kind": "og",
+        "at": 1790000000,
+        "value": 1.054
+      },
+      {
+        "kind": "gravity",
+        "at": 1790259200,
+        "value": 1.0255
+      }
+    ],
+    "expected": {
+      "current": 0,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790432000.0,
+          "target": 1.02592
+        },
+        {
+          "from": 1790432000.0,
+          "to": 1790691200.0,
+          "target": 1.0194400000000001
+        },
+        {
+          "from": 1790691200.0,
+          "to": 1791036800.0,
+          "target": null
+        },
+        {
+          "from": 1791036800.0,
+          "to": 1791209600.0,
+          "target": null
+        }
+      ],
+      "advice": {
+        "stage": 0,
+        "why": "target",
+        "value": 1.0255,
+        "at": 1790259200.0
+      },
+      "calm": null
+    }
+  },
+  {
+    "name": "до плотности: прикидка прошла — этап держится, следующие сдвигаются",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790604800,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790259200,
+        "value": 1.032
+      }
+    ],
+    "expected": {
+      "current": 0,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790604800.0,
+          "target": 1.024
+        },
+        {
+          "from": 1790604800.0,
+          "to": 1790864000.0,
+          "target": 1.018
+        },
+        {
+          "from": 1790864000.0,
+          "to": 1791209600.0,
+          "target": null
+        },
+        {
+          "from": 1791209600.0,
+          "to": 1791382400.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  },
+  {
+    "name": "до плотности: замедлилось — половина пути от плотности на начало этапа",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790604800,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790345600,
+        "value": 1.0235
+      },
+      {
+        "kind": "stage",
+        "at": 1790354240.0,
+        "value": 1
+      },
+      {
+        "kind": "gravity",
+        "at": 1790449280.0,
+        "value": 1.022
+      },
+      {
+        "kind": "gravity",
+        "at": 1790561600.0,
+        "value": 1.0205
+      }
+    ],
+    "expected": {
+      "current": 1,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790354240.0,
+          "target": 1.024
+        },
+        {
+          "from": 1790354240.0,
+          "to": 1790613440.0,
+          "target": 1.018
+        },
+        {
+          "from": 1790613440.0,
+          "to": 1790959040.0,
+          "target": null
+        },
+        {
+          "from": 1790959040.0,
+          "to": 1791131840.0,
+          "target": null
+        }
+      ],
+      "advice": {
+        "stage": 1,
+        "why": "slow",
+        "value": 1.0205,
+        "at": 1790561600.0
+      },
+      "calm": null
+    }
+  },
+  {
+    "name": "до плотности: второй этап, до половины пути — не замедлилось",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790475200.0,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790345600,
+        "value": 1.0235
+      },
+      {
+        "kind": "stage",
+        "at": 1790354240.0,
+        "value": 1
+      },
+      {
+        "kind": "gravity",
+        "at": 1790449280.0,
+        "value": 1.022
+      }
+    ],
+    "expected": {
+      "current": 1,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790354240.0,
+          "target": 1.024
+        },
+        {
+          "from": 1790354240.0,
+          "to": 1790613440.0,
+          "target": 1.018
+        },
+        {
+          "from": 1790613440.0,
+          "to": 1790959040.0,
+          "target": null
+        },
+        {
+          "from": 1790959040.0,
+          "to": 1791131840.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  },
+  {
+    "name": "до FG: стоит двое суток после падения",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 18,
+          "days": 7,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790475200.0,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790259200,
+        "value": 1.012
+      },
+      {
+        "kind": "gravity",
+        "at": 1790345600,
+        "value": 1.012
+      },
+      {
+        "kind": "gravity",
+        "at": 1790432000,
+        "value": 1.0115
+      }
+    ],
+    "expected": {
+      "current": 0,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790604800.0,
+          "target": null
+        },
+        {
+          "from": 1790604800.0,
+          "to": 1790777600.0,
+          "target": null
+        }
+      ],
+      "advice": {
+        "stage": 0,
+        "why": "stable",
+        "value": 1.0115,
+        "at": 1790432000.0
+      },
+      "calm": null
+    }
+  },
+  {
+    "name": "до FG: лаг-фаза не в счёт",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 18,
+          "days": 7,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790302400.0,
+    "entries": [
+      {
+        "kind": "gravity",
+        "at": 1790086400,
+        "value": 1.049
+      },
+      {
+        "kind": "gravity",
+        "at": 1790259200,
+        "value": 1.049
+      }
+    ],
+    "expected": {
+      "current": 0,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790604800.0,
+          "target": null
+        },
+        {
+          "from": 1790604800.0,
+          "to": 1790777600.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  },
+  {
+    "name": "выдержка после FG: «похоже» — только с её начала",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1790449280.0,
+    "entries": [
+      {
+        "kind": "stage",
+        "at": 1790086400,
+        "value": 1
+      },
+      {
+        "kind": "stage",
+        "at": 1790172800,
+        "value": 2
+      },
+      {
+        "kind": "gravity",
+        "at": 1790259200,
+        "value": 1.012
+      },
+      {
+        "kind": "gravity",
+        "at": 1790345600,
+        "value": 1.012
+      },
+      {
+        "kind": "gravity",
+        "at": 1790432000,
+        "value": 1.0115
+      },
+      {
+        "kind": "stage",
+        "at": 1790440640.0,
+        "value": 3
+      }
+    ],
+    "expected": {
+      "current": 3,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790086400.0,
+          "target": 1.024
+        },
+        {
+          "from": 1790086400.0,
+          "to": 1790172800.0,
+          "target": 1.018
+        },
+        {
+          "from": 1790172800.0,
+          "to": 1790440640.0,
+          "target": null
+        },
+        {
+          "from": 1790440640.0,
+          "to": 1790613440.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  },
+  {
+    "name": "ни один этап ещё не начат",
+    "plan": {
+      "og": 1.05,
+      "fermentation": [
+        {
+          "name": "Основное",
+          "temp": 12,
+          "days": 5,
+          "until": "gravity",
+          "gravity": 1.024
+        },
+        {
+          "name": "Подъём",
+          "temp": 14,
+          "days": 3,
+          "until": "gravity",
+          "gravity": 1.018
+        },
+        {
+          "name": "Пауза",
+          "temp": 16.5,
+          "days": 4,
+          "until": "fg"
+        },
+        {
+          "name": "Холод",
+          "temp": 4,
+          "days": 2,
+          "until": "days"
+        }
+      ]
+    },
+    "start": 1790000000,
+    "now": 1789913600,
+    "entries": [],
+    "expected": {
+      "current": -1,
+      "stages": [
+        {
+          "from": 1790000000.0,
+          "to": 1790432000.0,
+          "target": 1.024
+        },
+        {
+          "from": 1790432000.0,
+          "to": 1790691200.0,
+          "target": 1.018
+        },
+        {
+          "from": 1790691200.0,
+          "to": 1791036800.0,
+          "target": null
+        },
+        {
+          "from": 1791036800.0,
+          "to": 1791209600.0,
+          "target": null
+        }
+      ],
+      "advice": null,
+      "calm": null
+    }
+  }
+]
