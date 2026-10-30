@@ -1,4 +1,6 @@
-"""Фоновые напоминания по партиям: поток раз в interval секунд, уведомления на сайте и push (users.push_brews).
+"""Фоновые напоминания по партиям: поток раз в interval секунд — или раньше, к ближайшему сроку, если наследник его
+знает (next_at): конец паузы приходит вовремя, а не на следующем проходе; уведомления на сайте и push
+(users.push_brews).
 Что и когда напоминать, решает наследник (due): брожение — reminders.py, таймеры варочного дня — brewday.py.
 Напоминание уходит, когда время пришло, но не позже LATE: варку записали задним числом или сервис стоял — старое
 молча пропускается. О чём уже напомнили — brews.reminded. Проход идёт под замком: роутер может позвать tick сразу
@@ -43,11 +45,27 @@ class Ticker:
             self._thread.join(timeout=5)
 
     def _run(self):
-        while not self._stop.wait(self.interval):
+        while not self._stop.wait(self._pause()):
             try:
                 self.tick()
             except Exception:
                 log.exception("%s: ошибка напоминаний", self.NAME)
+
+    def _pause(self):
+        """Сколько ждать до прохода: interval, а подходит срок раньше — до него (с запасом на округление)."""
+        now = utcnow()
+        try:
+            nxt = self.next_at(now)
+        except Exception:
+            log.exception("%s: ошибка расписания", self.NAME)
+            nxt = None
+        if nxt is None:
+            return self.interval
+        return min(self.interval, max(0.5, (nxt - now).total_seconds() + 0.1))
+
+    def next_at(self, now):
+        """Ближайший срок ещё не отправленного напоминания позже now; None — проверять раз в interval."""
+        return None
 
     def due(self, s, now, brew_id=None):
         """[(варка, [(ключ, когда, заголовок, текст, молча)])] — чему пора (когда ≤ now); brew_id — только эта.

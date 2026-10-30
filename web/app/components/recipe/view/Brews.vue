@@ -5,9 +5,9 @@ import type { BrewSummary, Recipe } from '~/types'
 
 const props = defineProps<{ recipeId: string; recipe: Recipe }>()
 const prefs = usePreferencesStore()
-// где партия — пока не разлита: варка идёт, брожение и какой день
+// где партия — пока не разлита: варка идёт, брожение и какой день; вылитая — «вылито»
 const now = useNow({ interval: 60_000 })
-const live = (b: BrewSummary) => (b.packagedAt ? null : batchStatus(b, now.value.getTime() / 1000))
+const live = (b: BrewSummary) => (b.phase === 'packaged' ? null : batchStatus(b, now.value.getTime() / 1000))
 
 const rid = toRef(() => props.recipeId)
 const { data: brews, error } = useApi('/api/brews', { query: { recipe: rid }, key: () => `brews:${rid.value}`, default: () => [] })

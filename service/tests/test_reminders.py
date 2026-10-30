@@ -143,6 +143,25 @@ def test_stable_gravity(service, brewer, three_stages, pushes):
     assert tick(at(t0 + 6 * DAY + 1200)) == 0                                   # один раз
 
 
+def test_stuck_then_dumped(service, brewer, three_stages, pushes):
+    """Плотность встала на тёплом этапе заметно выше плана — «застряло» вместо «закончилось», и «пора» по дням
+    этого этапа не зовёт к холоду; вылитая партия — без напоминаний."""
+    t0 = time.time() - 14 * DAY
+    bid = pitched(brewer, {**three_stages, "batch": {"volume": 20, "efficiency": 75}}, t0)    # объём — будет FG плана
+    high = round(brewer.ok("GET", f"/brews/{bid}")["plan"]["fg"] + 0.008, 4)
+    for day, sg in ((2, 1.030), (4, high), (6, high)):
+        brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "gravity", "value": sg, "at": t0 + day * DAY})
+    tick = service.state.reminders.tick
+    assert tick(at(t0 + 6 * DAY + 600)) == 1
+    stuck = brewer.ok("GET", "/notifications")[0]
+    assert stuck["title"] == "Похоже, брожение застряло"
+    assert stuck["text"].endswith("Поднимите температуру на 2–3 °C и взболтайте дрожжи")
+
+    assert tick(at(t0 + 7 * DAY + 600)) == 0                                    # «Пора: Дображивание» — нет
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "dumped"})
+    assert tick(at(t0 + 10 * DAY + 600)) == 0                                   # вылито — и «Пора: Холодное» нет
+
+
 @pytest.fixture
 def lager(ferment_recipe):
     """Лагер по плотности: 12 °C до 1,024, 14 °C до 1,018, пауза до FG, холодное — выдержка 2 дня;

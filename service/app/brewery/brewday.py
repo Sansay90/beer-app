@@ -7,8 +7,9 @@
 Текущий шаг — последний по времени переход (progress): запись пивовара «step» (value — номер шага) или шаг программы
 пивоварни по её событиям (brewery_steps). Таймер только напоминает: конец паузы, закладка на кипячении —
 уведомление на сайте и push (ticker.py; ключи step-N, add-N-M), если к шагу перешёл пивовар; программа пивоварни
-напоминает сама. Варочный день кончается задачей дрожжей или «закончить» (logbook.py, end_day); брошенный — через
-DAY_SPAN после начала (close_stale). Конец программы пивоварни — не конец дня: охлаждение, замеры и дрожжи впереди.
+напоминает сама. Варочный день кончается задачей дрожжей, «закончить» или «вылито» (logbook.py, end_day; удалили
+такую запись — reopen_day); брошенный — через DAY_SPAN после начала (close_stale). Конец программы пивоварни —
+не конец дня: охлаждение, замеры и дрожжи впереди.
 """
 from datetime import timedelta
 
@@ -46,7 +47,7 @@ def steps_of(recipe):
         steps.append({"kind": "boil", "name": "Кипячение", "minutes": boil["minutes"],
                       "additions": [{"minutes": s["minutes"], "label": s["label"]} for s in addition_slots(recipe)]})
     steps.append({"kind": "chill", "name": "Охлаждение", "temp": chill_to, "measures": ["og", "fermenter_volume"]})
-    steps.append({"kind": "pitch", "name": "Задать дрожжи"})
+    steps.append({"kind": "pitch", "name": "Задать дрожжи", "measures": ["pitch_temp"]})
     for i, s in enumerate(steps):
         s.setdefault("measures", [])
         s.setdefault("additions", [])
@@ -111,6 +112,13 @@ def end_day(b, at):
         b.status, b.ended_at = "finished", at
 
 
+def reopen_day(b, at):
+    """Варочный день партии b снова идёт: удалили запись, которая закончила его в at."""
+    b.day_ended_at = None
+    if b.source == "manual" and b.status == "finished" and b.ended_at == at:
+        b.status, b.ended_at = "running", None
+
+
 def close_stale(now):
     """Брошенные варочные дни — старше DAY_SPAN, программа пивоварни не идёт — к брожению: день кончился, когда
     кончилась программа, иначе — в день варки. Вернуть [(id пользователя, id варки)] закрытых."""
@@ -152,8 +160,9 @@ def schedule(steps, index, started):
 
 
 class BrewDayTimers(Ticker):
-    """Таймеры шагов, к которым пивовар перешёл сам, раз в 30 с; после записи шага роутер зовёт tick сразу.
-    Заодно закрывает брошенные варочные дни."""
+    """Таймеры шагов, к которым пивовар перешёл сам: проход раз в 30 с, а к сроку — ровно в срок (next_at), чтобы
+    push пришёл вместе со звуком на странице; после записи шага роутер зовёт tick сразу. Заодно закрывает брошенные
+    варочные дни."""
 
     NAME = "brewday"
     TAG = "brewday"
@@ -169,6 +178,16 @@ class BrewDayTimers(Ticker):
         return super().tick(now, brew_id)
 
     def due(self, s, now, brew_id=None):
+        return [(b, [r for r in items if r[1] <= now]) for b, items in self._timers(s, now, brew_id)]
+
+    def next_at(self, now):
+        with session() as s:
+            times = [r[1] for b, items in self._timers(s, now) for r in items
+                     if r[1] > now and r[0] not in (b.reminded or [])]
+        return min(times, default=None)
+
+    def _timers(self, s, now, brew_id=None):
+        """[(варка, [(ключ, когда, заголовок, текст, молча)])] — все напоминания текущего шага идущих варочных дней."""
         q = select(Brew).options(defer(Brew.recipe)).where(
             Brew.day_ended_at.is_(None), Brew.snapshot.is_not(None), Brew.started_at >= now - DAY_SPAN,
             or_(Brew.source == "manual", Brew.status != "running"))     # программа идёт — напоминает пивоварня
@@ -191,5 +210,5 @@ class BrewDayTimers(Ticker):
             steps = steps_of(b.snapshot)
             current, starts, manual = progress(steps, b.started_at, entries.get(b.id, []), events.get(b.id, []))
             items = schedule(steps, current, starts.get(current)) if manual else []
-            out.append((b, [(*r, False) for r in items if r[1] <= now]))
+            out.append((b, [(*r, False) for r in items]))
         return out

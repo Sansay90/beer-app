@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import type { Recipe } from '~/types'
 import { platoFromSg } from '~/utils/beer'
-import { adjustable, calcRecipe, extractForSg, fitBase, fitEbc, fitFg, fitIbu, fitOg, sgFromExtract, yieldOf } from '~/utils/calc'
+import { adjustable, calcRecipe, extractForSg, fitBase, fitEbc, fitFg, fitIbu, fitOg, preBoilSg, sgFromExtract, yieldOf } from '~/utils/calc'
 import { newYeast } from '~/utils/recipe'
 import { draft, hop, malt } from './fixtures'
 
@@ -184,5 +185,19 @@ describe('подгонка под цель', () => {
     const d = recipe()
     fitEbc(d, fitBase(d), 1)
     expect(d.fermentables[1]!.amount).toBe(0)
+  })
+})
+
+describe('плотность до кипячения — для промывки на варке', () => {
+  it('экстракт сходится с OG плана: затираемое — до кипячения, сахар в кипячение — после', () => {
+    const recipe = {
+      batch: { volume: 20, efficiency: 75 }, boil: { minutes: 60 },
+      fermentables: [{ name: 'Pilsner', amount: 4, use: 'mash' }, { name: 'Сахар', kind: 'sugar', amount: 0.5, use: 'boil' }],
+    } as unknown as Recipe
+    const pre = preBoilSg(recipe, 23)
+    const sugar = extractForSg(calcRecipe({ ...recipe, fermentables: [recipe.fermentables![1]!] }).og!, 20)
+    expect(extractForSg(pre, 23) + sugar).toBeCloseTo(extractForSg(calcRecipe(recipe).og!, 20), 2)
+    const mashOnly = { ...recipe, fermentables: [recipe.fermentables![0]!] }
+    expect(extractForSg(preBoilSg(mashOnly, 23), 23)).toBeCloseTo(extractForSg(calcRecipe(mashOnly).og!, 20), 2)
   })
 })

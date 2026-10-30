@@ -103,8 +103,8 @@ class Limits(BaseModel):
 
 # ── история варок ─────────────────────────────────────────────────────────────
 EntryKind = Literal["first_wort", "preboil_gravity", "og", "gravity", "fg", "ph", "preboil_volume", "postboil_volume",
-                    "fermenter_volume", "mash_temp", "temp", "pitch", "dry_hop", "cold_crash", "package", "note",
-                    "stage", "step"]
+                    "fermenter_volume", "mash_temp", "pitch_temp", "temp", "pitch", "dry_hop", "cold_crash", "package",
+                    "dumped", "note", "stage", "step"]
 
 
 class EquipmentRef(BaseModel):
@@ -119,9 +119,8 @@ class BrewSummary(BaseModel):
     status: Literal["running", "finished", "stopped"] = Field(description="исход программы пивоварни: running — "
                                                                          "идёт; у партии без пивоварни — идёт ли "
                                                                          "варочный день")
-    phase: Literal["brewday", "fermenting", "packaged"] = Field(description="где партия: варочный день (до задачи "
-                                                                          "дрожжей или «закончить»), брожение, "
-                                                                          "разлито")
+    phase: Literal["brewday", "fermenting", "packaged", "dumped"] = Field(
+        description="где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито, вылито")
     manual: bool = Field(False, description="записана вручную, без пивоварни")
     recipeId: str | None = Field(None, description="рецепт библиотеки; None — рецепт из Smart Life или удалён")
     equipment: EquipmentRef | None = Field(None, description="на чём варили")
@@ -135,6 +134,7 @@ class BrewSummary(BaseModel):
     fermentStart: float | None = Field(None, description="начало брожения: задача дрожжей, иначе конец варочного "
                                                        "дня, если в плане есть брожение; unix-время")
     packagedAt: float | None = Field(None, description="розлив — брожение позади; unix-время")
+    dumpedAt: float | None = Field(None, description="партия вылита; unix-время")
     entries: int = Field(0, description="записей в журнале")
 
 

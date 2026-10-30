@@ -1,7 +1,8 @@
 <script setup lang="ts">
-// Лента варки по дням, новые сверху: записи пивовара (замеры, вехи, заметки — правятся и удаляются) и события
-// пивоварни (шаги, подсказки, закладки — как записала пивоварня, мельче и бледнее). Сначала — последние RECENT,
-// остальное — по кнопке «Все записи».
+// Лента варки по дням, новые сверху: записи пивовара (замеры, вехи, заметки, переходы к шагам и этапам — правятся
+// и удаляются; у перехода правится только время: забыли нажать «Дальше» вовремя) и события пивоварни (шаги,
+// подсказки, закладки — как записала пивоварня, мельче и бледнее). Кнопки записи видны всегда — на телефоне нет
+// наведения. Сначала — последние RECENT, остальное — по кнопке «Все записи».
 import type { BrewEntry, BrewEvent } from '~/types'
 
 const props = defineProps<{ brewId: string; entries: BrewEntry[]; events: BrewEvent[] }>()
@@ -66,9 +67,8 @@ function saved() {
                   {{ entryValue(r.entry.kind, r.entry.value, prefs.gravityUnit) }}
                 </span>
               </div>
-              <div class="flex shrink-0 gap-0.5 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
-                <!-- переход к этапу или шагу — только удалить: какой, решают кнопки таймлайна и «Сейчас» -->
-                <UButton v-if="!ENTRY_KINDS[r.entry.kind].transition" icon="i-lucide-pencil" color="neutral" variant="ghost" size="sm" aria-label="Изменить" @click="editing = r.entry.id" />
+              <div class="flex shrink-0 gap-0.5">
+                <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" size="sm" aria-label="Изменить" @click="editing = r.entry.id" />
                 <UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" size="sm" aria-label="Удалить" @click="remove(r.entry)" />
               </div>
             </div>

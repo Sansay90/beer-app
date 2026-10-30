@@ -87,7 +87,7 @@ describe('расписание брожения — как у сервиса (sh
       current: p.current,
       stages: p.stages.map(s => ({ from: s.from, to: s.to, target: s.target })),
       advice: advice && { stage: advice.stage, why: advice.why, value: advice.value, at: advice.at },
-      calm: calm && { value: calm.value, at: calm.at },
+      calm: calm && { value: calm.value, at: calm.at, stuck: calm.stuck },
     }, c.expected)
   })
 })

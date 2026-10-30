@@ -8,14 +8,16 @@
 брожения и сухое охмеление по дням. Записи: замеры (плотность — в SG, pH, объём — л, температура — °C), вехи
 (задача дрожжей, сухое охмеление, холодное осветление, розлив), переходы к шагам и этапам и заметки.
 
-Фаза партии (phase): варочный день (brewday) → брожение (fermenting) → разлито (packaged). Варочный день кончается
-задачей дрожжей или «закончить», брошенный — сам через полтора суток (brewday.py); конец программы пивоварни
-или её выключение день не заканчивают — охлаждение и дрожжи ещё впереди. status — исход программы пивоварни
+Фаза партии (phase): варочный день (brewday) → брожение (fermenting) → разлито (packaged); вылитая (dumped) —
+с любой фазы, история остаётся. Варочный день кончается задачей дрожжей, «закончить» или «вылито», брошенный — сам
+через полтора суток (brewday.py); удалили запись, которая его закончила, — день снова идёт. Конец программы
+пивоварни или её выключение день не заканчивают — охлаждение и дрожжи ещё впереди. status — исход программы пивоварни
 (у партии без неё — идёт ли день). Начальная и конечная плотность варки, объём в ферментере — последние такие
 замеры, крепость — по ним. Брожение отсчитывается от задачи дрожжей (нет такой записи, но в плане есть брожение —
 от конца варочного дня; нет и плана — брожения не видно: это могла быть проверка пивоварни на воде) и идёт
 до розлива; напоминания по плану — reminders.py. Варку видит и ведёт только её пивовар; другим — только счёт
-«сварили N раз»: от одного пивовара по рецепту — не больше одной варки в день, ручными записями его не накрутить.
+«сварили N раз»: сваренной считается разлитая и не вылитая партия, от одного пивовара по рецепту — не больше одной
+в день, ручными записями его не накрутить.
 """
 from datetime import timedelta
 
@@ -29,20 +31,20 @@ from ..models import Brew, BrewEntry, Equipment, Event, Reading, Recipe, from_un
 from ..recipes.calc import abv_of
 from ..recipes.program import ru_num
 from ..recipes.scale import scale_recipe
-from .brewday import end_day, progress, steps_of
+from .brewday import end_day, progress, reopen_day, steps_of
 from .equipment import main_of, own
 from .kinds import is_system
 
 MANUAL, DEVICE = "manual", "device"
-BREWDAY, FERMENTING, PACKAGED = "brewday", "fermenting", "packaged"   # фазы партии
+BREWDAY, FERMENTING, PACKAGED, DUMPED = "brewday", "fermenting", "packaged", "dumped"   # фазы партии
 # замеры: вид → единица; вехи и заметка — без значения
 MEASURES = {
     "first_wort": "sg", "preboil_gravity": "sg", "og": "sg", "gravity": "sg", "fg": "sg",
     "ph": "ph",
     "preboil_volume": "l", "postboil_volume": "l", "fermenter_volume": "l",
-    "mash_temp": "c", "temp": "c",                  # температура затора; температура брожения
+    "mash_temp": "c", "pitch_temp": "c", "temp": "c",   # затора; сусла при задаче дрожжей; брожения
 }
-MILESTONES = ("pitch", "dry_hop", "cold_crash", "package")
+MILESTONES = ("pitch", "dry_hop", "cold_crash", "package", "dumped")
 NOTE = "note"
 STAGE = "stage"                          # переход к этапу брожения по факту: value — его номер в плане с нуля (≥ 1)
 STEP = "step"                            # переход к шагу варочного дня (brewday.py): value — номер шага с нуля
@@ -56,7 +58,8 @@ LIST_MAX = 200
 EARLIEST = from_unix(946684800)          # 2000-01-01: раньше варок не записывают
 AHEAD = timedelta(days=1)                # запас на часовые пояса: «сегодня» у пивовара может быть завтра по UTC
 SUMMARY = ("og", "fg", "fermenter_volume")   # из этих замеров — итог варки
-MARKS = ("pitch", "package")                 # первая такая веха — начало брожения и розлив
+MARKS = ("pitch", "package", "dumped")       # первая такая веха — начало брожения, розлив, вылито
+DAY_ENDS = ("pitch", "dumped")               # эти вехи заканчивают варочный день
 
 
 def dry_hops_of(data):
@@ -116,18 +119,29 @@ def summary_of(rows):
     return last
 
 
+def has_entry(*kinds):
+    """Условие для запроса по Brew: у варки есть запись одного из видов kinds."""
+    return exists().where(BrewEntry.brew_id == Brew.id, BrewEntry.kind.in_(kinds))
+
+
+def ended_by(b, at):
+    """Веха со временем at закончила варочный день b: день кончился в её время, и это не день начала (записанная
+    задним числом варка кончается в день начала)."""
+    return at is not None and b.day_ended_at == at != b.started_at
+
+
 def fermenting(plan):
     """Есть ли в плане варки брожение — этапы или сухое охмеление."""
     return bool(plan and (plan.get("fermentation") or plan.get("dryHops")))
 
 
 def brews_total(s, ids):
-    """{id рецепта: сколько раз его сварили все пивовары}: от одного пивовара — не больше одной варки в день;
-    кто варил, не раскрывается."""
+    """{id рецепта: сколько раз его сварили все пивовары}: сваренная — разлитая и не вылитая партия; от одного
+    пивовара — не больше одной в день; кто варил, не раскрывается."""
     if not ids:
         return {}
     days = (select(Brew.recipe_id, Brew.user_id, func.date_trunc("day", Brew.started_at).label("day"))
-            .where(Brew.recipe_id.in_(ids)).distinct().subquery())
+            .where(Brew.recipe_id.in_(ids), has_entry("package"), ~has_entry("dumped")).distinct().subquery())
     return dict(s.exec(select(days.c.recipe_id, func.count()).group_by(days.c.recipe_id)).all())
 
 
@@ -176,10 +190,14 @@ class Logbook:
     def list(self, recipe_id=None, phase=None, limit=LIST_MAX):
         """Новые первыми; recipe_id — только по этому рецепту, phase — только в этой фазе."""
         q = select(Brew).where(Brew.user_id == self.user.id)
-        if phase:
-            packaged = exists().where(BrewEntry.brew_id == Brew.id, BrewEntry.kind == "package")
-            q = q.where(packaged) if phase == PACKAGED else q.where(
-                ~packaged, Brew.day_ended_at.is_(None) if phase == BREWDAY else Brew.day_ended_at.is_not(None))
+        # фаза — как в _summary: вылито важнее «разлито», дальше — идёт ли варочный день
+        if phase == DUMPED:
+            q = q.where(has_entry("dumped"))
+        elif phase == PACKAGED:
+            q = q.where(~has_entry("dumped"), has_entry("package"))
+        elif phase in (BREWDAY, FERMENTING):
+            day = Brew.day_ended_at.is_(None) if phase == BREWDAY else Brew.day_ended_at.is_not(None)
+            q = q.where(~has_entry("dumped", "package"), day)
         if recipe_id:
             if (rid := parse_id(recipe_id)) is None:
                 return []
@@ -283,7 +301,9 @@ class Logbook:
                 raise Conflict(f"в журнале варки уже {ENTRIES_MAX} записей")
             if kind in TRANSITIONS:
                 text = text or (self._stage_name if kind == STAGE else self._step_name)(b, value)
-            if kind == "pitch" and b.day_ended_at is None:      # дрожжи заданы — варочный день позади
+            if kind == "dumped" and b.source != MANUAL and b.status == "running":
+                raise Conflict("программа пивоварни ещё идёт — отметить можно после её конца")
+            if kind in DAY_ENDS and b.day_ended_at is None:     # дрожжи заданы или вылито — варочный день позади
                 end_day(b, when)
                 s.add(b)
             e = BrewEntry(brew_id=b.id, kind=kind, value=value, text=text, at=when)
@@ -292,21 +312,38 @@ class Logbook:
             return self._entry(e)
 
     def edit_entry(self, brew_id, entry_id, value=None, text=None, at=None):
-        """Вид записи не меняется; время не прислали — остаётся прежним."""
+        """Вид записи не меняется; время не прислали — остаётся прежним. Запись закончила варочный день — его конец
+        переезжает вместе с ней: иначе её удаление день не вернёт."""
         with session() as s:
             e = self._entry_row(s, brew_id, entry_id)
             if e.kind in TRANSITIONS:                         # к какому этапу или шагу — не меняется
                 value = e.value
             e.value, e.text = check_entry(e.kind, value, text)
             if at is not None:
-                e.at = check_at(at, "время записи")
+                when = check_at(at, "время записи")
+                b = s.get(Brew, e.brew_id)
+                if e.kind in DAY_ENDS and ended_by(b, e.at):
+                    if b.ended_at == b.day_ended_at:
+                        b.ended_at = when
+                    b.day_ended_at = when
+                    s.add(b)
+                e.at = when
             s.add(e)
             s.commit()
             return self._entry(e)
 
     def remove_entry(self, brew_id, entry_id):
+        """Удалили запись, которая закончила варочный день («дрожжи заданы», «вылито»), и другой такой нет — день
+        снова идёт. Записанная задним числом варка кончилась в день начала — её день не возвращается."""
         with session() as s:
-            s.delete(self._entry_row(s, brew_id, entry_id))
+            e = self._entry_row(s, brew_id, entry_id)
+            b = s.get(Brew, e.brew_id)
+            others = s.exec(select(func.count()).select_from(BrewEntry).where(
+                BrewEntry.brew_id == b.id, BrewEntry.kind.in_(DAY_ENDS), BrewEntry.id != e.id)).one()
+            if e.kind in DAY_ENDS and ended_by(b, e.at) and not others:
+                reopen_day(b, e.at)
+                s.add(b)
+            s.delete(e)
             s.commit()
 
     # ── общее ─────────────────────────────────────────────────────────────────
@@ -358,15 +395,18 @@ class Logbook:
     def _summary(b, last, entries, equipment_names):
         og, fg = last.get("og"), last.get("fg")
         name = equipment_names.get(b.equipment_id)
-        phase = PACKAGED if last.get("package") else BREWDAY if b.day_ended_at is None else FERMENTING
+        phase = (DUMPED if last.get("dumped") else PACKAGED if last.get("package")
+                 else BREWDAY if b.day_ended_at is None else FERMENTING)
         return {"id": str(b.id), "name": b.name, "status": b.status, "phase": phase, "manual": b.source == MANUAL,
                 "recipeId": str(b.recipe_id) if b.recipe_id else None,
                 "equipment": {"id": str(b.equipment_id), "name": name} if name else None,
                 "startedAt": unix(b.started_at), "endedAt": unix(b.ended_at), "energyWh": b.energy_wh,
                 "og": og, "fg": fg, "abv": abv_of(og, fg), "volume": last.get("fermenter_volume"),
-                # от задачи дрожжей, иначе от конца варочного дня; день ещё идёт — брожение впереди
-                "fermentStart": unix(last.get("pitch") or (b.day_ended_at if fermenting(b.plan) else None)),
-                "packagedAt": unix(last.get("package")),
+                # от задачи дрожжей, иначе от конца варочного дня; день ещё идёт — брожение впереди; вылили в
+                # варочный день, без дрожжей, — брожения не было
+                "fermentStart": unix(last.get("pitch") or (b.day_ended_at if fermenting(b.plan)
+                                                           and not ended_by(b, last.get("dumped")) else None)),
+                "packagedAt": unix(last.get("package")), "dumpedAt": unix(last.get("dumped")),
                 "entries": entries}
 
     @staticmethod

@@ -2,7 +2,8 @@
 // Таймлайн партии одной линией: шаги варочного дня из рецепта партии — сделано, сейчас, дальше; у каждого время
 // по факту, что приготовить, закладки на кипячении, замеры шага чипами (есть значение — показываем, нет — записать);
 // после задачи дрожжей — брожение по плану: этапы с датами (следующий — «Начать сейчас»), сухое охмеление в свой день
-// («Заложил»), розлив («Разлито»). Замеры брожения — в карточке «Брожение» (они по дням, а не по этапам).
+// («Заложил»), розлив («Разлито»); вылитая партия — «Вылито» с причиной (после розлива — и он; вылили в варочный
+// день — брожения нет, только «Вылито»). Замеры брожения — в карточке «Брожение» (они по дням, а не по этапам).
 // Пока варочный день идёт, у брожения дат нет.
 import type { BrewDetail } from '~/types'
 import type { BrewDayView, StepState } from '~/utils/brewday'
@@ -15,8 +16,12 @@ const prefs = usePreferencesStore()
 // брожение — от задачи дрожжей (её нет — от дня варки); варочный день ещё идёт — всё впереди, без дат
 const brewing = computed(() => props.view.active)
 const start = computed(() => props.brew.fermentStart ?? props.brew.startedAt)
+const reason = computed(() => props.brew.entries.find(e => e.kind === 'dumped')?.text ?? null)
 const ferment = computed(() => fermentPlan(props.brew.plan, start.value, brewing.value ? start.value - 1 : props.now,
-  props.brew.packagedAt, props.brew.entries))
+  props.brew.packagedAt, props.brew.entries, props.brew.dumpedAt))
+// вылили в варочный день, без дрожжей, — брожения не было
+const fermented = computed(() => (ferment.value.stages.length > 0 || ferment.value.dryHops.length > 0)
+  && !(props.brew.phase === 'dumped' && props.brew.fermentStart == null))
 // розлив — «сейчас», когда план пройден (у последнего этапа по плотности — когда его условие наступило и перешли)
 const ended = computed(() => !brewing.value && ferment.value.stages.length > 0 && ferment.value.finished)
 const dryLabel = (items: string[]) => items.join(', ')
@@ -47,6 +52,7 @@ const NODE: Record<StepState, string> = {
   now: 'bg-primary text-inverted ring-primary ring-offset-4 ring-offset-default',
   next: 'bg-elevated text-muted ring-default',
 }
+const DUMPED = 'bg-error text-inverted ring-error'
 const ICONS: Record<string, string> = { prepare: 'i-lucide-list-checks', heat: 'i-lucide-thermometer-sun', mash_in: 'i-lucide-wheat', rest: 'i-lucide-timer', sparge: 'i-lucide-droplets', boil: 'i-lucide-flame', chill: 'i-lucide-snowflake', pitch: 'i-lucide-microscope' }
 const measureLabel = (m: EntryKind) => {
   const name = ENTRY_KINDS[m].short ?? ENTRY_KINDS[m].label
@@ -92,7 +98,7 @@ const measureLabel = (m: EntryKind) => {
     </li>
   </ol>
 
-  <template v-if="ferment.stages.length || ferment.dryHops.length">
+  <template v-if="fermented">
     <div class="mt-4 mb-1 flex items-center gap-3 text-xs font-medium tracking-wider text-dimmed uppercase">
       Брожение<template v-if="brewing">{{ SEP }}с задачи дрожжей</template><span class="h-px flex-1 bg-border" />
     </div>
@@ -112,7 +118,7 @@ const measureLabel = (m: EntryKind) => {
           </div>
           <!-- следующий этап можно начать раньше плана; первый начинается с задачи дрожжей -->
           <UButton
-            v-if="r.i >= 1 && r.i === ferment.next && !brewing && !brew.packagedAt"
+            v-if="r.i >= 1 && r.i === ferment.next && !brewing && !ferment.closed"
             :label="`Начать «${r.st.name}» сейчас`"
             icon="i-lucide-arrow-right"
             color="neutral"
@@ -131,7 +137,7 @@ const measureLabel = (m: EntryKind) => {
             </span>
           </div>
           <UButton
-            v-if="r.state !== 'done' && !brewing && !brew.packagedAt"
+            v-if="r.state !== 'done' && !brewing && !ferment.closed"
             label="Заложил"
             icon="i-lucide-check"
             :color="r.state === 'now' ? 'primary' : 'neutral'"
@@ -142,7 +148,7 @@ const measureLabel = (m: EntryKind) => {
           />
         </div>
       </li>
-      <li :class="ROW">
+      <li v-if="!brew.dumpedAt || brew.packagedAt" :class="ROW">
         <span class="relative z-10 grid size-9 place-items-center rounded-full ring-2" :class="NODE[brew.packagedAt ? 'done' : ended ? 'now' : 'next']">
           <UIcon :name="brew.packagedAt ? 'i-lucide-check' : 'i-lucide-beer'" class="size-4" />
         </span>
@@ -164,4 +170,18 @@ const measureLabel = (m: EntryKind) => {
       </li>
     </ol>
   </template>
+  <ol v-if="brew.dumpedAt" class="relative">
+    <li :class="ROW">
+      <span class="relative z-10 grid size-9 place-items-center rounded-full ring-2" :class="DUMPED">
+        <UIcon name="i-lucide-circle-x" class="size-4" />
+      </span>
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+          <span class="text-lg font-semibold text-highlighted">Вылито</span>
+          <span class="num text-sm text-dimmed">{{ fmtDay(brew.dumpedAt) }}</span>
+        </div>
+        <p v-if="reason" class="mt-0.5 text-sm break-words whitespace-pre-line text-toned">{{ reason }}</p>
+      </div>
+    </li>
+  </ol>
 </template>

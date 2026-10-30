@@ -4,26 +4,28 @@
 «до FG» — плотность перестала падать (стоит двое суток после того, как пошла вниз); «выдержка» — прошли дни.
 Цель по плотности в партии — от фактической OG: та же доля сбраживания (target_of). Цель «до плотности» страхуется
 замедлением (slowdown): пройдена половина пути от плотности на начало этапа к цели, а плотность падает медленнее
-SLOW_SG в сутки — конечная выйдет выше расчётной, пора всё равно. У этапов по плотности дни — прикидка: по ним
-даты и график, а прошли они без свежих замеров — «пора замерить». Решает пивовар: напоминание предлагает переход,
-этап меняется записью «переход к этапу» (value — номер этапа с нуля) или «холодное осветление» (начинает первый
-этап не теплее COLD).
+SLOW_SG в сутки — конечная выйдет выше расчётной, пора всё равно. Плотность встала на тёплом этапе заметно выше
+конечной по плану (STUCK_SG) — не «пора» и не «закончилось», а «застряло»: помочь дрожжам, дальше не переходить.
+У этапов по плотности дни — прикидка: по ним даты и график, а прошли они без свежих замеров — «пора замерить».
+Решает пивовар: напоминание предлагает переход, этап меняется записью «переход к этапу» (value — номер этапа с нуля)
+или «холодное осветление» (начинает первый этап не теплее COLD).
 
 Начало брожения — задача дрожжей, иначе конец варочного дня (logbook.py). Сухое охмеление — при своей плотности
 (в партии — от фактической OG; день при ней — когда напомнить замерить) или «на N-й день» — через N − 1 суток
 от начала. Этап, начатый по факту, не напоминается; как и когда уходят напоминания — ticker.py. Разлитые,
-идущий варочный день и начатые раньше SCAN_DAYS не смотрим. Тот же расчёт — в интерфейсе
+вылитые, идущий варочный день и начатые раньше SCAN_DAYS не смотрим. Тот же расчёт — в интерфейсе
 (web/app/utils/brewlog.ts: fermentPlan, fermentAdvice, fermentCalm); общие примеры — shared/ferment-cases.json.
 """
 from datetime import timedelta
 
-from sqlalchemy import exists, func
+from sqlalchemy import func
 from sqlalchemy.orm import defer
 from sqlmodel import select
 
 from ..models import Brew, BrewEntry, unix
 from ..recipes.calc import plato_from_sg
 from ..recipes.program import ru_num
+from .logbook import has_entry
 from .ticker import Ticker
 
 SCAN_DAYS = 120
@@ -33,6 +35,7 @@ STABLE_SPAN = timedelta(days=2)
 DROP_SG = 0.005                          # «стоит» — только когда плотность уже пошла вниз (не лаг-фаза)
 SLOW_SG = 0.002                          # ≈ 0,5 °P в сутки: медленнее — брожение замедлилось
 SLOW_SPAN = timedelta(days=1)            # скорость — по двум замерам не ближе суток: шаг ареометра 0,001 не мешает
+STUCK_SG = 0.004                         # ≈ 1 °P выше конечной по плану — не «закончилось», а «застряло»
 FRESH = timedelta(hours=20)              # замер свежее — «пора замерить» не нужно
 DAY = timedelta(days=1)
 FACTS = ("pitch", "stage", "cold_crash", "og", "gravity", "fg")   # записи, от которых зависит расписание
@@ -164,9 +167,28 @@ class Ferment:
         before = [e for e in self.gravity if e.at <= self.dated[i][0]]
         return before[-1].value if before else self.top
 
+    @property
+    def final(self):
+        """Конечная плотность по плану в партии — от фактической OG; в плане нет — None."""
+        return target_of(self.plan.get("fg"), self.plan.get("og"), self.og)
+
+    def stuck(self, sg, i=None):
+        """Плотность sg встала заметно выше конечной по плану, а этап (i, иначе идущий) тёплый или этапов нет —
+        брожение застряло."""
+        i = self.current if i is None else i
+        warm = i < 0 or self.stages[i]["temp"] > COLD
+        return self.final is not None and warm and sg > self.final + STUCK_SG + 1e-9
+
+    def stuck_on(self, i):
+        """На этапе i плотность встала выше плана — по его замерам (с начала до конца): его «пора» по дням — не к
+        следующему этапу, а сначала помочь дрожжам."""
+        frm, to, _ = self.dated[i]
+        calm = stable([e for e in self.gravity if frm <= e.at <= to], self.top)
+        return calm is not None and self.stuck(calm[1], i)
+
     def advice(self):
-        """Пора ли кончать идущий этап «до плотности» или «до FG»: (номер этапа, почему — target | slow | stable,
-        замер) или None."""
+        """Пора ли кончать идущий этап «до плотности» или «до FG»: (номер этапа, почему — target | slow | stable |
+        stuck, замер) или None. stuck — плотность встала, но брожение застряло: «пора» нет."""
         i = self.current
         if i < 0 or until_of(self.stages[i]) == "days":
             return None
@@ -178,16 +200,18 @@ class Ferment:
                 return i, "target", reached
             slow = slowdown(since, self.top_of(i), target)
             return (i, "slow", slow) if slow is not None else None
-        calm = stable(since, self.top)
-        return (i, "stable", since[-1]) if calm is not None else None
+        if stable(since, self.top) is None:
+            return None
+        return i, "stuck" if self.stuck(since[-1].value) else "stable", since[-1]
 
     def calm(self):
         """«Похоже, брожение закончилось»: идёт выдержка (или этапов нет), а плотность с начала этапа стоит двое
-        суток — (когда, плотность) или None. У «до плотности» и «до FG» это их собственное «пора»."""
+        суток — (когда, плотность, застряло ли) или None. У «до плотности» и «до FG» это их собственное «пора»."""
         if self.current >= 0 and until_of(self.stages[self.current]) != "days":
             return None
         measures = self.since(self.current) if self.current >= 0 else self.gravity
-        return stable(measures, self.top)
+        calm = stable(measures, self.top)
+        return (*calm, self.stuck(calm[1])) if calm is not None else None
 
     def view(self):
         """Для общих примеров (shared/ferment-cases.json): то же, что считает интерфейс."""
@@ -196,7 +220,7 @@ class Ferment:
                 "stages": [{"from": unix(f), "to": unix(t), "target": self.targets[i]}
                            for i, (f, t, _) in enumerate(self.dated)],
                 "advice": {"stage": a[0], "why": a[1], "value": a[2].value, "at": unix(a[2].at)} if a else None,
-                "calm": {"value": c[1], "at": unix(c[0])} if c else None}
+                "calm": {"value": c[1], "at": unix(c[0]), "stuck": c[2]} if c else None}
 
 
 def schedule(plan, start, entries=(), now=None):
@@ -205,6 +229,12 @@ def schedule(plan, start, entries=(), now=None):
     f = Ferment(plan, start, entries, now)
     stages, dated = f.stages, f.dated
     out = []
+
+    def stuck(sg):
+        """Заголовок и текст «застряло»: плотность встала выше конечной по плану."""
+        return ("Похоже, брожение застряло",
+                f"Плотность {gravity_text(sg)} не меняется двое суток, а по плану — {gravity_text(f.final)}. "
+                "Поднимите температуру на 2–3 °C и взболтайте дрожжи")
 
     def transition(i, why=None):
         """Заголовок и текст перехода от этапа i к следующему (или конца плана)."""
@@ -221,12 +251,16 @@ def schedule(plan, start, entries=(), now=None):
         if now is not None and now >= due:
             reasons.append(text)
 
-    hit = f.advice()
+    hit, calm = f.advice(), f.calm()
     for i, st in enumerate(stages):
         key = f"stage-{i + 1}" if i + 1 < len(stages) else "end"
         silent = i + 1 < len(stages) and dated[i + 1][2]          # следующий уже начат по факту
         if until_of(st) == "days":
+            if f.stuck_on(i):
+                continue                                          # застряло — дальше по дням не зовём
             out.append((key, dated[i][1], *transition(i), silent))
+        elif i == f.current and hit is not None and hit[1] == "stuck":
+            out.append((f"stuck-{i + 1}", hit[2].at, *stuck(hit[2].value), silent))
         elif i == f.current and hit is not None:
             _, why, e = hit
             text = {"target": f"Плотность {gravity_text(e.value)} — цель достигнута",
@@ -256,8 +290,10 @@ def schedule(plan, start, entries=(), now=None):
     if reasons and not any(now - e.at < FRESH for e in f.gravity):
         out.append((f"measure-{int((now - start) / DAY)}", now, "Пора замерить плотность", "; ".join(reasons), False))
 
-    if (calm := f.calm()) is not None:
-        at, sg = calm
+    if calm is not None and calm[2]:
+        out.append((f"stuck-{f.current + 1}", calm[0], *stuck(calm[1]), False))
+    elif calm is not None:
+        at, sg, _ = calm
         nxt = stages[f.current + 1] if f.current + 1 < len(stages) else None
         upcoming = (nxt.get("name") or f"этап {f.current + 2}") if nxt else None
         out.append(("stable", at, "Похоже, брожение закончилось",
@@ -275,11 +311,10 @@ class Reminders(Ticker):
     LATE = timedelta(hours=12)
 
     def due(self, s, now, brew_id=None):
-        packaged = exists().where(BrewEntry.brew_id == Brew.id, BrewEntry.kind == "package")
         brews = s.exec(select(Brew).options(defer(Brew.snapshot), defer(Brew.recipe))
                        .where(func.jsonb_typeof(Brew.plan) == "object", Brew.day_ended_at.is_not(None),
                               Brew.started_at >= now - timedelta(days=SCAN_DAYS), Brew.started_at <= now,
-                              ~packaged)).all()
+                              ~has_entry("package", "dumped"))).all()
         facts = {}
         if brews:
             for e in s.exec(select(BrewEntry).where(BrewEntry.brew_id.in_([b.id for b in brews]),

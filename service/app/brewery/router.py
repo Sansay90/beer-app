@@ -160,7 +160,7 @@ UserLogbook = Annotated[Logbook, Depends(user_logbook)]
 
 @router.get("/brews", response_model=list[BrewSummary], tags=["варки"], summary="Свои варки, новые первыми")
 def list_brews(logbook: UserLogbook, recipe: str | None = None,
-               phase: Literal["brewday", "fermenting", "packaged"] | None = None,
+               phase: Literal["brewday", "fermenting", "packaged", "dumped"] | None = None,
                limit: Annotated[int, Query(ge=1, le=200)] = 200):
     """recipe — только варки по этому рецепту, phase — только в этой фазе (brewday — варочный день идёт)."""
     return logbook.list(recipe, phase, limit)

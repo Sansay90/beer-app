@@ -2,8 +2,9 @@
 // Партия — одна страница варки для кастрюли и пивоварни: «Сейчас» (текущий шаг, таймер; на подключённой пивоварне —
 // её живое состояние), таймлайн варочного дня из рецепта партии с замерами на своих шагах, итог против плана,
 // брожение по плану, журнал, температура с пивоварни, рецепт партии. Изменилась на сервисе (пивоварня сменила
-// шаг, закончила программу) — страница освежается сама. День и оборудование задаются один раз, в «Сварить»: рецепт
-// партии посчитан под них. Удалить — любую, кроме идущей на пивоварне.
+// шаг, закончила программу) или вернулись на вкладку — страница освежается сама. День и оборудование задаются один
+// раз, в «Сварить»: рецепт партии посчитан под них. «Партия вылита» — партия остаётся с меткой, напоминания
+// прекращаются; «Удалить» — любую, кроме идущей на пивоварне.
 import type { EntryKind } from '~/utils/brewlog'
 
 definePageMeta({ auth: 'user', title: 'Варка' })
@@ -28,6 +29,13 @@ watch(changed, (c) => {
   refresh()
   refreshReadings()
 })
+// вернулись на вкладку (телефон спал, переключались) — пока её не было видно, на сервисе могло измениться что угодно
+const visibility = useDocumentVisibility()
+watch(visibility, (v) => {
+  if (v !== 'visible') return
+  refresh()
+  refreshReadings()
+})
 // варочный день закончился здесь (дрожжи, «закончить») — «Варка» в меню больше не ведёт сюда
 const { refresh: refreshCurrent } = useCurrentBrew()
 watch(() => brew.value?.phase, (p, was) => { if (was && p !== was) refreshCurrent() })
@@ -42,7 +50,7 @@ const date = computed(() => brew.value
   && new Date(brew.value.startedAt * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }))
 const eq = computed(() => equipment.value.find(e => e.id === brew.value?.equipment?.id))
 const connected = computed(() => !!eq.value?.connected)
-const view = computed(() => brew.value && brewDay(brew.value, brewery.snapshot, brewery.phase))
+const view = computed(() => brew.value && brewDay(brew.value, brewery.snapshot, brewery.phase, prefs.gravityUnit))
 
 // цифры партии — из рецепта партии
 const snapshot = computed(() => brew.value?.snapshot ?? null)
@@ -73,6 +81,10 @@ async function entry(kind: 'dry_hop' | 'package', text?: string) {
   // у сухого охмеления — состав закладки: по нему таймлайн отмечает именно её
   if (await exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: id.value }, body: { kind, text } }))) await refresh()
 }
+
+// партия вылита — окно с причиной (BrewDumpModal); идущую программу пивоварни сначала надо закончить
+const dumping = ref(false)
+const running = computed(() => brew.value?.status === 'running' && !brew.value.manual)
 
 // замер со шага — форма журнала с нужным видом
 const preset = ref<{ kind: EntryKind } | null>(null)
@@ -115,8 +127,9 @@ async function remove() {
 
 const menu = computed(() => [[
   // пока идёт программа пивоварни, день ведёт она
-  ...(brew.value?.phase === 'brewday' && (brew.value.manual || brew.value.status !== 'running') ? [{ label: 'Закончить варочный день', icon: 'i-lucide-check', onSelect: finish }] : []),
-  { label: 'Удалить варку', icon: 'i-lucide-trash-2', color: 'error' as const, disabled: brew.value?.status === 'running' && !brew.value.manual, onSelect: remove },
+  ...(brew.value?.phase === 'brewday' && !running.value ? [{ label: 'Закончить варочный день', icon: 'i-lucide-check', onSelect: finish }] : []),
+  ...(brew.value?.phase !== 'dumped' ? [{ label: 'Партия вылита', icon: 'i-lucide-circle-x', disabled: running.value, onSelect: () => { dumping.value = true } }] : []),
+  { label: 'Удалить варку', icon: 'i-lucide-trash-2', color: 'error' as const, disabled: running.value, onSelect: remove },
 ]])
 </script>
 
@@ -205,8 +218,8 @@ const menu = computed(() => [[
               </template>
               <BrewDayTimeline :brew="brew" :view="view" :now="t" @measure="measure" @stage="advanceStage" @entry="entry" />
             </UCard>
-            <!-- ход брожения и график — когда оно началось; до дрожжей всё есть в таймлайне -->
-            <BrewFermentCard v-if="!view.active" :brew="brew" @changed="refresh()" @stage="advanceStage" />
+            <!-- ход брожения и график — когда оно началось; до дрожжей всё есть в таймлайне; вылили в варочный день — брожения нет -->
+            <BrewFermentCard v-if="!view.active && !(brew.phase === 'dumped' && brew.fermentStart == null)" :brew="brew" @changed="refresh()" @stage="advanceStage" />
             <BrewTempChart v-if="readings.length > 1" :points="readings" />
           </div>
 
@@ -226,6 +239,7 @@ const menu = computed(() => [[
             </template>
           </div>
         </div>
+        <BrewDumpModal v-model:open="dumping" :brew-id="brew.id" @done="refresh()" />
       </div>
       <UEmpty
         v-else-if="missing"

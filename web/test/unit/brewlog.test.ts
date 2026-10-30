@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { batchStatus, dryHopWhen, fermentAdvice, fermentCalm, stageCondition, brewFacts, entryInput, entryKindItems, entryValue, dryHopDays, fermentPlan, fromStored, gravityStable, toStored } from '../../app/utils/brewlog'
+import { batchStatus, dryHopWhen, fermentAdvice, fermentCalm, fermentFinal, stageCondition, brewFacts, entryInput, entryKindItems, entryValue, dryHopDays, fermentPlan, fromStored, gravityStable, planDelta, toStored } from '../../app/utils/brewlog'
 import { dots } from './fixtures'
+
+describe('факт против плана', () => {
+  it('разница — между показанными числами; совпали — «как в рецепте»', () => {
+    expect(planDelta(5.16, 5.03, 1, ' %')).toBe('+0,2 %')                  // показаны 5,2 и 5,0
+    expect(planDelta(12.04, 12.16, 1, ' °P')).toBe('−0,2 °P')                // 12,0 против 12,2
+    expect(planDelta(12.06, 12.14, 1, ' °P')).toBe('как в рецепте')         // обе — 12,1
+    expect(planDelta(1.0512, 1.0508, 3)).toBe('как в рецепте')               // обе — 1,051
+    expect(planDelta(1.049, 1.051, 3)).toBe('−0,002')
+  })
+
+  it('конечная плотность партии — та же доля сбраживания от фактической OG', () => {
+    expect(fermentFinal({ og: 1.060 }, { og: 1.050, fg: 1.010 })).toBeCloseTo(1.012, 9)
+    expect(fermentFinal({ og: null }, { og: 1.050, fg: 1.010 })).toBe(1.010)
+    expect(fermentFinal({ og: 1.060 }, { og: 1.050 })).toBeNull()
+  })
+})
 
 describe('журнал варки', () => {
   it('плотность вводится в °P, хранится в SG и обратно', () => {
@@ -59,6 +75,15 @@ describe('брожение', () => {
   it('разлито — всё позади', () => {
     const p = fermentPlan(plan, 0, 2 * DAY, DAY)
     expect(p.stages.every(s => s.state === 'done')).toBe(true)
+    expect(p.closed).toBe(true)
+  })
+
+  it('вылито до розлива — план на день, когда вылили: прерванный этап и следующие не сделаны', () => {
+    const p = fermentPlan(plan, 0, 20 * DAY, null, [], 8 * DAY)
+    expect(p.stages.map(s => s.state)).toEqual(['done', 'next'])            // второй шёл, когда вылили
+    expect(p.dryHops[0]!.state).toBe('done')
+    expect(p).toMatchObject({ closed: true, finished: false, next: null })
+    expect(fermentPlan(plan, 0, 20 * DAY, 15 * DAY, [], 16 * DAY).stages.every(s => s.state === 'done')).toBe(true)   // разлито, потом вылито
   })
 
   it('статус партии', () => {
@@ -67,6 +92,7 @@ describe('брожение', () => {
     expect(batchStatus({ phase: 'brewday', status: 'running', manual: true, fermentStart: null }, DAY)).toMatchObject({ label: 'варочный день' })
     expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: 0 }, 2.5 * DAY)).toMatchObject({ label: dots('брожение · день 3') })
     expect(batchStatus({ phase: 'packaged', status: 'finished', manual: true, fermentStart: 0 }, 9 * DAY)).toMatchObject({ label: 'разлито' })
+    expect(batchStatus({ phase: 'dumped', status: 'finished', manual: true, fermentStart: 0 }, 9 * DAY)).toMatchObject({ label: 'вылито' })
     expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: 0 }, 90 * DAY)).toBeNull()
     expect(batchStatus({ phase: 'fermenting', status: 'finished', manual: true, fermentStart: null }, DAY)).toBeNull()
   })

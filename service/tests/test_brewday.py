@@ -4,6 +4,8 @@
 import time
 from datetime import timedelta
 
+import pytest
+
 from app.brewery.brewday import DAY_SPAN, progress, steps_of
 from app.models import from_unix
 
@@ -21,7 +23,7 @@ def test_steps_from_batch_recipe(brewer, recipe):
     boil = steps[7]
     assert boil["minutes"] == 3 and [a["minutes"] for a in boil["additions"]] == [2, 1]
     assert boil["additions"][0]["label"] == "Тест-хмель А 10 г"
-    assert steps[8]["measures"] == ["og", "fermenter_volume"]
+    assert steps[8]["measures"] == ["og", "fermenter_volume"] and steps[9]["measures"] == ["pitch_temp"]
     assert brew["currentStep"] == 0 and brew["phase"] == "brewday"
     assert steps[0]["at"] == brew["startedAt"] and steps[1]["at"] is None     # подготовка — с начала варки
 
@@ -52,6 +54,13 @@ def test_step_timers(service, brewer, recipe, pushes):
     tick = service.state.brewday.tick
 
     assert tick(from_unix(t0 + 60)) == 0
+    timers = service.state.brewday
+    assert timers.next_at(from_unix(t0 + 60)) == from_unix(t0 + 120)           # проснуться ровно к концу паузы
+    interval, timers.interval = timers.interval, 600
+    try:                                                                        # проход реже срока — проснуться к сроку
+        assert timers._pause() == pytest.approx(t0 + 120 - time.time(), abs=2)
+    finally:
+        timers.interval = interval
     assert tick(from_unix(t0 + 121)) == 1                                       # пауза прошла — напомнили
     assert tick(from_unix(t0 + 200)) == 0                                       # без повторов
     [n] = brewer.ok("GET", "/notifications")

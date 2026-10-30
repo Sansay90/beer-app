@@ -3,15 +3,15 @@
 import type { BrewEntry, BrewEvent, BrewPlan, BrewSummary } from '~/types'
 import type { GravityUnit } from '~/utils/beer'
 import { fmtGravity, gravityIn, sgFromPlato } from '~/utils/beer'
-import { fmtNumber, SEP } from '~/utils/format'
+import { fixed, fmtNumber, SEP } from '~/utils/format'
 
 export type EntryKind = BrewEntry['kind']
 type Unit = 'sg' | 'ph' | 'l' | 'c'
 type Group = 'Варочный день' | 'Брожение и розлив' | 'Заметка'
 
 // short — короткая подпись (поле на шаге, журнал); transition — переход к этапу или шагу: ставится кнопками,
-// не из общего выбора, номер у записи не меняется
-export interface EntryKindView { label: string; short?: string; icon: string; unit?: Unit; group: Group; transition?: true }
+// не из общего выбора, номер у записи не меняется; own — своя кнопка («Партия вылита» в меню), не из общего выбора
+export interface EntryKindView { label: string; short?: string; icon: string; unit?: Unit; group: Group; transition?: true; own?: true }
 
 export const ENTRY_KINDS: Record<EntryKind, EntryKindView> = {
   ph: { label: 'pH затора', icon: 'i-lucide-flask-conical', unit: 'ph', group: 'Варочный день' },
@@ -22,6 +22,7 @@ export const ENTRY_KINDS: Record<EntryKind, EntryKindView> = {
   postboil_volume: { label: 'Объём после кипячения', icon: 'i-lucide-beaker', unit: 'l', group: 'Варочный день' },
   og: { label: 'Начальная плотность (OG)', short: 'OG', icon: 'i-lucide-droplets', unit: 'sg', group: 'Варочный день' },
   fermenter_volume: { label: 'Объём в ферментере', short: 'В ферментере', icon: 'i-lucide-beaker', unit: 'l', group: 'Варочный день' },
+  pitch_temp: { label: 'Температура сусла при задаче дрожжей', short: 'Температура сусла', icon: 'i-lucide-thermometer', unit: 'c', group: 'Брожение и розлив' },
   pitch: { label: 'Задача дрожжей', icon: 'i-lucide-microscope', group: 'Брожение и розлив' },
   temp: { label: 'Температура брожения', short: 'Температура', icon: 'i-lucide-thermometer', unit: 'c', group: 'Брожение и розлив' },
   gravity: { label: 'Плотность на брожении', short: 'Плотность', icon: 'i-lucide-droplet', unit: 'sg', group: 'Брожение и розлив' },
@@ -29,17 +30,26 @@ export const ENTRY_KINDS: Record<EntryKind, EntryKindView> = {
   fg: { label: 'Конечная плотность (FG)', short: 'FG', icon: 'i-lucide-droplets', unit: 'sg', group: 'Брожение и розлив' },
   cold_crash: { label: 'Холодное осветление', icon: 'i-lucide-thermometer-snowflake', group: 'Брожение и розлив' },
   package: { label: 'Розлив', icon: 'i-lucide-beer', group: 'Брожение и розлив' },
+  dumped: { label: 'Партия вылита', icon: 'i-lucide-circle-x', group: 'Брожение и розлив', own: true },
   note: { label: 'Заметка', icon: 'i-lucide-notebook-pen', group: 'Заметка' },
   // переход к этапу брожения (value — номер этапа с нуля) и к шагу варочного дня (номер шага)
   stage: { label: 'Переход к этапу', icon: 'i-lucide-arrow-right', group: 'Брожение и розлив', transition: true },
   step: { label: 'Шаг варочного дня', icon: 'i-lucide-list-checks', group: 'Варочный день', transition: true },
 }
 
-/** Выбор вида записи — по группам, в порядке варки; переход к этапу — не отсюда. */
+/** Факт против плана: «+0,2 %», «−0,1 °P» или «как в рецепте». Разница — между показанными числами (digits
+ *  знаков): 5,16 и 5,03 показаны как «5,2» и «5,0» — значит +0,2, а не +0,1. */
+export function planDelta(fact: number, plan: number, digits: number, unit = '') {
+  const shown = (v: number) => Number(fixed(v, digits).replace(',', '.'))
+  const d = shown(fact) - shown(plan)
+  return Math.abs(d) < 10 ** -digits / 2 ? 'как в рецепте' : `${d > 0 ? '+' : '−'}${fixed(Math.abs(d), digits)}${unit}`
+}
+
+/** Выбор вида записи — по группам, в порядке варки; переходы и «Партия вылита» — не отсюда. */
 export function entryKindItems() {
   const groups = new Map<Group, { label: string; value: EntryKind; icon: string }[]>()
   for (const [value, k] of Object.entries(ENTRY_KINDS) as [EntryKind, EntryKindView][]) {
-    if (k.transition) continue
+    if (k.transition || k.own) continue
     groups.set(k.group, [...groups.get(k.group) ?? [], { label: k.label, value, icon: k.icon }])
   }
   return [...groups].map(([group, items]) => [{ type: 'label' as const, label: group }, ...items])
@@ -136,10 +146,11 @@ const STABLE_DAYS = 2
 const DROP_SG = 0.005                    // «стоит» — только когда плотность уже пошла вниз (не лаг-фаза)
 const SLOW_SG = 0.002                    // ≈ 0,5 °P в сутки: медленнее — брожение замедлилось
 const SLOW_SPAN = DAY                    // скорость — по двум замерам не ближе суток: шаг ареометра 0,001 не мешает
+const STUCK_SG = 0.004                   // ≈ 1 °P выше конечной по плану — не «закончилось», а «застряло»
 
 type Fact = Pick<BrewEntry, 'kind' | 'at' | 'value'>
 // план партии (BrewPlan); у планов до плотностей этапы без условия — по дням
-type PlanIn = Pick<BrewPlan, 'og'> & {
+type PlanIn = Pick<BrewPlan, 'og' | 'fg'> & {
   fermentation?: { name?: string | null; temp: number; days: number; until?: StageUntil | null; gravity?: number | null }[] | null
   dryHops?: { day?: number | null; gravity?: number | null; items: string[] }[] | null
 }
@@ -183,9 +194,14 @@ export const ogOf = (entries: Fact[]) => [...entries].sort((a, b) => a.at - b.at
  *  «Выдержка» кончается через свои дни; «до плотности» и «до FG» — по замерам: их дни — прикидка, и пока идущий
  *  такой этап не закончен переходом, он не кончается раньше now — следующие сдвигаются. Цель по плотности —
  *  от фактической OG. Сухое охмеление — при своей плотности (дошли — когда) или в свой день («на N-й день» —
- *  через N − 1 суток). finished — план пройден: последний этап позади. Разлито — всё позади. Так же считает
+ *  через N − 1 суток). finished — план пройден: последний этап позади. Разлито — всё позади. Вылита до розлива
+ *  (dumpedAt) — план на день, когда вылили: прерванный этап и следующие не сделаны. closed — разлито или вылито,
+ *  отмечать на плане больше нечего. Так же считает
  *  напоминания сервис (service/app/brewery/reminders.py, Ferment); общие примеры — shared/ferment-cases.json. */
-export function fermentPlan(plan: PlanIn | null | undefined, start: number, now: number, packagedAt?: number | null, entries: Fact[] = []) {
+export function fermentPlan(plan: PlanIn | null | undefined, start: number, at: number, packagedAt?: number | null, entries: Fact[] = [],
+  dumpedAt?: number | null) {
+  const dumped = dumpedAt != null && !packagedAt
+  const now = dumped ? Math.min(at, dumpedAt) : at
   const list = plan?.fermentation ?? []
   const starts = stageStarts(list, entries)
   const latest = Math.max(0, ...starts.keys())
@@ -205,7 +221,7 @@ export function fermentPlan(plan: PlanIn | null | undefined, start: number, now:
   // идёт — последний начатый к now (ни один — −1); лишь по прикидке начинающийся ровно сейчас ещё не идёт
   const current = stages.findLastIndex(s => s.from < now || (s.manual && s.from <= now))
   stages.forEach((s, i) => {
-    s.state = packagedAt || i < current || (i === current && s.until === 'days' && now >= s.to) ? 'done' : i === current ? 'now' : 'next'
+    s.state = packagedAt || i < current || (i === current && s.until === 'days' && now >= s.to) ? 'done' : i === current && !dumped ? 'now' : 'next'
   })
   const gravity = gravityOf(entries)
   const dryHops: DryHopView[] = (plan?.dryHops ?? []).map((d) => {
@@ -214,15 +230,16 @@ export function fermentPlan(plan: PlanIn | null | undefined, start: number, now:
     const at = reached?.at ?? (d.day ? start + (d.day - 1) * DAY : null)
     let state: PlanState = 'next'
     if (packagedAt) state = 'done'
-    else if (target != null) state = reached ? 'now' : 'next'
-    else if (at != null) state = now >= at + DAY ? 'done' : now >= at ? 'now' : 'next'
+    else if (target != null) state = reached && !dumped ? 'now' : 'next'
+    else if (at != null) state = now >= at + DAY ? 'done' : now >= at && !dumped ? 'now' : 'next'
     return { day: d.day ?? null, target, items: d.items, at, estimated: target != null && !reached, state }
   })
   const last = stages[stages.length - 1]
   const end = last ? last.to : start
   return { stages, dryHops, days: (end - start) / DAY, end, current, og,
-    finished: !!packagedAt || last?.state === 'done',
-    estimated: stages.some(s => s.until !== 'days' && s.state !== 'done'), next: !packagedAt && current + 1 < stages.length ? current + 1 : null }
+    finished: !!packagedAt || (!dumped && last?.state === 'done'), closed: !!packagedAt || dumpedAt != null,
+    estimated: stages.some(s => s.until !== 'days' && s.state !== 'done'),
+    next: !packagedAt && !dumped && current + 1 < stages.length ? current + 1 : null }
 }
 export type FermentPlanView = ReturnType<typeof fermentPlan>
 
@@ -251,11 +268,24 @@ function slowdown(measures: Fact[], top: number | null, target: number) {
   return (prev.value! - last.value!) / ((last.at - prev.at) / DAY) < SLOW_SG ? last : null
 }
 
-export interface FermentAdvice { stage: number; why: 'target' | 'slow' | 'stable'; value: number; at: number }
+/** Конечная плотность по плану в партии — от фактической OG; в плане нет — null. Как у сервиса (Ferment.final). */
+export function fermentFinal(p: Pick<FermentPlanView, 'og'>, plan: PlanIn | null | undefined) {
+  return targetOf(plan?.fg, plan?.og, p.og)
+}
+
+/** Плотность value встала заметно выше конечной по плану (в партии — от фактической OG), а этап тёплый (или этапов
+ *  нет) — брожение застряло: не переходить дальше, а помочь дрожжам. Как у сервиса (reminders.py, Ferment.stuck). */
+export function fermentStuck(p: FermentPlanView, plan: PlanIn | null | undefined, value: number) {
+  const fg = fermentFinal(p, plan)
+  const st = p.stages[p.current]
+  return fg != null && (!st || st.temp > COLD) && value > fg + STUCK_SG + 1e-9
+}
+
+export interface FermentAdvice { stage: number; why: 'target' | 'slow' | 'stable' | 'stuck'; value: number; at: number }
 
 /** Пора ли кончать идущий этап «до плотности» или «до FG»: цель достигнута, брожение замедлилось до цели (половина
- *  пути — от плотности на начало этапа) или плотность встала. p — уже посчитанный план. Как у сервиса
- *  (reminders.py, Ferment.advice). */
+ *  пути — от плотности на начало этапа) или плотность встала; встала, но застряла (fermentStuck) — stuck, «пора»
+ *  нет. p — уже посчитанный план. Как у сервиса (reminders.py, Ferment.advice). */
 export function fermentAdvice(p: FermentPlanView, plan: PlanIn | null | undefined, entries: Fact[] = []): FermentAdvice | null {
   const st = p.stages[p.current]
   if (p.finished || !st || st.until === 'days') return null
@@ -271,25 +301,28 @@ export function fermentAdvice(p: FermentPlanView, plan: PlanIn | null | undefine
     return slow ? hit('slow', { value: slow.value!, at: slow.at }) : null
   }
   const calm = gravityStable(since, top)
-  return calm ? hit('stable', calm) : null
+  return calm ? hit(fermentStuck(p, plan, calm.value) ? 'stuck' : 'stable', calm) : null
 }
 
-/** «Похоже, брожение закончилось»: идёт выдержка (или этапов нет), а плотность с начала этапа стоит двое суток.
- *  У «до плотности» и «до FG» это их собственное «пора» (fermentAdvice). Как у сервиса (reminders.py, Ferment.calm). */
+/** «Похоже, брожение закончилось»: идёт выдержка (или этапов нет), а плотность с начала этапа стоит двое суток;
+ *  stuck — встала выше плана (fermentStuck). У «до плотности» и «до FG» это их собственное «пора» (fermentAdvice).
+ *  Как у сервиса (reminders.py, Ferment.calm). */
 export function fermentCalm(p: FermentPlanView, plan: PlanIn | null | undefined, entries: Fact[] = []) {
   const st = p.stages[p.current]
   if (st && st.until !== 'days') return null
   const gravity = gravityOf(entries)
-  return gravityStable(st ? gravity.filter(e => e.at >= st.from) : gravity, p.og ?? plan?.og ?? null)
+  const calm = gravityStable(st ? gravity.filter(e => e.at >= st.from) : gravity, p.og ?? plan?.og ?? null)
+  return calm && { ...calm, stuck: fermentStuck(p, plan, calm.value) }
 }
 
-/** Где партия: варочный день (идёт программа пивоварни — «варка идёт») → брожение, день N → разлито. Брожения
- *  не видно (ни задачи дрожжей, ни плана — например, проверка пивоварни на воде) или давно без розлива (больше
- *  STALE дней) — не гадаем. */
+/** Где партия: варочный день (идёт программа пивоварни — «варка идёт») → брожение, день N → разлито; или вылито.
+ *  Брожения не видно (ни задачи дрожжей, ни плана — например, проверка пивоварни на воде) или давно без розлива
+ *  (больше STALE дней) — не гадаем. */
 const STALE = 60
 export function batchStatus(b: Pick<BrewSummary, 'phase' | 'status' | 'manual' | 'fermentStart'>, now: number) {
   if (b.phase === 'brewday') return { label: !b.manual && b.status === 'running' ? 'варка идёт' : 'варочный день', color: 'info' as const }
   if (b.phase === 'packaged') return { label: 'разлито', color: 'success' as const }
+  if (b.phase === 'dumped') return { label: 'вылито', color: 'neutral' as const }
   if (b.fermentStart == null) return null
   const day = Math.floor((now - b.fermentStart) / DAY) + 1
   if (day < 1 || day > STALE) return null

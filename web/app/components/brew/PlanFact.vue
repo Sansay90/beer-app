@@ -7,11 +7,6 @@ const props = defineProps<{ brew: BrewDetail }>()
 const prefs = usePreferencesStore()
 
 const num = fixed
-// разница — как между показанными числами: 5,16 и 5,03 — «5,2 %» и «5,0 %», значит +0,2, а не +0,1
-const signed = (fact: number, plan: number, digits: number, unit: string) => {
-  const d = Number(num(fact, digits).replace(',', '.')) - Number(num(plan, digits).replace(',', '.'))
-  return Math.abs(d) < 10 ** -digits / 2 ? 'как в рецепте' : `${d > 0 ? '+' : '−'}${num(Math.abs(d), digits)}${unit}`
-}
 
 const tiles = computed(() => {
   const b = props.brew
@@ -20,8 +15,8 @@ const tiles = computed(() => {
   const gDelta = (fact?: number | null, plan?: number | null) => (fact == null || plan == null
     ? null
     : unit === 'plato'
-      ? signed(gravityIn(fact, 'plato'), gravityIn(plan, 'plato'), 1, ' °P')
-      : signed(fact, plan, 3, ''))
+      ? planDelta(gravityIn(fact, 'plato'), gravityIn(plan, 'plato'), 1, ' °P')
+      : planDelta(fact, plan, 3))
   return [
     { label: 'Начальная плотность', fact: fmtGravity(b.og, unit), plan: p.og != null ? fmtGravity(p.og, unit) : null, delta: gDelta(b.og, p.og) },
     { label: 'Конечная плотность', fact: fmtGravity(b.fg, unit), plan: p.fg != null ? fmtGravity(p.fg, unit) : null, delta: gDelta(b.fg, p.fg) },
@@ -29,7 +24,7 @@ const tiles = computed(() => {
       label: 'Крепость',
       fact: b.abv != null ? `${num(b.abv, 1)} %` : '—',
       plan: p.abv != null ? `${num(p.abv, 1)} %` : null,
-      delta: b.abv != null && p.abv != null ? signed(b.abv, p.abv, 1, ' %') : null,
+      delta: b.abv != null && p.abv != null ? planDelta(b.abv, p.abv, 1, ' %') : null,
     },
     {
       label: 'В ферментере',

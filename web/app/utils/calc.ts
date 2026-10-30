@@ -101,6 +101,12 @@ function extractWhere(r: Source, keep: (f: Fermentable) => boolean) {
   return (r.fermentables ?? []).filter(keep).reduce((a, f) => a + extractOf(f, efficiencyOf(r)), 0)
 }
 
+/** Плотность до кипячения в preBoil литрах: экстракт того, что в котле до кипячения, — затираемое (сахар и экстракт
+ *  «в кипячение» и «на брожение» — нет), с эффективностью партии. Тот же расчёт, что OG, — экстракт сходится с ней. */
+export function preBoilSg(r: Source, preBoil: number) {
+  return sgFromExtract(extractWhere(r, f => (f.use ?? 'mash') === 'mash'), preBoil)
+}
+
 /** Плотность от того, что сбраживается на степень дрожжей: всё, кроме сахара. От неё считается FG. */
 function attenuableSg(r: Source, litres: number) {
   return sgFromExtract(extractWhere(r, f => !fullyFermentable(f)), litres)

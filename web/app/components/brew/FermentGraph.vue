@@ -2,8 +2,9 @@
 // Брожение партии графиком — в стиле профиля рецепта (recipe/FermentProfile.vue): две панели с общей осью времени,
 // у каждой своя единица. Сверху температура: план этапов ступеньками (температура над ступенькой, название под
 // осью), замеры точками, сухое охмеление зелёной точкой в свой день. Снизу плотность в единицах пивовара: план
-// от OG к FG пунктиром, цели этапов «до плотности» — пунктиром над их отрезком, замеры (OG, на брожении, FG) точками. Ось — от начала брожения до конца плана (или до
-// розлива / сегодня, если позже); «сейчас» — вертикальной чертой. Между замерами ничего не достраивается.
+// от OG к FG пунктиром, цели этапов «до плотности» — пунктиром над их отрезком, замеры (OG, на брожении, FG) точками.
+// Ось — от начала брожения до конца плана (или до розлива / «вылито» / сегодня, если позже); «сейчас», розлив и
+// «вылито» — вертикальной чертой. Между замерами ничего не достраивается.
 import type { BrewEntry } from '~/types'
 import type { DryHopView, StageView } from '~/utils/brewlog'
 
@@ -16,6 +17,7 @@ const props = defineProps<{
   start: number
   now: number
   packagedAt?: number | null
+  dumpedAt?: number | null
 }>()
 const prefs = usePreferencesStore()
 
@@ -33,11 +35,14 @@ interface Pt { x: number; y: number; t: number; text: string }
 
 const model = computed(() => {
   // замеры брожения по видам; OG сняли до задачи дрожжей — ставим её в начало брожения
-  const temps = props.entries.filter(e => e.kind === 'temp' && e.value != null).sort((a, b) => a.at - b.at)
+  // температура сусла при задаче дрожжей — первая точка температуры брожения
+  const temps = props.entries.filter(e => (e.kind === 'temp' || e.kind === 'pitch_temp') && e.value != null)
+    .map(e => ({ ...e, at: Math.max(e.at, props.start) })).sort((a, b) => a.at - b.at)
   const gravs = props.entries.filter(e => ['og', 'gravity', 'fg'].includes(e.kind) && e.value != null)
     .map(e => (e.kind === 'og' ? { ...e, at: Math.max(e.at, props.start) } : e)).sort((a, b) => a.at - b.at)
   const planEnd = props.stages.length ? Math.max(...props.stages.map(s => s.to)) : props.start + 7 * DAY
-  const last = Math.max(planEnd, props.packagedAt ?? props.now, ...temps.map(e => e.at), ...gravs.map(e => e.at))
+  const closed = props.dumpedAt ?? props.packagedAt
+  const last = Math.max(planEnd, closed ?? props.now, ...temps.map(e => e.at), ...gravs.map(e => e.at))
   const t0 = props.start - DAY * 0.15
   const t1 = last + DAY * 0.3
   const x = (t: number) => PAD.left + ((t - t0) / (t1 - t0)) * plotW
@@ -78,10 +83,13 @@ const model = computed(() => {
   const targets = props.stages.filter(s => s.target != null)
     .map(s => ({ x1: x(s.from), x2: x(s.to), y: yG(gv(s.target!)), text: `до ${fmtGravity(s.target!, prefs.gravityUnit)}` }))
 
-  const nowX = !props.packagedAt && props.now >= t0 && props.now <= t1 ? x(props.now) : null
-  const pkgX = props.packagedAt ? x(props.packagedAt) : null
+  const nowX = closed == null && props.now >= t0 && props.now <= t1 ? x(props.now) : null
+  const ends = [
+    props.packagedAt != null && { x: x(props.packagedAt), label: 'розлив', color: 'var(--ui-success)' },
+    props.dumpedAt != null && { x: x(props.dumpedAt), label: 'вылито', color: 'var(--ui-error)' },
+  ].filter(Boolean) as { x: number; label: string; color: string }[]
   return { segs, line, area, tempPts, hops, yT, baseT, tTicks: tScale.ticks, planG, gravPts, targets, yG, topG, baseG,
-    gTicks: gScale.ticks, nowX, pkgX }
+    gTicks: gScale.ticks, nowX, ends }
 })
 
 const poly = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ')
@@ -142,7 +150,7 @@ const showHop = (h: { x: number; y: number; items: string[]; day: number | null 
         <circle :cx="p.x" :cy="p.y" r="4.5" fill="var(--ui-info)" stroke="var(--ui-bg)" stroke-width="2" />
       </g>
 
-      <!-- ось времени: границы этапов, сейчас, розлив -->
+      <!-- ось времени: границы этапов, сейчас, розлив или «вылито» -->
       <g font-size="10" fill="var(--ui-text-dimmed)">
         <template v-for="(s, i) in model.segs" :key="`d${i}`">
           <line :x1="s.x1" :x2="s.x1" :y1="PAD.top" :y2="model.baseG" stroke="var(--ui-border)" />
@@ -152,9 +160,9 @@ const showHop = (h: { x: number; y: number; items: string[]; day: number | null 
           <line :x1="model.nowX" :x2="model.nowX" :y1="PAD.top" :y2="model.baseG" stroke="var(--ui-primary)" stroke-width="1.5" />
           <text :x="model.nowX" :y="model.baseG + 28" text-anchor="middle" font-weight="600" fill="var(--ui-primary)">сейчас</text>
         </template>
-        <template v-if="model.pkgX != null">
-          <line :x1="model.pkgX" :x2="model.pkgX" :y1="PAD.top" :y2="model.baseG" stroke="var(--ui-success)" stroke-width="1.5" />
-          <text :x="model.pkgX" :y="model.baseG + 28" text-anchor="middle" font-weight="600" fill="var(--ui-success)">розлив</text>
+        <template v-for="e in model.ends" :key="e.label">
+          <line :x1="e.x" :x2="e.x" :y1="PAD.top" :y2="model.baseG" :stroke="e.color" stroke-width="1.5" />
+          <text :x="e.x" :y="model.baseG + 28" text-anchor="middle" font-weight="600" :fill="e.color">{{ e.label }}</text>
         </template>
       </g>
     </svg>

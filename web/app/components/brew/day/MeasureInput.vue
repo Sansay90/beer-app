@@ -2,6 +2,7 @@
 // Замер прямо на месте: подпись, поле в единицах пивовара. Записывается само, когда ввод закончен — через паузу,
 // по Enter или когда ушли из поля: кнопок нет. Обычно есть запись этого вида — её значение в поле, новое пишется
 // новой записью. fresh — замер по дням (брожение): поле пустое, прошлое значение подсказкой, после записи снова пустое.
+// «Сейчас» может попросить дописать введённое сразу (MEASURE_FLUSH) — перед «Дальше».
 import type { BrewEntry } from '~/types'
 import type { EntryKind } from '~/utils/brewlog'
 
@@ -23,14 +24,19 @@ const saved = ref(false)                                 // записали в 
 const DELAY_MS = 900
 let timer: ReturnType<typeof setTimeout> | null = null
 let lastSaved: number | null = null
+let inflight: Promise<unknown> | null = null
 async function save() {
   if (timer) clearTimeout(timer)
   timer = null
+  while (inflight) await inflight                        // запись уже идёт — дождаться, потом сверить: не дублировать
   const v = value.value
   if (v == null || v === lastSaved) return
   if (!props.fresh && lastInput.value != null && Math.abs(v - lastInput.value) < 1e-9) return
   const body = { kind: props.kind, value: toStored(props.kind, v, prefs.gravityUnit) }
-  const entry = await exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: props.brewId }, body }))
+  const request = exec(() => $api('/api/brews/{bid}/entries', { method: 'POST', path: { bid: props.brewId }, body }))
+  inflight = request
+  const entry = await request
+  inflight = null
   if (!entry) return
   saved.value = true
   lastSaved = props.fresh ? null : v
@@ -41,7 +47,12 @@ watch(value, (v) => {
   if (timer) clearTimeout(timer)
   timer = v == null ? null : setTimeout(save, DELAY_MS)
 })
-onBeforeUnmount(() => { if (timer) clearTimeout(timer) })
+const flushes = inject(MEASURE_FLUSH, null)
+flushes?.add(save)
+onBeforeUnmount(() => {
+  if (timer) clearTimeout(timer)
+  flushes?.delete(save)
+})
 </script>
 
 <template>

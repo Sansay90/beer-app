@@ -1,11 +1,15 @@
 <script setup lang="ts">
 // «Сейчас» — текущий шаг варочного дня. Без пивоварни: шаг, что приготовить, что дальше, «Дальше» (запись «step»;
-// на последнем шаге — «Дрожжи заданы», веха pitch); справа — таймер шага (если у шага есть время) или поля его
-// замеров (не записаны — «Дальше» спрашивает: эти цифры потом не восстановить). Звук здесь же: время шага вышло — сигнал повторяется, пока не нажали «Дальше»; закладка на кипячении
-// в свою минуту — сигнал закладки (на пивоварне звучат её события). На подключённой пивоварне: программа партии
-// ещё не в ней — загрузить; в ней — «Сейчас» и «Дальше» самой пивоварни, шаги она ведёт сама.
-import type { BrewDetail } from '~/types'
+// на последнем шаге — «Дрожжи заданы», веха pitch; ошиблись — удалить запись в журнале); справа — таймер шага (если у
+// шага есть время) или поля его замеров (не записаны — «Дальше» спрашивает: эти цифры потом не восстановить). Звук
+// здесь же: время шага вышло — сигнал минуту, дальше раз в 5 минут, пока не нажали «Дальше» (ждут йодную пробу —
+// не звенеть без конца); закладка на кипячении в свою минуту — сигнал закладки (на пивоварне звучат её события).
+// На подключённой пивоварне: до засыпи программа партии ещё не в ней — загрузить, загружена — запустить; позже
+// загружать незачем (программа начнётся с нагрева) — шаги рукой. Программа идёт — «Сейчас» и «Дальше» самой
+// пивоварни, шаги она ведёт сама.
+import type { BrewDetail, BrewEntry } from '~/types'
 import type { BrewDayView } from '~/utils/brewday'
+import type { EntryKind } from '~/utils/brewlog'
 
 const props = defineProps<{ brew: BrewDetail; view: BrewDayView; connected: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -19,10 +23,20 @@ const now = useNow({ interval: 1000 })             // секунды нужны 
 const step = computed(() => props.view.steps[props.view.current]!)
 const next = computed(() => props.view.steps[props.view.current + 1] ?? null)
 const measures = computed(() => lastMeasures(props.brew.entries))
+// замеры шага, записанные только что, — партия освежится чуть позже, а «Дальше» могут нажать сразу
+const recorded = ref(new Set<EntryKind>())
+watch(() => props.view.current, () => { recorded.value = new Set() })
+const flushes = new Set<() => Promise<unknown>>()
+provide(MEASURE_FLUSH, flushes)
+function measured(e: BrewEntry) {
+  recorded.value.add(e.kind)
+  emit('changed')
+}
 const loaded = computed(() => brewery.snapshot?.deviceRecipe?.brewId === props.brew.id)
 const programActive = computed(() => brewery.phase.running || brewery.phase.paused)
-// пивоварня: программа ещё не загружена или ждёт запуска — пока её шаги не идут, рукой доходим до старта
-const breweryIdle = computed(() => props.connected && !props.view.byBrewery)
+// пивоварня: программа ещё не загружена или ждёт запуска — пока её шаги не идут, рукой доходим до старта; после
+// засыпи загружать и запускать незачем: программа начнётся с нагрева
+const breweryIdle = computed(() => props.connected && !props.view.byBrewery && ['prepare', 'heat'].includes(step.value.kind))
 // справа есть что показать (таймер, замеры, «Дальше» пивоварни) — иначе карточка шага на всю ширину
 const aside = computed(() => !!step.value.minutes || step.value.measures.length > 0 || (breweryIdle.value && loaded.value))
 
@@ -32,17 +46,27 @@ const progress = computed(() => (remaining.value != null && step.value.minutes
   ? Math.min(100, Math.max(0, 100 * (1 - remaining.value / (step.value.minutes * 60))))
   : null))
 
-// время шага вышло — сигнал, пока не перешли дальше
-const REPEAT_MS = 4_000
+// время шага вышло — сигнал минуту, дальше раз в 5 минут, пока не перешли дальше
+const RING_MS = 4_000
+const RING_FOR_MS = 60_000
+const NAG_MS = 5 * 60_000
 let repeat: ReturnType<typeof setInterval> | undefined
-watch(over, (ring) => {
+let quieter: ReturnType<typeof setTimeout> | undefined
+function silence() {
   clearInterval(repeat)
-  if (ring) {
-    sound.play('end')
-    repeat = setInterval(() => sound.play('end'), REPEAT_MS)
-  }
+  clearTimeout(quieter)
+}
+watch(over, (ring) => {
+  silence()
+  if (!ring) return
+  sound.play('end')
+  repeat = setInterval(() => sound.play('end'), RING_MS)
+  quieter = setTimeout(() => {
+    clearInterval(repeat)
+    repeat = setInterval(() => sound.play('end'), NAG_MS)
+  }, RING_FOR_MS)
 }, { immediate: true })
-onBeforeUnmount(() => clearInterval(repeat))
+onBeforeUnmount(silence)
 // закладки кипячения — по таймеру шага: пришла минута закладки — один сигнал (вернулись позже минуты — молча)
 const sounded = new Set<number>()
 watch(() => props.view.current, () => sounded.clear())
@@ -57,8 +81,21 @@ watch(remaining, (left) => {
   }
 })
 
+// пока дописываются замеры и идёт запись — второй тап ничего не делает (иначе — две записи шага или дрожжей)
+const advancing = ref(false)
 async function advance() {
-  const missing = step.value.measures.filter(m => !measures.value.get(m))
+  if (advancing.value) return
+  advancing.value = true
+  try {
+    await moveOn()
+  } finally {
+    advancing.value = false
+  }
+}
+async function moveOn() {
+  // ввели значение и сразу «Дальше» — сначала дописать его
+  await Promise.all([...flushes].map(f => f()))
+  const missing = step.value.measures.filter(m => !measures.value.get(m) && !recorded.value.has(m))
   if (missing.length && !await confirm({
     title: 'Замеры не записаны',
     description: `${missing.map(m => ENTRY_KINDS[m].short ?? ENTRY_KINDS[m].label).join(', ')} — поля на этом шаге пустые. Идти дальше без записи?`,
@@ -108,7 +145,7 @@ async function upload() {
         </li>
       </ol>
       <div v-if="next" class="mt-3 text-base text-muted">
-        дальше — <span class="text-highlighted">{{ next.name }}</span><template v-if="stepLine(next)"> {{ stepLine(next) }}</template>
+        дальше — <span class="text-highlighted">{{ next.name }}</span><template v-if="stepLine(next)">{{ ` ${stepLine(next)}` }}</template>
       </div>
 
       <!-- пивоварня: программу надо загрузить — пока она в простое, шаги до старта проходим рукой -->
@@ -127,7 +164,7 @@ async function upload() {
         size="xl"
         class="mt-5"
         :class="(!step.minutes || over) && 'call-pulse'"
-        :loading="pending"
+        :loading="pending || advancing"
         @click="advance"
       />
     </UCard>
@@ -153,7 +190,7 @@ async function upload() {
         <h2 class="text-xl font-semibold text-highlighted">Замеры</h2>
       </template>
       <div class="flex flex-col gap-3">
-        <BrewDayMeasureInput v-for="m in step.measures" :key="m" :brew-id="brew.id" :kind="m" :last="measures.get(m)" @saved="emit('changed')" />
+        <BrewDayMeasureInput v-for="m in step.measures" :key="m" :brew-id="brew.id" :kind="m" :last="measures.get(m)" @saved="measured" />
       </div>
     </UCard>
     <BrewNextCard v-else-if="breweryIdle && loaded" class="h-full" />

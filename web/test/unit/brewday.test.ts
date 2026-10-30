@@ -20,7 +20,7 @@ const STEPS: BrewDayStep[] = [
 const at = (i: number, t: number) => STEPS.map(s => (s.index === i ? { ...s, at: t } : s))
 const entry = (kind: BrewEntry['kind'], t: number, value: number | null = null): BrewEntry => ({ id: `${kind}-${t}`, at: t, kind, value, text: null })
 const brew = (over: Partial<Parameters<typeof brewDay>[0]> = {}): Parameters<typeof brewDay>[0] => ({
-  id: 'b1', brewDay: STEPS, currentStep: 0, phase: 'brewday', snapshot: null, ...over,
+  id: 'b1', brewDay: STEPS, currentStep: 0, phase: 'brewday', snapshot: null, fermentStart: null, ...over,
 })
 const idle: Phase = phaseOf(null)
 
@@ -34,6 +34,14 @@ describe('шаг с сервиса', () => {
     expect(stepRemaining(v.steps[3]!, 1200 + 40 * 60)).toBe(20 * 60)
     expect(stepRemaining(v.steps[3]!, 1200 + 75 * 60)).toBe(-15 * 60)           // время вышло — шаг всё ещё текущий
     expect(stepRemaining(v.steps[0]!, 1500)).toBeNull()                           // без таймера
+  })
+
+  it('вылили в варочный день, без дрожжей, — пройденное сделано, остальное нет', () => {
+    const v = brewDay(brew({ phase: 'dumped', currentStep: 6 }), null, idle)
+    expect(v.active).toBe(false)
+    expect(v.steps.map(s => s.state)).toEqual([...Array(6).fill('done'), 'next', 'next', 'next'])
+    const fermented = brewDay(brew({ phase: 'dumped', currentStep: 8, fermentStart: 1000 }), null, idle)
+    expect(fermented.steps.every(s => s.state === 'done')).toBe(true)          // вылили на брожении — день весь позади
   })
 
   it('варочный день позади — все шаги сделаны, «Сейчас» не нужно', () => {
@@ -98,11 +106,12 @@ describe('что приготовить', () => {
       miscs: [{ kind: 'fining', name: 'Brewtan B', amount: 0.5, unit: 'g', use: 'mash' }, { kind: 'fining', name: 'Мох', amount: 5, unit: 'g', use: 'boil' }],
     } as unknown as Recipe
     expect(stepDetails(STEPS[0]!, r)[0]).toBe('Затор: 12 л — хлорид кальция 2,4 г, Magnum 10 г, Brewtan B 0,5 г')
-    expect(stepDetails(STEPS[5]!, r)).toEqual(['промывочная вода 14,2 л', 'до кипячения 23 л', 'на первое сусло: Hallertau 20 г'])
+    expect(stepDetails(STEPS[5]!, r)).toEqual(['промывочная вода 14,2 л', dots('до кипячения 23 л · 10,0 °P'), 'на первое сусло: Hallertau 20 г'])
   })
 
-  it('промывка — объёмы по испарению оборудования из рецепта партии; на прочих шагах — ничего', () => {
-    expect(stepDetails(STEPS[5]!, recipe)).toEqual(['промывочная вода 14,2 л', 'до кипячения 23 л'])
+  it('промывка — объёмы и плотность до кипячения по испарению оборудования из рецепта партии; на прочих шагах — ничего', () => {
+    expect(stepDetails(STEPS[5]!, recipe)).toEqual(['промывочная вода 14,2 л', dots('до кипячения 23 л · 10,0 °P')])
+    expect(stepDetails(STEPS[5]!, recipe, 'sg')[1]).toBe(dots('до кипячения 23 л · 1,040'))
     expect(stepDetails(STEPS[3]!, recipe)).toEqual([])
     expect(stepDetails(STEPS[0]!, null)).toEqual([])
   })

@@ -174,7 +174,7 @@ def test_foreign_brewery_rejected(service, brewer, agents, caplog):
 
 
 def test_brews_of_published_recipe_counted_for_all(service, brewer, agents, recipe):
-    """Чужой опубликованный рецепт сварили — варка к нему привязана, «сколько раз варили» видят все."""
+    """Чужой опубликованный рецепт сварили — варка к нему привязана, «сколько раз варили» (разлитые) видят все."""
     author = service.client()
     author.signup("author@test.local")
     author.ok("POST", "/auth/verify", {"token": service.outbox.link("verify")})
@@ -188,5 +188,7 @@ def test_brews_of_published_recipe_counted_for_all(service, brewer, agents, reci
     agent.brewery.push({"104": 2, "144": 1, "6": 2, "10": 250})
     brews = eventually(lambda: brewer.get("/brews")[1])
     assert brews[0]["recipeId"] == rid
+    assert service.client().get("/recipes")[1][0]["brewsTotal"] == 0              # сварена — когда разлита
+    brewer.ok("POST", f"/brews/{bid}/entries", {"kind": "package"})
     assert service.client().get("/recipes")[1][0]["brewsTotal"] == 1
     assert author.get(f"/recipes/{rid}")[1]["meta"]["brewsTotal"] == 1

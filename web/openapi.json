@@ -1974,7 +1974,8 @@
                   "enum": [
                     "brewday",
                     "fermenting",
-                    "packaged"
+                    "packaged",
+                    "dumped"
                   ],
                   "type": "string"
                 },
@@ -3308,11 +3309,13 @@
                 "postboil_volume",
                 "fermenter_volume",
                 "mash_temp",
+                "pitch_temp",
                 "temp",
                 "pitch",
                 "dry_hop",
                 "cold_crash",
                 "package",
+                "dumped",
                 "note",
                 "stage",
                 "step"
@@ -3380,10 +3383,11 @@
             "enum": [
               "brewday",
               "fermenting",
-              "packaged"
+              "packaged",
+              "dumped"
             ],
             "title": "Phase",
-            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито"
+            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито, вылито"
           },
           "manual": {
             "type": "boolean",
@@ -3506,6 +3510,18 @@
             ],
             "title": "Packagedat",
             "description": "розлив — брожение позади; unix-время"
+          },
+          "dumpedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dumpedat",
+            "description": "партия вылита; unix-время"
           },
           "entries": {
             "items": {
@@ -3638,11 +3654,13 @@
               "postboil_volume",
               "fermenter_volume",
               "mash_temp",
+              "pitch_temp",
               "temp",
               "pitch",
               "dry_hop",
               "cold_crash",
               "package",
+              "dumped",
               "note",
               "stage",
               "step"
@@ -3714,11 +3732,13 @@
               "postboil_volume",
               "fermenter_volume",
               "mash_temp",
+              "pitch_temp",
               "temp",
               "pitch",
               "dry_hop",
               "cold_crash",
               "package",
+              "dumped",
               "note",
               "stage",
               "step"
@@ -3979,10 +3999,11 @@
             "enum": [
               "brewday",
               "fermenting",
-              "packaged"
+              "packaged",
+              "dumped"
             ],
             "title": "Phase",
-            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито"
+            "description": "где партия: варочный день (до задачи дрожжей или «закончить»), брожение, разлито, вылито"
           },
           "manual": {
             "type": "boolean",
@@ -4105,6 +4126,18 @@
             ],
             "title": "Packagedat",
             "description": "розлив — брожение позади; unix-время"
+          },
+          "dumpedAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dumpedat",
+            "description": "партия вылита; unix-время"
           },
           "entries": {
             "type": "integer",

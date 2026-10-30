@@ -55,7 +55,7 @@ def test_manual_brew(service, people, published):
     assert brew["fermentStart"] is None                      # ни плана брожения, ни задачи дрожжей — брожения не видно
     assert [b["id"] for b in reader.ok("GET", f"/brews?recipe={rid}")] == [brew["id"]]
     assert author.ok("GET", "/brews") == [] and author.get(f"/brews/{brew['id']}")[0] == 404   # видит только сам
-    assert total(reader, rid) == 1
+    assert total(reader, rid) == 0                                             # сварена — когда разлита
 
 
 def test_batch_recipe_follows_the_equipment(people, published, full_recipe):
@@ -126,15 +126,65 @@ def test_entries_make_the_summary(people, published):
 
 
 def test_brews_counted_once_a_day(people, published):
+    """«Сварили N раз» — разлитые и не вылитые партии; от пивовара — не больше одной в день."""
     author, reader = people
     rid = published
-    reader.ok("POST", "/brews", {"recipeId": rid})
-    reader.ok("POST", "/brews", {"recipeId": rid})                             # второй раз за день — не в счёт
+
+    def brewed(who, **kw):
+        bid = who.ok("POST", "/brews", {"recipeId": rid, **kw})["id"]
+        who.ok("POST", f"/brews/{bid}/entries", {"kind": "package"})
+        return bid
+
+    reader.ok("POST", "/brews", {"recipeId": rid})                             # не разлита — не в счёт
+    assert total(reader, rid) == 0
+    brewed(reader)
+    brewed(reader)                                                             # второй раз за день — не в счёт
     assert total(reader, rid) == 1
-    reader.ok("POST", "/brews", {"recipeId": rid, "startedAt": time.time() - 3 * DAY})
-    author.ok("POST", "/brews", {"recipeId": rid})                             # свой рецепт автор тоже варит
+    brewed(reader, startedAt=time.time() - 3 * DAY)
+    spoiled = brewed(author)                                                   # свой рецепт автор тоже варит
     assert total(author, rid) == 3
+    author.ok("POST", f"/brews/{spoiled}/entries", {"kind": "dumped", "text": "заражение"})
+    assert total(author, rid) == 2                                             # вылитая — не в счёт
     assert reader.post("/brews", {"recipeId": rid, "startedAt": time.time() + 3 * DAY})[0] == 400
+
+
+def test_dumped_and_undo(people, published):
+    """«Партия вылита» — партия остаётся с фазой dumped; удалили запись, закончившую варочный день («Вернуть»), —
+    день снова идёт; у записанной задним числом — нет."""
+    _, reader = people
+    bid = reader.ok("POST", "/brews", {"recipeId": published})["id"]
+    pitch = reader.ok("POST", f"/brews/{bid}/entries", {"kind": "pitch"})
+    assert reader.ok("GET", f"/brews/{bid}")["phase"] == "fermenting"
+    reader.ok("DELETE", f"/brews/{bid}/entries/{pitch['id']}")
+    brew = reader.ok("GET", f"/brews/{bid}")
+    assert brew["phase"] == "brewday" and brew["status"] == "running"
+
+    dumped = reader.ok("POST", f"/brews/{bid}/entries", {"kind": "dumped", "text": "пригорело"})
+    brew = reader.ok("GET", f"/brews/{bid}")
+    assert brew["phase"] == "dumped" and brew["dumpedAt"] == pytest.approx(dumped["at"])
+    assert brew["fermentStart"] is None                                        # вылили в день варки — брожения нет
+    assert [b["id"] for b in reader.ok("GET", "/brews?phase=dumped")] == [bid]
+    assert bid not in [b["id"] for b in reader.ok("GET", "/brews?phase=brewday")]
+    reader.ok("DELETE", f"/brews/{bid}/entries/{dumped['id']}")
+    assert reader.ok("GET", f"/brews/{bid}")["phase"] == "brewday"
+
+    twice = reader.ok("POST", "/brews", {"recipeId": published})["id"]          # «Дрожжи заданы» нажали дважды
+    first = reader.ok("POST", f"/brews/{twice}/entries", {"kind": "pitch"})
+    reader.ok("POST", f"/brews/{twice}/entries", {"kind": "pitch"})
+    reader.ok("DELETE", f"/brews/{twice}/entries/{first['id']}")
+    assert reader.ok("GET", f"/brews/{twice}")["phase"] == "fermenting"       # вторая осталась — день позади
+
+    moved = reader.ok("POST", "/brews", {"recipeId": published})["id"]          # время дрожжей поправили, потом удалили
+    pitch = reader.ok("POST", f"/brews/{moved}/entries", {"kind": "pitch"})
+    reader.ok("PATCH", f"/brews/{moved}/entries/{pitch['id']}", {"at": pitch["at"] - 600})
+    reader.ok("DELETE", f"/brews/{moved}/entries/{pitch['id']}")
+    assert reader.ok("GET", f"/brews/{moved}")["phase"] == "brewday"
+
+    past = time.time() - 3 * DAY
+    old = reader.ok("POST", "/brews", {"recipeId": published, "startedAt": past})["id"]
+    pitch = reader.ok("POST", f"/brews/{old}/entries", {"kind": "pitch", "at": past})
+    reader.ok("DELETE", f"/brews/{old}/entries/{pitch['id']}")
+    assert reader.ok("GET", f"/brews/{old}")["phase"] == "fermenting"
 
 
 def test_past_day_and_delete(people, published):
